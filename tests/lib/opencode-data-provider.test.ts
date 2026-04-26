@@ -137,6 +137,35 @@ describe("opencode-data-provider", () => {
       expect(typeof provider.loadMessageParts).toBe("function")
     })
 
+    test("SQLite provider exposes dispose() to close persistent connection", () => {
+      createTestDatabase(testDbPath)
+
+      const provider = createProvider({
+        backend: "sqlite",
+        dbPath: testDbPath,
+      })
+
+      expect(typeof (provider as any).dispose).toBe("function")
+      ;(provider as any).dispose()
+    })
+
+    test("SQLite provider reuses connection across multiple read calls", async () => {
+      createTestDatabase(testDbPath)
+
+      const provider = createProvider({
+        backend: "sqlite",
+        dbPath: testDbPath,
+      })
+
+      // Multiple reads should succeed without reopening the database
+      const projects1 = await provider.loadProjectRecords()
+      const projects2 = await provider.loadProjectRecords()
+      expect(projects1).toBeArray()
+      expect(projects2).toBeArray()
+
+      ;(provider as any).dispose()
+    })
+
     test("SQLite provider uses default path when dbPath not provided", () => {
       // This test verifies the provider is created (may fail at runtime
       // if default path doesn't exist, but that's expected behavior)

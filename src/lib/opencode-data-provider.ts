@@ -22,6 +22,7 @@
  */
 import { resolve } from "node:path"
 import { existsSync } from "node:fs"
+import { Database } from "bun:sqlite"
 import type {
   ProjectRecord,
   SessionRecord,
@@ -52,6 +53,7 @@ import {
 } from "./opencode-data"
 import {
   DEFAULT_SQLITE_PATH,
+  openDatabase,
   loadProjectRecordsSqlite,
   loadSessionRecordsSqlite,
   loadSessionChatIndexSqlite,
@@ -132,6 +134,12 @@ export interface DataProvider {
    * The storage backend being used.
    */
   readonly backend: StorageBackend
+
+  /**
+   * Optional disposal hook for releasing resources (e.g. persistent DB connections).
+   * Should be called when the provider is no longer needed.
+   */
+  dispose?(): void
 
   /**
    * Load all project records.
@@ -292,11 +300,11 @@ function createJsonlProvider(root: string): DataProvider {
  */
 async function hydrateChatMessagePartsSqlite(
   message: ChatMessage,
-  dbPath: string,
+  db: Database,
   options?: { strict?: boolean; onWarning?: (warning: string) => void }
 ): Promise<ChatMessage> {
   const parts = await loadMessagePartsSqlite({
-    db: dbPath,
+    db,
     messageId: message.messageId,
     strict: options?.strict,
     onWarning: options?.onWarning,
@@ -326,24 +334,37 @@ async function hydrateChatMessagePartsSqlite(
 
 /**
  * Create a SQLite-backed data provider.
+ *
+ * Opens a persistent readonly Database connection for read operations.
+ * Write operations open their own short-lived connections to avoid
+ * read/write locking contention.
  */
 function createSqliteProvider(
   dbPath: string,
   options?: { strict?: boolean; forceWrite?: boolean; onWarning?: (warning: string) => void }
 ): DataProvider {
   const normalizedDbPath = resolve(dbPath)
+  // Persistent readonly connection for all read operations.
+  const db = openDatabase(normalizedDbPath, { readonly: true })
+
   const readOptions = {
-    db: normalizedDbPath,
+    db,
     strict: options?.strict,
     onWarning: options?.onWarning,
   }
   const writeOptions = {
-    ...readOptions,
+    db: normalizedDbPath,
+    strict: options?.strict,
+    onWarning: options?.onWarning,
     forceWrite: options?.forceWrite,
   }
 
   return {
     backend: "sqlite",
+
+    dispose() {
+      db.close()
+    },
 
     async loadProjectRecords() {
       return loadProjectRecordsSqlite(readOptions)
@@ -362,11 +383,11 @@ function createSqliteProvider(
     },
 
     async hydrateChatMessageParts(message: ChatMessage) {
-      return hydrateChatMessagePartsSqlite(message, normalizedDbPath, readOptions)
+      return hydrateChatMessagePartsSqlite(message, db, readOptions)
     },
 
-    // Write operations: SQLite implementations not yet available
-    // For now, these throw NotImplementedError to be clear about limitations
+    // Write operations open their own connection so they don't contend
+    // with the persistent readonly handle.
 
     async deleteProjectMetadata(records: ProjectRecord[], options?: DeleteOptions) {
       const projectIds = records.map(r => r.projectId)
