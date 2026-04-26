@@ -1380,6 +1380,92 @@ export async function loadMessagePartsSqlite(
 }
 
 // ========================
+// Token Aggregation
+// ========================
+
+/**
+ * Compute token summaries for all sessions in a single SQL query.
+ *
+ * Uses json_extract to aggregate assistant message tokens per session.
+ * Returns a Map from sessionId to TokenSummary.
+ *
+ * - Sessions with no assistant messages (or no messages at all) are marked
+ *   { kind: "unknown", reason: "no_messages" }.
+ * - Sessions where any assistant message lacks a token payload are marked
+ *   { kind: "unknown", reason: "missing" }.
+ */
+export async function computeTokenSummariesSqlite(
+  options: SqliteLoadOptions
+): Promise<Map<string, TokenSummary>> {
+  const db = openDatabase(options.db)
+  const result = new Map<string, TokenSummary>()
+
+  try {
+    // Fast path: scan only assistant messages (indexed by role), no session LEFT JOIN.
+    // Sessions with no assistant messages are handled by the caller as "no_messages".
+    const rows = db.query(`
+      SELECT
+        session_id,
+        COUNT(*) AS assistant_count,
+        SUM(COALESCE(json_extract(data, '$.tokens.input'), 0)) AS input,
+        SUM(COALESCE(json_extract(data, '$.tokens.output'), 0)) AS output,
+        SUM(COALESCE(json_extract(data, '$.tokens.reasoning'), 0)) AS reasoning,
+        SUM(COALESCE(json_extract(data, '$.tokens.cache.read'), 0)) AS cache_read,
+        SUM(COALESCE(json_extract(data, '$.tokens.cache.write'), 0)) AS cache_write,
+        SUM(CASE WHEN json_extract(data, '$.tokens') IS NULL THEN 1 ELSE 0 END) AS missing_token_count
+      FROM message
+      WHERE json_extract(data, '$.role') = 'assistant'
+      GROUP BY session_id
+    `).all() as {
+      session_id: string
+      assistant_count: number
+      input: number | null
+      output: number | null
+      reasoning: number | null
+      cache_read: number | null
+      cache_write: number | null
+      missing_token_count: number
+    }[]
+
+    for (const row of rows) {
+      if (row.missing_token_count > 0) {
+        result.set(row.session_id, { kind: "unknown", reason: "missing" })
+        continue
+      }
+      const input = row.input ?? 0
+      const output = row.output ?? 0
+      const reasoning = row.reasoning ?? 0
+      const cacheRead = row.cache_read ?? 0
+      const cacheWrite = row.cache_write ?? 0
+      result.set(row.session_id, {
+        kind: "known",
+        tokens: {
+          input,
+          output,
+          reasoning,
+          cacheRead,
+          cacheWrite,
+          total: input + output + reasoning + cacheRead + cacheWrite,
+        },
+      })
+    }
+  } catch (error) {
+    const message = formatSqliteErrorMessage(error, "Failed to compute token summaries", {
+      forceWrite: options.forceWrite,
+      allowForceWrite: false,
+    })
+    if (options.strict) {
+      throw new Error(message)
+    }
+    warnSqlite(options, message)
+  } finally {
+    closeIfOwned(db, options.db, { readonly: true })
+  }
+
+  return result
+}
+
+// ========================
 // Session Delete Operations
 // ========================
 

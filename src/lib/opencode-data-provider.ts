@@ -58,6 +58,7 @@ import {
   loadSessionRecordsSqlite,
   loadSessionChatIndexSqlite,
   loadMessagePartsSqlite,
+  computeTokenSummariesSqlite,
   deleteSessionMetadataSqlite,
   deleteProjectMetadataSqlite,
   updateSessionTitleSqlite,
@@ -429,65 +430,21 @@ function createSqliteProvider(
       })
     },
 
-    // Token computation: Use SQLite data loading but same computation logic
+    // Token computation: batch-aggregate via single SQL query instead of N+1
     async computeSessionTokenSummary(session: SessionRecord) {
-      // Load messages from SQLite
-      const messages = await loadSessionChatIndexSqlite({
-        ...readOptions,
-        sessionId: session.sessionId,
-      })
-
-      if (messages.length === 0) {
-        return { kind: "unknown", reason: "no_messages" } as const
-      }
-
-      // Sum tokens from assistant messages
-      let totalInput = 0
-      let totalOutput = 0
-      let totalReasoning = 0
-      let totalCacheRead = 0
-      let totalCacheWrite = 0
-      let foundAnyAssistant = false
-
-      for (const message of messages) {
-        if (message.role !== "assistant") continue
-        foundAnyAssistant = true
-
-        if (!message.tokens) {
-          return { kind: "unknown", reason: "missing" } as const
-        }
-
-        totalInput += message.tokens.input
-        totalOutput += message.tokens.output
-        totalReasoning += message.tokens.reasoning
-        totalCacheRead += message.tokens.cacheRead
-        totalCacheWrite += message.tokens.cacheWrite
-      }
-
-      if (!foundAnyAssistant) {
-        return { kind: "unknown", reason: "no_messages" } as const
-      }
-
-      return {
-        kind: "known",
-        tokens: {
-          input: totalInput,
-          output: totalOutput,
-          reasoning: totalReasoning,
-          cacheRead: totalCacheRead,
-          cacheWrite: totalCacheWrite,
-          total: totalInput + totalOutput + totalReasoning + totalCacheRead + totalCacheWrite,
-        },
-      } as const
+      const summaries = await computeTokenSummariesSqlite(readOptions)
+      return summaries.get(session.sessionId) ?? { kind: "unknown", reason: "no_messages" } as const
     },
 
     async computeProjectTokenSummary(projectId: string, sessions: SessionRecord[]) {
+      const summaries = await computeTokenSummariesSqlite(readOptions)
       const projectSessions = sessions.filter((s) => s.projectId === projectId)
-      return computeAggregateSqlite(projectSessions, this)
+      return aggregateFromSummaries(projectSessions, summaries)
     },
 
     async computeGlobalTokenSummary(sessions: SessionRecord[]) {
-      return computeAggregateSqlite(sessions, this)
+      const summaries = await computeTokenSummariesSqlite(readOptions)
+      return aggregateFromSummaries(sessions, summaries)
     },
 
     // Search: Use SQLite data loading but same search logic
@@ -561,12 +518,15 @@ function createSqliteProvider(
 }
 
 /**
- * Helper to compute aggregate token summary for SQLite provider.
+ * Helper to aggregate token summaries from a batch-computed Map.
+ *
+ * Only includes sessions that appear in both the `sessions` array and the
+ * `summaries` Map. Sessions missing from the Map are treated as unknown.
  */
-async function computeAggregateSqlite(
+function aggregateFromSummaries(
   sessions: SessionRecord[],
-  provider: DataProvider
-): Promise<AggregateTokenSummary> {
+  summaries: Map<string, TokenSummary>
+): AggregateTokenSummary {
   if (sessions.length === 0) {
     return {
       total: { kind: "unknown", reason: "no_messages" },
@@ -593,8 +553,8 @@ async function computeAggregateSqlite(
   let unknownSessions = 0
 
   for (const session of sessions) {
-    const summary = await provider.computeSessionTokenSummary(session)
-    if (summary.kind === "known") {
+    const summary = summaries.get(session.sessionId)
+    if (summary && summary.kind === "known") {
       knownOnly.input += summary.tokens.input
       knownOnly.output += summary.tokens.output
       knownOnly.reasoning += summary.tokens.reasoning

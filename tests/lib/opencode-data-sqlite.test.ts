@@ -3045,6 +3045,120 @@ describe("opencode-data-sqlite", () => {
     })
   })
 
+  describe("computeTokenSummariesSqlite", () => {
+    test("aggregates assistant tokens per session", async () => {
+      const db = new Database(":memory:")
+      db.run(`
+        CREATE TABLE session (
+          id TEXT PRIMARY KEY,
+          project_id TEXT NOT NULL,
+          parent_id TEXT,
+          directory TEXT NOT NULL DEFAULT '',
+          title TEXT NOT NULL DEFAULT '',
+          version TEXT NOT NULL DEFAULT '',
+          time_created INTEGER NOT NULL DEFAULT 0,
+          time_updated INTEGER NOT NULL DEFAULT 0
+        )
+      `)
+      db.run(`
+        CREATE TABLE message (
+          id TEXT PRIMARY KEY,
+          session_id TEXT NOT NULL,
+          time_created INTEGER NOT NULL DEFAULT 0,
+          time_updated INTEGER NOT NULL DEFAULT 0,
+          data TEXT NOT NULL
+        )
+      `)
+
+      // Session with known tokens
+      db.run(
+        "INSERT INTO session (id, project_id, directory, title, version, time_created, time_updated) VALUES (?, ?, '', '', '', ?, ?)",
+        ["sess_known", "proj_1", 1, 1]
+      )
+      const msg1 = {
+        id: "msg_a1",
+        sessionID: "sess_known",
+        role: "assistant",
+        time: { created: 1 },
+        tokens: { input: 100, output: 50, reasoning: 10, cache: { read: 5, write: 3 } },
+      }
+      const msg2 = {
+        id: "msg_a2",
+        sessionID: "sess_known",
+        role: "assistant",
+        time: { created: 2 },
+        tokens: { input: 200, output: 100, reasoning: 20, cache: { read: 10, write: 6 } },
+      }
+      db.run("INSERT INTO message (id, session_id, time_created, data) VALUES (?, ?, ?, ?)", [msg1.id, "sess_known", 1, JSON.stringify(msg1)])
+      db.run("INSERT INTO message (id, session_id, time_created, data) VALUES (?, ?, ?, ?)", [msg2.id, "sess_known", 2, JSON.stringify(msg2)])
+
+      // Session with missing token payload
+      db.run(
+        "INSERT INTO session (id, project_id, directory, title, version, time_created, time_updated) VALUES (?, ?, '', '', '', ?, ?)",
+        ["sess_missing", "proj_1", 1, 1]
+      )
+      const msg3 = {
+        id: "msg_a3",
+        sessionID: "sess_missing",
+        role: "assistant",
+        time: { created: 3 },
+        // no tokens field
+      }
+      db.run("INSERT INTO message (id, session_id, time_created, data) VALUES (?, ?, ?, ?)", [msg3.id, "sess_missing", 3, JSON.stringify(msg3)])
+
+      // Session with only user messages
+      db.run(
+        "INSERT INTO session (id, project_id, directory, title, version, time_created, time_updated) VALUES (?, ?, '', '', '', ?, ?)",
+        ["sess_user_only", "proj_1", 1, 1]
+      )
+      const msg4 = {
+        id: "msg_u1",
+        sessionID: "sess_user_only",
+        role: "user",
+        time: { created: 4 },
+      }
+      db.run("INSERT INTO message (id, session_id, time_created, data) VALUES (?, ?, ?, ?)", [msg4.id, "sess_user_only", 4, JSON.stringify(msg4)])
+
+      // Session with no messages (empty)
+      db.run(
+        "INSERT INTO session (id, project_id, directory, title, version, time_created, time_updated) VALUES (?, ?, '', '', '', ?, ?)",
+        ["sess_empty", "proj_1", 1, 1]
+      )
+
+      const { computeTokenSummariesSqlite } = await import("../../src/lib/opencode-data-sqlite")
+      const summaries = await computeTokenSummariesSqlite({ db, onWarning: () => {} })
+
+      // Known session
+      expect(summaries.has("sess_known")).toBe(true)
+      const known = summaries.get("sess_known")!
+      expect(known.kind).toBe("known")
+      if (known.kind === "known") {
+        expect(known.tokens.input).toBe(300)
+        expect(known.tokens.output).toBe(150)
+        expect(known.tokens.reasoning).toBe(30)
+        expect(known.tokens.cacheRead).toBe(15)
+        expect(known.tokens.cacheWrite).toBe(9)
+        expect(known.tokens.total).toBe(504)
+      }
+
+      // Missing tokens session
+      expect(summaries.has("sess_missing")).toBe(true)
+      const missing = summaries.get("sess_missing")!
+      expect(missing.kind).toBe("unknown")
+      if (missing.kind === "unknown") {
+        expect(missing.reason).toBe("missing")
+      }
+
+      // User-only session is not in the result (no assistant messages)
+      expect(summaries.has("sess_user_only")).toBe(false)
+
+      // Empty session is not in the result (no assistant messages)
+      expect(summaries.has("sess_empty")).toBe(false)
+
+      db.close()
+    })
+  })
+
   describe("SQLite lock handling", () => {
     test("write operations fail gracefully when DB is locked", async () => {
       const lockDbPath = join(testDir, "locked.db")
