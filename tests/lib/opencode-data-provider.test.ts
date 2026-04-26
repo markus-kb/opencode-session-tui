@@ -83,6 +83,12 @@ describe("opencode-data-provider", () => {
         data TEXT NOT NULL
       )
     `)
+    // Clear any stale rows so tests don't see data from prior runs when the
+    // file couldn't be deleted (e.g. Windows file-lock retention).
+    db.run("DELETE FROM part")
+    db.run("DELETE FROM message")
+    db.run("DELETE FROM session")
+    db.run("DELETE FROM project")
     db.close()
   }
 
@@ -110,6 +116,8 @@ describe("opencode-data-provider", () => {
       expect(typeof provider.computeProjectTokenSummary).toBe("function")
       expect(typeof provider.computeGlobalTokenSummary).toBe("function")
       expect(typeof provider.searchSessionsChat).toBe("function")
+
+      provider.dispose?.()
     })
 
     test("returns JSONL provider when backend is explicitly 'jsonl'", () => {
@@ -421,6 +429,7 @@ describe("opencode-data-provider", () => {
       }
       expect(row.project_id).toBe("proj_target")
       verifyDb.close()
+      provider.dispose()
     })
 
     test("copySession works for SQLite backend", async () => {
@@ -461,6 +470,7 @@ describe("opencode-data-provider", () => {
       const sessionCount = verifyDb.query("SELECT COUNT(*) as count FROM session").get() as any
       expect(sessionCount.count).toBe(2) // Original + copy
       verifyDb.close()
+      provider.dispose()
     })
   })
 
