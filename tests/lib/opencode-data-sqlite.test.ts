@@ -187,6 +187,56 @@ describe("opencode-data-sqlite", () => {
       // Clean up
       existingDb.close()
     })
+
+    test("skips WAL checkpoint when readonly option is true", () => {
+      // Create a test database
+      const setupDb = new Database(testDbPath)
+      setupDb.run("CREATE TABLE test (id INTEGER)")
+      setupDb.close()
+
+      const db = openDatabase(testDbPath, { readonly: true })
+
+      // Monkey-patch exec to detect checkpoint attempts
+      let checkpointAttempted = false
+      const originalExec = db.exec.bind(db)
+      db.exec = (sql: string) => {
+        if (sql.includes("wal_checkpoint")) {
+          checkpointAttempted = true
+          throw new Error("checkpoint should not be called on readonly close")
+        }
+        return originalExec(sql)
+      }
+
+      // closeIfOwned with readonly:true should NOT attempt checkpoint
+      closeIfOwned(db, testDbPath, { readonly: true })
+
+      expect(checkpointAttempted).toBe(false)
+    })
+
+    test("attempts WAL checkpoint when readonly option is false or omitted", () => {
+      // Create a test database
+      const setupDb = new Database(testDbPath)
+      setupDb.run("CREATE TABLE test (id INTEGER)")
+      setupDb.close()
+
+      const db = openDatabase(testDbPath, { readonly: false })
+
+      let checkpointAttempted = false
+      const originalExec = db.exec.bind(db)
+      db.exec = (sql: string) => {
+        if (sql.includes("wal_checkpoint")) {
+          checkpointAttempted = true
+          // Swallow error — we only care that it was attempted
+          return
+        }
+        return originalExec(sql)
+      }
+
+      // closeIfOwned without readonly (or with readonly:false) should attempt checkpoint
+      closeIfOwned(db, testDbPath)
+
+      expect(checkpointAttempted).toBe(true)
+    })
   })
 
   describe("validateSchema", () => {

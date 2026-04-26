@@ -150,15 +150,22 @@ export function openDatabase(
  * @param db - The Database instance to potentially close.
  * @param originalInput - The original input that was passed to openDatabase.
  */
-export function closeIfOwned(db: Database, originalInput: Database | string): void {
+export function closeIfOwned(
+  db: Database,
+  originalInput: Database | string,
+  options?: { readonly?: boolean }
+): void {
   // Only close if we opened it (i.e., originalInput was a string path)
   if (typeof originalInput === "string") {
-    // Checkpoint and truncate WAL before closing to avoid lingering file handles
-    // on Windows (EBUSY during subsequent unlink in tests).
-    try {
-      db.exec("PRAGMA wal_checkpoint(TRUNCATE)")
-    } catch {
-      // Ignore — WAL may not be active (e.g., readonly DB or DELETE journal mode)
+    // For read-only connections we skip WAL checkpoint: readonly DBs often fail
+    // the checkpoint (disk I/O error) and the operation is expensive (~1.5s on
+    // real DBs). Write paths still checkpoint to release file handles.
+    if (!options?.readonly) {
+      try {
+        db.exec("PRAGMA wal_checkpoint(TRUNCATE)")
+      } catch {
+        // Ignore — WAL may not be active (e.g., DELETE journal mode)
+      }
     }
     db.close()
   }
@@ -653,7 +660,7 @@ export async function loadProjectRecordsSqlite(
       })
     }
   } finally {
-    closeIfOwned(db, options.db)
+    closeIfOwned(db, options.db, { readonly: true })
   }
 
   // Sort by createdAt descending, then by projectId for stability
@@ -831,7 +838,7 @@ export async function loadSessionRecordsSqlite(
       })
     }
   } finally {
-    closeIfOwned(db, options.db)
+    closeIfOwned(db, options.db, { readonly: true })
   }
 
   // Sort by updatedAt (or createdAt) descending, then by sessionId for stability
@@ -1071,7 +1078,7 @@ export async function loadSessionChatIndexSqlite(
       })
     }
   } finally {
-    closeIfOwned(db, options.db)
+    closeIfOwned(db, options.db, { readonly: true })
   }
 
   // Messages are already sorted by time_created ASC from the query,
@@ -1364,12 +1371,11 @@ export async function loadMessagePartsSqlite(
       })
     }
   } finally {
-    closeIfOwned(db, options.db)
+    closeIfOwned(db, options.db, { readonly: true })
   }
 
   // Sort by partId for deterministic order (consistent with JSONL loader's filename sort)
   parts.sort((a, b) => a.partId.localeCompare(b.partId))
-
   return parts
 }
 
