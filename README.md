@@ -15,6 +15,15 @@ OpenCode migrated its storage layer from JSONL flat-files to a SQLite database (
 - **Windows compatibility** — `closeIfOwned()` runs `PRAGMA wal_checkpoint(TRUNCATE)` before closing to release WAL handles; test `afterEach` hooks use a retry loop for `EBUSY`/`EPERM`; `chmod`-dependent CLI tests are skipped on Windows; path assertions normalised for cross-platform separators.
 - **`expandUserPath` fix** — Unix absolute paths stored in the database (e.g. `/tmp/foo`) are no longer mangled to Windows paths when the tool runs on Windows.
 
+## Installation
+```bash
+# Clone the repo and install deps
+git clone https://github.com/markus-kb/oc-manager-fork.git
+cd oc-manager-fork
+bun install
+
+```
+
 ## Credits
 Original project by [shuv1337](https://github.com/shuv1337) — [shuv1337/oc-manager](https://github.com/shuv1337/oc-manager). This fork adapts the tool for the current OpenCode SQLite schema and adds Windows compatibility.
 
