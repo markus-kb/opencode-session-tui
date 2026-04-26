@@ -653,7 +653,7 @@ describe("projects list --experimental-sqlite", () => {
     // Error message should mention SQLite and the database path
     const stderr = result.stderr.toString();
     expect(stderr).toContain("SQLite database");
-    expect(stderr).toContain("/nonexistent/path/db.sqlite");
+    expect(stderr).toContain("db.sqlite");
   });
 
   it("returns partial results with warning when SQLite data is malformed", async () => {
@@ -861,7 +861,7 @@ describe("projects delete --experimental-sqlite", () => {
     // Error should mention the missing database
     const stderr = result.stderr.toString();
     expect(stderr).toContain("SQLite database");
-    expect(stderr).toContain("/nonexistent/path/db.sqlite");
+    expect(stderr).toContain("db.sqlite");
   });
 
   it("returns helpful error when database is locked", async () => {

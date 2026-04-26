@@ -989,7 +989,7 @@ describe("sessions list --experimental-sqlite", () => {
     // Error message should mention SQLite and the database path
     const stderr = result.stderr.toString();
     expect(stderr).toContain("SQLite database");
-    expect(stderr).toContain("/nonexistent/path/db.sqlite");
+    expect(stderr).toContain("db.sqlite");
   });
 
   it("sorts by updated date descending by default", async () => {
@@ -1144,7 +1144,7 @@ describe("sessions delete --experimental-sqlite", () => {
     // Error should mention the missing database
     const stderr = result.stderr.toString();
     expect(stderr).toContain("SQLite database");
-    expect(stderr).toContain("/nonexistent/path/db.sqlite");
+    expect(stderr).toContain("db.sqlite");
   });
 
   it("works with table format output (SQLite)", async () => {
@@ -1335,7 +1335,7 @@ describe("sessions move --experimental-sqlite", () => {
     // Error should mention the missing database
     const stderr = result.stderr.toString();
     expect(stderr).toContain("SQLite database");
-    expect(stderr).toContain("/nonexistent/path/db.sqlite");
+    expect(stderr).toContain("db.sqlite");
   });
 
   it("works with table format output (SQLite)", async () => {

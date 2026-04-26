@@ -18,6 +18,10 @@ import { join } from "node:path"
 import { tmpdir } from "node:os"
 import { FIXTURE_STORE_ROOT } from "../helpers"
 
+// On Windows, fs.chmod does not enforce Unix permission bits for directories/files,
+// so tests that rely on making a directory read-only via chmod will not work.
+const isWindows = process.platform === "win32"
+
 // ========================
 // Exit Code 2: Usage Errors
 // ========================
@@ -486,7 +490,7 @@ describe("Exit Code 4: File Operation Failures", () => {
     await fs.rm(tempRoot, { recursive: true, force: true })
   })
 
-  describe("backup to non-writable directory", () => {
+  describe.skipIf(isWindows)("backup to non-writable directory", () => {
     let readOnlyBackupDir: string
 
     beforeEach(async () => {
@@ -530,7 +534,7 @@ describe("Exit Code 4: File Operation Failures", () => {
     })
   })
 
-  describe("delete of file with removed permissions", () => {
+  describe.skipIf(isWindows)("delete of file with removed permissions", () => {
     beforeEach(async () => {
       // Remove write permissions from the project directory
       // Use 555 (r-xr-xr-x) to allow listing/reading but not writing/deleting
@@ -557,7 +561,7 @@ describe("Exit Code 4: File Operation Failures", () => {
     })
   })
 
-  describe("delete of session file with removed permissions", () => {
+  describe.skipIf(isWindows)("delete of session file with removed permissions", () => {
     beforeEach(async () => {
       // Remove write permissions from the session directory
       // Use 555 (r-xr-xr-x) to allow listing/reading but not writing/deleting
@@ -584,7 +588,7 @@ describe("Exit Code 4: File Operation Failures", () => {
     })
   })
 
-  describe("table format output for file operation failures", () => {
+  describe.skipIf(isWindows)("table format output for file operation failures", () => {
     let readOnlyBackupDir: string
 
     beforeEach(async () => {
@@ -612,7 +616,7 @@ describe("Exit Code 4: File Operation Failures", () => {
     })
   })
 
-  describe("ndjson format output for file operation failures", () => {
+  describe.skipIf(isWindows)("ndjson format output for file operation failures", () => {
     let readOnlyBackupDir: string
 
     beforeEach(async () => {
@@ -642,7 +646,7 @@ describe("Exit Code 4: File Operation Failures", () => {
     })
   })
 
-  describe("file not deleted on backup failure", () => {
+  describe.skipIf(isWindows)("file not deleted on backup failure", () => {
     let readOnlyBackupDir: string
 
     beforeEach(async () => {
@@ -686,3 +690,5 @@ describe("Exit Code 4: File Operation Failures", () => {
     })
   })
 })
+
+

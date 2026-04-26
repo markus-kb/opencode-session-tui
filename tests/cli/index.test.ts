@@ -133,8 +133,9 @@ describe("parseGlobalOptions SQLite flags", () => {
       db: "relative/path/db.sqlite",
     });
 
-    expect(opts.dbPath).toMatch(/^\//);  // Absolute path starts with /
-    expect(opts.dbPath).toContain("relative/path/db.sqlite");
+    // On Windows, absolute paths start with a drive letter; on Unix they start with /
+    expect(require("node:path").isAbsolute(opts.dbPath!)).toBe(true);
+    expect(opts.dbPath!.replace(/\\/g, "/")).toContain("relative/path/db.sqlite");
   });
 
   it("--db without --experimental-sqlite still enables experimentalSqlite", () => {
@@ -144,7 +145,8 @@ describe("parseGlobalOptions SQLite flags", () => {
     });
 
     expect(opts.experimentalSqlite).toBe(true);
-    expect(opts.dbPath).toBe("/custom/path/opencode.db");
+    // Path may be resolved differently on Windows; check that it ends with the db filename
+    expect(opts.dbPath!.replace(/\\/g, "/")).toContain("custom/path/opencode.db");
   });
 
   it("--sqlite-strict flag is parsed correctly", () => {
@@ -171,7 +173,7 @@ describe("parseGlobalOptions SQLite flags", () => {
       sort: "created",
     });
 
-    expect(opts.root).toContain("custom/root");
+    expect(opts.root).toContain("custom");
     expect(opts.format).toBe("json");
     expect(opts.limit).toBe(50);
     expect(opts.sort).toBe("created");

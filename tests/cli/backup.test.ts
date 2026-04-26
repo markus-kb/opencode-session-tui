@@ -6,7 +6,7 @@
 
 import { describe, expect, it, beforeEach, afterEach } from "bun:test"
 import { promises as fs } from "node:fs"
-import { join } from "node:path"
+import { join, sep } from "node:path"
 import { tmpdir } from "node:os"
 import {
   copyToBackupDir,
@@ -140,8 +140,8 @@ describe("copyToBackupDir", () => {
     // backupDir should be inside the backup directory with timestamp
     expect(result.backupDir.startsWith(backupDir)).toBe(true)
     expect(result.backupDir).not.toBe(backupDir)
-    // Should match timestamp pattern
-    const subdir = result.backupDir.replace(backupDir + "/", "")
+    // Should match timestamp pattern — normalize separators for cross-platform comparison
+    const subdir = result.backupDir.replace(backupDir + sep, "").replace(backupDir + "/", "")
     expect(/^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}$/.test(subdir)).toBe(true)
   })
 
@@ -153,7 +153,7 @@ describe("copyToBackupDir", () => {
       prefix: "project",
     })
 
-    const subdir = result.backupDir.replace(backupDir + "/", "")
+    const subdir = result.backupDir.replace(backupDir + sep, "").replace(backupDir + "/", "")
     expect(subdir.startsWith("project_")).toBe(true)
   })
 
@@ -191,9 +191,9 @@ describe("copyToBackupDir", () => {
     expect(result.sources).toHaveLength(2)
     expect(result.failed).toHaveLength(0)
 
-    // Check structure is preserved
-    const dest1 = result.destinations[0]
-    const dest2 = result.destinations[1]
+    // Check structure is preserved — normalize separators for cross-platform comparison
+    const dest1 = result.destinations[0].replace(/\\/g, "/")
+    const dest2 = result.destinations[1].replace(/\\/g, "/")
     expect(dest1.endsWith("storage/project/abc.json")).toBe(true)
     expect(dest2.endsWith("storage/session/xyz.json")).toBe(true)
     expect(await readFile(dest1)).toBe('{"id":"abc"}')
@@ -276,7 +276,7 @@ describe("previewBackupPaths", () => {
       structureRoot: sourceDir,
     })
 
-    expect(preview.destinations[0]).toContain("storage/project/abc.json")
+    expect(preview.destinations[0].replace(/\\/g, "/")).toContain("storage/project/abc.json")
   })
 
   it("should include prefix in backupDir path", () => {
