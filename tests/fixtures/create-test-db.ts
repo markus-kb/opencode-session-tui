@@ -20,7 +20,7 @@ if (existsSync(DB_PATH)) {
 
 const db = new Database(DB_PATH)
 
-// Create tables matching OpenCode's SQLite schema
+// Create tables matching OpenCode's real SQLite schema (post-Feb-2025)
 db.run(`
   CREATE TABLE project (
     id TEXT PRIMARY KEY,
@@ -33,9 +33,22 @@ db.run(`
     id TEXT PRIMARY KEY,
     project_id TEXT NOT NULL,
     parent_id TEXT,
-    created_at INTEGER,
-    updated_at INTEGER,
-    data TEXT NOT NULL
+    workspace_id TEXT,
+    slug TEXT NOT NULL DEFAULT '',
+    directory TEXT NOT NULL DEFAULT '',
+    title TEXT NOT NULL DEFAULT '',
+    version TEXT NOT NULL DEFAULT '',
+    share_url TEXT,
+    summary_additions INTEGER,
+    summary_deletions INTEGER,
+    summary_files INTEGER,
+    summary_diffs TEXT,
+    revert TEXT,
+    permission TEXT,
+    time_created INTEGER NOT NULL DEFAULT 0,
+    time_updated INTEGER NOT NULL DEFAULT 0,
+    time_compacting INTEGER,
+    time_archived INTEGER
   )
 `)
 
@@ -43,7 +56,8 @@ db.run(`
   CREATE TABLE message (
     id TEXT PRIMARY KEY,
     session_id TEXT NOT NULL,
-    created_at INTEGER,
+    time_created INTEGER NOT NULL DEFAULT 0,
+    time_updated INTEGER NOT NULL DEFAULT 0,
     data TEXT NOT NULL
   )
 `)
@@ -53,6 +67,8 @@ db.run(`
     id TEXT PRIMARY KEY,
     message_id TEXT NOT NULL,
     session_id TEXT NOT NULL,
+    time_created INTEGER NOT NULL DEFAULT 0,
+    time_updated INTEGER NOT NULL DEFAULT 0,
     data TEXT NOT NULL
   )
 `)
@@ -100,93 +116,70 @@ const sessions = [
     id: "session_parser_fix",
     project_id: "proj_present",
     parent_id: null,
-    created_at: 1704067200000,
-    updated_at: 1704153600000,
-    data: JSON.stringify({
-      id: "session_parser_fix",
-      projectID: "proj_present",
-      directory: "tests/fixtures/worktrees/my-present-project",
-      title: "Fix bug in parser",
-      version: "1.0.0",
-      time: { created: 1704067200000, updated: 1704153600000 },
-    }),
+    directory: "tests/fixtures/worktrees/my-present-project",
+    title: "Fix bug in parser",
+    version: "1.0.0",
+    time_created: 1704067200000,
+    time_updated: 1704153600000,
   },
   {
     id: "session_add_tests",
     project_id: "proj_present",
     parent_id: null,
-    created_at: 1704240000000,
-    updated_at: 1704326400000,
-    data: JSON.stringify({
-      id: "session_add_tests",
-      projectID: "proj_present",
-      directory: "tests/fixtures/worktrees/my-present-project",
-      title: "Add unit tests for utils",
-      version: "1.0.0",
-      time: { created: 1704240000000, updated: 1704326400000 },
-    }),
+    directory: "tests/fixtures/worktrees/my-present-project",
+    title: "Add unit tests for utils",
+    version: "1.0.0",
+    time_created: 1704240000000,
+    time_updated: 1704326400000,
   },
   {
     id: "session_refactor_api",
     project_id: "proj_present",
     parent_id: null,
-    created_at: 1704412800000,
-    updated_at: 1704499200000,
-    data: JSON.stringify({
-      id: "session_refactor_api",
-      projectID: "proj_present",
-      directory: "tests/fixtures/worktrees/my-present-project",
-      title: "Refactor API endpoints",
-      version: "1.0.0",
-      time: { created: 1704412800000, updated: 1704499200000 },
-    }),
+    directory: "tests/fixtures/worktrees/my-present-project",
+    title: "Refactor API endpoints",
+    version: "1.0.0",
+    time_created: 1704412800000,
+    time_updated: 1704499200000,
   },
   // proj_missing sessions
   {
     id: "session_missing_proj_01",
     project_id: "proj_missing",
     parent_id: null,
-    created_at: 1704585600000,
-    updated_at: 1704672000000,
-    data: JSON.stringify({
-      id: "session_missing_proj_01",
-      projectID: "proj_missing",
-      directory: "tests/fixtures/worktrees/nonexistent-project",
-      title: "Setup project structure",
-      version: "1.0.0",
-      time: { created: 1704585600000, updated: 1704672000000 },
-    }),
+    directory: "tests/fixtures/worktrees/nonexistent-project",
+    title: "Setup project structure",
+    version: "1.0.0",
+    time_created: 1704585600000,
+    time_updated: 1704672000000,
   },
   // Forked session (has parent_id)
   {
     id: "session_fork_parser",
     project_id: "proj_present",
     parent_id: "session_parser_fix",
-    created_at: 1704758400000,
-    updated_at: 1704844800000,
-    data: JSON.stringify({
-      id: "session_fork_parser",
-      projectID: "proj_present",
-      parentID: "session_parser_fix",
-      directory: "tests/fixtures/worktrees/my-present-project",
-      title: "Fork: Alternative parser approach",
-      version: "1.0.0",
-      time: { created: 1704758400000, updated: 1704844800000 },
-    }),
+    directory: "tests/fixtures/worktrees/my-present-project",
+    title: "Fork: Alternative parser approach",
+    version: "1.0.0",
+    time_created: 1704758400000,
+    time_updated: 1704844800000,
   },
 ]
 
-const insertSession = db.prepare(
-  "INSERT INTO session (id, project_id, parent_id, created_at, updated_at, data) VALUES (?, ?, ?, ?, ?, ?)"
-)
+const insertSession = db.prepare(`
+  INSERT INTO session (id, project_id, parent_id, directory, title, version, time_created, time_updated)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+`)
 for (const session of sessions) {
   insertSession.run(
     session.id,
     session.project_id,
     session.parent_id,
-    session.created_at,
-    session.updated_at,
-    session.data
+    session.directory,
+    session.title,
+    session.version,
+    session.time_created,
+    session.time_updated
   )
 }
 console.log(`Inserted ${sessions.length} sessions`)
@@ -348,7 +341,7 @@ const messages = [
 ]
 
 const insertMessage = db.prepare(
-  "INSERT INTO message (id, session_id, created_at, data) VALUES (?, ?, ?, ?)"
+  "INSERT INTO message (id, session_id, time_created, data) VALUES (?, ?, ?, ?)"
 )
 for (const message of messages) {
   insertMessage.run(message.id, message.session_id, message.created_at, message.data)
@@ -615,10 +608,10 @@ const parts = [
 ]
 
 const insertPart = db.prepare(
-  "INSERT INTO part (id, message_id, session_id, data) VALUES (?, ?, ?, ?)"
+  "INSERT INTO part (id, message_id, session_id, time_created, data) VALUES (?, ?, ?, ?, ?)"
 )
 for (const part of parts) {
-  insertPart.run(part.id, part.message_id, part.session_id, part.data)
+  insertPart.run(part.id, part.message_id, part.session_id, 0, part.data)
 }
 console.log(`Inserted ${parts.length} parts`)
 
