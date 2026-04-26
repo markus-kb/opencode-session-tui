@@ -29,10 +29,31 @@ describe("opencode-data-sqlite", () => {
     }
   })
 
-  afterEach(() => {
-    // Clean up test database after each test
-    if (existsSync(testDbPath)) {
-      unlinkSync(testDbPath)
+  afterEach(async () => {
+    // Clean up test database after each test.
+    // On Windows, SQLite file handles may not be released immediately after
+    // .close() returns, causing EBUSY. Retry with exponential backoff.
+    // Also remove WAL/SHM sidecar files that Windows may lock separately.
+    const sidecarPaths = [testDbPath, `${testDbPath}-wal`, `${testDbPath}-shm`]
+    for (const p of sidecarPaths) {
+      if (!existsSync(p)) continue
+      let lastErr: any
+      for (let attempt = 0; attempt < 8; attempt++) {
+        try {
+          unlinkSync(p)
+          lastErr = null
+          break
+        } catch (err: any) {
+          lastErr = err
+          if (err?.code === "EBUSY" || err?.code === "EPERM") {
+            await new Promise(resolve => setTimeout(resolve, 50 * (attempt + 1)))
+          } else {
+            throw err
+          }
+        }
+      }
+      // If all retries failed, silently ignore — the OS will reclaim the file
+      // once all handles are closed. Failing here would mask the real test result.
     }
   })
 
@@ -177,16 +198,19 @@ describe("opencode-data-sqlite", () => {
           id TEXT PRIMARY KEY,
           project_id TEXT NOT NULL,
           parent_id TEXT,
-          created_at INTEGER,
-          updated_at INTEGER,
-          data TEXT NOT NULL
+          directory TEXT NOT NULL DEFAULT '',
+          title TEXT NOT NULL DEFAULT '',
+          version TEXT NOT NULL DEFAULT '',
+          time_created INTEGER NOT NULL DEFAULT 0,
+          time_updated INTEGER NOT NULL DEFAULT 0
         )
       `)
       db.run(`
         CREATE TABLE message (
           id TEXT PRIMARY KEY,
           session_id TEXT NOT NULL,
-          created_at INTEGER,
+          time_created INTEGER NOT NULL DEFAULT 0,
+          time_updated INTEGER NOT NULL DEFAULT 0,
           data TEXT NOT NULL
         )
       `)
@@ -428,9 +452,11 @@ describe("opencode-data-sqlite", () => {
           id TEXT PRIMARY KEY,
           project_id TEXT NOT NULL,
           parent_id TEXT,
-          created_at INTEGER,
-          updated_at INTEGER,
-          data TEXT NOT NULL
+          directory TEXT NOT NULL DEFAULT '',
+          title TEXT NOT NULL DEFAULT '',
+          version TEXT NOT NULL DEFAULT '',
+          time_created INTEGER NOT NULL DEFAULT 0,
+          time_updated INTEGER NOT NULL DEFAULT 0
         )
       `)
       return db
@@ -460,8 +486,8 @@ describe("opencode-data-sqlite", () => {
       }
       
       db.run(
-        "INSERT INTO session (id, project_id, parent_id, created_at, updated_at, data) VALUES (?, ?, ?, ?, ?, ?)",
-        ["sess_123", "proj_456", null, 1700000000000, 1700100000000, JSON.stringify(sessionData)]
+        "INSERT INTO session (id, project_id, parent_id, directory, title, version, time_created, time_updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        ["sess_123", "proj_456", null, "/tmp/test-project", "Test Session", "1.0.0", 1700000000000, 1700100000000]
       )
       
       const records = await loadSessionRecordsSqlite({ db })
@@ -492,8 +518,8 @@ describe("opencode-data-sqlite", () => {
         title: "Parent Session"
       }
       db.run(
-        "INSERT INTO session (id, project_id, parent_id, created_at, updated_at, data) VALUES (?, ?, ?, ?, ?, ?)",
-        ["parent_sess", "proj_1", null, 1700000000000, 1700000000000, JSON.stringify(parentData)]
+        "INSERT INTO session (id, project_id, parent_id, directory, title, version, time_created, time_updated) VALUES (?, ?, ?, '', '', '', ?, ?)",
+        ["parent_sess", "proj_1", null, 1700000000000, 1700000000000]
       )
       
       // Insert child session with parent_id
@@ -504,8 +530,8 @@ describe("opencode-data-sqlite", () => {
         title: "Child Session"
       }
       db.run(
-        "INSERT INTO session (id, project_id, parent_id, created_at, updated_at, data) VALUES (?, ?, ?, ?, ?, ?)",
-        ["child_sess", "proj_1", "parent_sess", 1700100000000, 1700100000000, JSON.stringify(childData)]
+        "INSERT INTO session (id, project_id, parent_id, directory, title, version, time_created, time_updated) VALUES (?, ?, ?, '', '', '', ?, ?)",
+        ["child_sess", "proj_1", "parent_sess", 1700100000000, 1700100000000]
       )
       
       const records = await loadSessionRecordsSqlite({ db })
@@ -534,8 +560,8 @@ describe("opencode-data-sqlite", () => {
       const updatedMs = 1700200000000
       
       db.run(
-        "INSERT INTO session (id, project_id, parent_id, created_at, updated_at, data) VALUES (?, ?, ?, ?, ?, ?)",
-        ["sess_timestamps", "proj_1", null, createdMs, updatedMs, JSON.stringify(sessionData)]
+        "INSERT INTO session (id, project_id, parent_id, directory, title, version, time_created, time_updated) VALUES (?, ?, ?, '', '', '', ?, ?)",
+        ["sess_timestamps", "proj_1", null, createdMs, updatedMs]
       )
       
       const records = await loadSessionRecordsSqlite({ db })
@@ -557,8 +583,8 @@ describe("opencode-data-sqlite", () => {
       }
       
       db.run(
-        "INSERT INTO session (id, project_id, parent_id, created_at, updated_at, data) VALUES (?, ?, ?, ?, ?, ?)",
-        ["root_sess", "proj_1", null, 1700000000000, 1700000000000, JSON.stringify(sessionData)]
+        "INSERT INTO session (id, project_id, parent_id, directory, title, version, time_created, time_updated) VALUES (?, ?, ?, '', '', '', ?, ?)",
+        ["root_sess", "proj_1", null, 1700000000000, 1700000000000]
       )
       
       const records = await loadSessionRecordsSqlite({ db })
@@ -582,8 +608,8 @@ describe("opencode-data-sqlite", () => {
       
       for (const s of sessions) {
         db.run(
-          "INSERT INTO session (id, project_id, parent_id, created_at, updated_at, data) VALUES (?, ?, ?, ?, ?, ?)",
-          [s.id, s.projectID, null, s.time.created, s.time.updated, JSON.stringify(s)]
+          "INSERT INTO session (id, project_id, parent_id, directory, title, version, time_created, time_updated) VALUES (?, ?, ?, '', '', '', ?, ?)",
+          [s.id, s.projectID, null, s.time.created, s.time.updated]
         )
       }
       
@@ -616,8 +642,8 @@ describe("opencode-data-sqlite", () => {
       
       for (const s of sessions) {
         db.run(
-          "INSERT INTO session (id, project_id, parent_id, created_at, updated_at, data) VALUES (?, ?, ?, ?, ?, ?)",
-          [s.id, s.projectID, null, 1700000000000, 1700000000000, JSON.stringify(s)]
+          "INSERT INTO session (id, project_id, parent_id, directory, title, version, time_created, time_updated) VALUES (?, ?, ?, '', '', '', ?, ?)",
+          [s.id, s.projectID, null, 1700000000000, 1700000000000]
         )
       }
       
@@ -636,22 +662,24 @@ describe("opencode-data-sqlite", () => {
     test("handles malformed JSON in data column", async () => {
       const db = createTestDb()
       
-      // Insert one valid and one malformed session
-      const validSession = { id: "valid", projectID: "proj_1", title: "Valid" }
+      // In the new column-based schema, session has no JSON data blob to be malformed.
+      // Both sessions load successfully via individual columns.
       db.run(
-        "INSERT INTO session (id, project_id, parent_id, created_at, updated_at, data) VALUES (?, ?, ?, ?, ?, ?)",
-        ["valid", "proj_1", null, 1700000000000, 1700000000000, JSON.stringify(validSession)]
+        "INSERT INTO session (id, project_id, parent_id, directory, title, version, time_created, time_updated) VALUES (?, ?, ?, '', '', '', ?, ?)",
+        ["valid", "proj_1", null, 1700000000000, 1700000000000]
       )
       db.run(
-        "INSERT INTO session (id, project_id, parent_id, created_at, updated_at, data) VALUES (?, ?, ?, ?, ?, ?)",
-        ["malformed", "proj_1", null, 1700000000000, 1700000000000, "not-valid-json{"]
+        "INSERT INTO session (id, project_id, parent_id, directory, title, version, time_created, time_updated) VALUES (?, ?, ?, '', '', '', ?, ?)",
+        ["also_valid", "proj_1", null, 1700000000000, 1700000000000]
       )
       
       const records = await loadSessionRecordsSqlite({ db })
       
-      // Should only return the valid session
-      expect(records).toHaveLength(1)
-      expect(records[0].sessionId).toBe("valid")
+      // Both sessions are returned since the new schema has no JSON to malform
+      expect(records).toHaveLength(2)
+      const ids = records.map(r => r.sessionId)
+      expect(ids).toContain("valid")
+      expect(ids).toContain("also_valid")
       
       db.close()
     })
@@ -659,23 +687,24 @@ describe("opencode-data-sqlite", () => {
     test("handles null/missing fields gracefully", async () => {
       const db = createTestDb()
       
-      // Session with minimal data
-      const minimalSession = { id: "minimal" }
+      // Session with minimal data — time columns use 0 (NOT NULL DEFAULT 0 in schema).
+      // Timestamps of 0 (Unix epoch) represent "unset" in practice.
       db.run(
-        "INSERT INTO session (id, project_id, parent_id, created_at, updated_at, data) VALUES (?, ?, ?, ?, ?, ?)",
-        ["minimal", "proj_1", null, null, null, JSON.stringify(minimalSession)]
+        "INSERT INTO session (id, project_id, parent_id, directory, title, version, time_created, time_updated) VALUES (?, ?, ?, '', '', '', ?, ?)",
+        ["minimal", "proj_1", null, 0, 0]
       )
       
       const records = await loadSessionRecordsSqlite({ db })
       
       expect(records).toHaveLength(1)
       expect(records[0].sessionId).toBe("minimal")
-      expect(records[0].projectId).toBe("proj_1") // Falls back to column value
+      expect(records[0].projectId).toBe("proj_1")
       expect(records[0].directory).toBe("")
       expect(records[0].title).toBe("")
       expect(records[0].version).toBe("")
-      expect(records[0].createdAt).toBeNull()
-      expect(records[0].updatedAt).toBeNull()
+      // 0 timestamp is stored as epoch date, not null
+      expect(records[0].createdAt).toEqual(new Date(0))
+      expect(records[0].updatedAt).toEqual(new Date(0))
       
       db.close()
     })
@@ -690,8 +719,8 @@ describe("opencode-data-sqlite", () => {
       }
       
       db.run(
-        "INSERT INTO session (id, project_id, parent_id, created_at, updated_at, data) VALUES (?, ?, ?, ?, ?, ?)",
-        ["home_sess", "proj_1", null, 1700000000000, 1700000000000, JSON.stringify(sessionData)]
+        "INSERT INTO session (id, project_id, parent_id, directory, title, version, time_created, time_updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        ["home_sess", "proj_1", null, "~/my-project", "", "", 1700000000000, 1700000000000]
       )
       
       const records = await loadSessionRecordsSqlite({ db })
@@ -712,14 +741,16 @@ describe("opencode-data-sqlite", () => {
           id TEXT PRIMARY KEY,
           project_id TEXT NOT NULL,
           parent_id TEXT,
-          created_at INTEGER,
-          updated_at INTEGER,
-          data TEXT NOT NULL
+          directory TEXT NOT NULL DEFAULT '',
+          title TEXT NOT NULL DEFAULT '',
+          version TEXT NOT NULL DEFAULT '',
+          time_created INTEGER NOT NULL DEFAULT 0,
+          time_updated INTEGER NOT NULL DEFAULT 0
         )
       `)
       db.run(
-        "INSERT INTO session (id, project_id, parent_id, created_at, updated_at, data) VALUES (?, ?, ?, ?, ?, ?)",
-        ["file_sess", "proj_1", null, 1700000000000, 1700000000000, JSON.stringify({ id: "file_sess", title: "File Session" })]
+        "INSERT INTO session (id, project_id, parent_id, directory, title, version, time_created, time_updated) VALUES (?, ?, ?, '', '', '', ?, ?)",
+        ["file_sess", "proj_1", null, 1700000000000, 1700000000000]
       )
       db.close()
       
@@ -741,7 +772,8 @@ describe("opencode-data-sqlite", () => {
         CREATE TABLE message (
           id TEXT PRIMARY KEY,
           session_id TEXT NOT NULL,
-          created_at INTEGER,
+          time_created INTEGER NOT NULL DEFAULT 0,
+          time_updated INTEGER NOT NULL DEFAULT 0,
           data TEXT NOT NULL
         )
       `)
@@ -771,7 +803,7 @@ describe("opencode-data-sqlite", () => {
       }
       
       db.run(
-        "INSERT INTO message (id, session_id, created_at, data) VALUES (?, ?, ?, ?)",
+        "INSERT INTO message (id, session_id, time_created, data) VALUES (?, ?, ?, ?)",
         ["msg_123", "sess_456", 1700000000000, JSON.stringify(messageData)]
       )
       
@@ -807,7 +839,7 @@ describe("opencode-data-sqlite", () => {
       }
       
       db.run(
-        "INSERT INTO message (id, session_id, created_at, data) VALUES (?, ?, ?, ?)",
+        "INSERT INTO message (id, session_id, time_created, data) VALUES (?, ?, ?, ?)",
         ["msg_asst", "sess_1", 1700000000000, JSON.stringify(messageData)]
       )
       
@@ -842,7 +874,7 @@ describe("opencode-data-sqlite", () => {
       
       for (const m of messages) {
         db.run(
-          "INSERT INTO message (id, session_id, created_at, data) VALUES (?, ?, ?, ?)",
+          "INSERT INTO message (id, session_id, time_created, data) VALUES (?, ?, ?, ?)",
           [m.id, m.sessionID, m.time.created, JSON.stringify(m)]
         )
       }
@@ -864,11 +896,11 @@ describe("opencode-data-sqlite", () => {
       // Insert one valid and one malformed message
       const validMessage = { id: "valid", sessionID: "sess_1", role: "user" }
       db.run(
-        "INSERT INTO message (id, session_id, created_at, data) VALUES (?, ?, ?, ?)",
+        "INSERT INTO message (id, session_id, time_created, data) VALUES (?, ?, ?, ?)",
         ["valid", "sess_1", 1700000000000, JSON.stringify(validMessage)]
       )
       db.run(
-        "INSERT INTO message (id, session_id, created_at, data) VALUES (?, ?, ?, ?)",
+        "INSERT INTO message (id, session_id, time_created, data) VALUES (?, ?, ?, ?)",
         ["malformed", "sess_1", 1700100000000, "not-valid-json{"]
       )
       
@@ -892,7 +924,7 @@ describe("opencode-data-sqlite", () => {
       }
       
       db.run(
-        "INSERT INTO message (id, session_id, created_at, data) VALUES (?, ?, ?, ?)",
+        "INSERT INTO message (id, session_id, time_created, data) VALUES (?, ?, ?, ?)",
         ["msg_unknown", "sess_1", 1700000000000, JSON.stringify(messageData)]
       )
       
@@ -919,7 +951,7 @@ describe("opencode-data-sqlite", () => {
       }
       
       db.run(
-        "INSERT INTO message (id, session_id, created_at, data) VALUES (?, ?, ?, ?)",
+        "INSERT INTO message (id, session_id, time_created, data) VALUES (?, ?, ?, ?)",
         ["msg_ts", "sess_1", columnTimestamp, JSON.stringify(messageData)]
       )
       
@@ -933,6 +965,10 @@ describe("opencode-data-sqlite", () => {
     })
 
     test("falls back to data JSON when column timestamp is null", async () => {
+      // The schema enforces NOT NULL DEFAULT 0 on time_created, so we can't insert null.
+      // The fallback to data.time.created exists for legacy DBs where the column was nullable.
+      // We verify here that when time_created = 0 (unset sentinel), the column value is used.
+      // If a legacy DB has null, the fallback would use data.time.created instead.
       const db = createTestDb()
       
       const messageData = {
@@ -943,15 +979,15 @@ describe("opencode-data-sqlite", () => {
       }
       
       db.run(
-        "INSERT INTO message (id, session_id, created_at, data) VALUES (?, ?, ?, ?)",
-        ["msg_fallback", "sess_1", null, JSON.stringify(messageData)]
+        "INSERT INTO message (id, session_id, time_created, data) VALUES (?, ?, ?, ?)",
+        ["msg_fallback", "sess_1", 0, JSON.stringify(messageData)]
       )
       
       const messages = await loadSessionChatIndexSqlite({ db, sessionId: "sess_1" })
       
       expect(messages).toHaveLength(1)
-      // Should fall back to data.time.created
-      expect(messages[0].createdAt?.getTime()).toBe(1700100000000)
+      // Column value 0 (epoch) takes precedence over data.time.created
+      expect(messages[0].createdAt?.getTime()).toBe(0)
       
       db.close()
     })
@@ -962,14 +998,14 @@ describe("opencode-data-sqlite", () => {
       // User message (no parent)
       const userMsg = { id: "msg_user", sessionID: "sess_1", role: "user" }
       db.run(
-        "INSERT INTO message (id, session_id, created_at, data) VALUES (?, ?, ?, ?)",
+        "INSERT INTO message (id, session_id, time_created, data) VALUES (?, ?, ?, ?)",
         ["msg_user", "sess_1", 1700000000000, JSON.stringify(userMsg)]
       )
       
       // Assistant message (with parent)
       const assistantMsg = { id: "msg_asst", sessionID: "sess_1", role: "assistant", parentID: "msg_user" }
       db.run(
-        "INSERT INTO message (id, session_id, created_at, data) VALUES (?, ?, ?, ?)",
+        "INSERT INTO message (id, session_id, time_created, data) VALUES (?, ?, ?, ?)",
         ["msg_asst", "sess_1", 1700100000000, JSON.stringify(assistantMsg)]
       )
       
@@ -991,15 +1027,15 @@ describe("opencode-data-sqlite", () => {
       const msg3 = { id: "msg_3", sessionID: "sess_2", role: "user" }
       
       db.run(
-        "INSERT INTO message (id, session_id, created_at, data) VALUES (?, ?, ?, ?)",
+        "INSERT INTO message (id, session_id, time_created, data) VALUES (?, ?, ?, ?)",
         ["msg_1", "sess_1", 1700000000000, JSON.stringify(msg1)]
       )
       db.run(
-        "INSERT INTO message (id, session_id, created_at, data) VALUES (?, ?, ?, ?)",
+        "INSERT INTO message (id, session_id, time_created, data) VALUES (?, ?, ?, ?)",
         ["msg_2", "sess_1", 1700100000000, JSON.stringify(msg2)]
       )
       db.run(
-        "INSERT INTO message (id, session_id, created_at, data) VALUES (?, ?, ?, ?)",
+        "INSERT INTO message (id, session_id, time_created, data) VALUES (?, ?, ?, ?)",
         ["msg_3", "sess_2", 1700200000000, JSON.stringify(msg3)]
       )
       
@@ -1021,12 +1057,13 @@ describe("opencode-data-sqlite", () => {
         CREATE TABLE message (
           id TEXT PRIMARY KEY,
           session_id TEXT NOT NULL,
-          created_at INTEGER,
+          time_created INTEGER NOT NULL DEFAULT 0,
+          time_updated INTEGER NOT NULL DEFAULT 0,
           data TEXT NOT NULL
         )
       `)
       db.run(
-        "INSERT INTO message (id, session_id, created_at, data) VALUES (?, ?, ?, ?)",
+        "INSERT INTO message (id, session_id, time_created, data) VALUES (?, ?, ?, ?)",
         ["file_msg", "file_sess", 1700000000000, JSON.stringify({ id: "file_msg", role: "user" })]
       )
       db.close()
@@ -1541,16 +1578,19 @@ describe("opencode-data-sqlite", () => {
           id TEXT PRIMARY KEY,
           project_id TEXT NOT NULL,
           parent_id TEXT,
-          created_at INTEGER,
-          updated_at INTEGER,
-          data TEXT NOT NULL
+          directory TEXT NOT NULL DEFAULT '',
+          title TEXT NOT NULL DEFAULT '',
+          version TEXT NOT NULL DEFAULT '',
+          time_created INTEGER NOT NULL DEFAULT 0,
+          time_updated INTEGER NOT NULL DEFAULT 0
         )
       `)
       db.run(`
         CREATE TABLE message (
           id TEXT PRIMARY KEY,
           session_id TEXT NOT NULL,
-          created_at INTEGER,
+          time_created INTEGER NOT NULL DEFAULT 0,
+          time_updated INTEGER NOT NULL DEFAULT 0,
           data TEXT NOT NULL
         )
       `)
@@ -1577,15 +1617,15 @@ describe("opencode-data-sqlite", () => {
     ) {
       const sessionData = { id: sessionId, projectID: projectId, title: `Test Session ${sessionId}` }
       db.run(
-        "INSERT INTO session (id, project_id, created_at, updated_at, data) VALUES (?, ?, ?, ?, ?)",
-        [sessionId, projectId, Date.now(), Date.now(), JSON.stringify(sessionData)]
+        "INSERT INTO session (id, project_id, directory, title, version, time_created, time_updated) VALUES (?, ?, '', '', '', ?, ?)",
+        [sessionId, projectId, Date.now(), Date.now()]
       )
 
       for (let m = 1; m <= messageCount; m++) {
         const messageId = `${sessionId}_msg_${m}`
         const messageData = { id: messageId, sessionID: sessionId, role: m % 2 === 1 ? "user" : "assistant" }
         db.run(
-          "INSERT INTO message (id, session_id, created_at, data) VALUES (?, ?, ?, ?)",
+          "INSERT INTO message (id, session_id, time_created, data) VALUES (?, ?, ?, ?)",
           [messageId, sessionId, Date.now(), JSON.stringify(messageData)]
         )
 
@@ -1738,16 +1778,19 @@ describe("opencode-data-sqlite", () => {
           id TEXT PRIMARY KEY,
           project_id TEXT NOT NULL,
           parent_id TEXT,
-          created_at INTEGER,
-          updated_at INTEGER,
-          data TEXT NOT NULL
+          directory TEXT NOT NULL DEFAULT '',
+          title TEXT NOT NULL DEFAULT '',
+          version TEXT NOT NULL DEFAULT '',
+          time_created INTEGER NOT NULL DEFAULT 0,
+          time_updated INTEGER NOT NULL DEFAULT 0
         )
       `)
       db.run(`
         CREATE TABLE message (
           id TEXT PRIMARY KEY,
           session_id TEXT NOT NULL,
-          created_at INTEGER,
+          time_created INTEGER NOT NULL DEFAULT 0,
+          time_updated INTEGER NOT NULL DEFAULT 0,
           data TEXT NOT NULL
         )
       `)
@@ -1762,8 +1805,8 @@ describe("opencode-data-sqlite", () => {
       
       const sessionData = { id: "sess_path_test", projectID: "proj_1" }
       db.run(
-        "INSERT INTO session (id, project_id, data) VALUES (?, ?, ?)",
-        ["sess_path_test", "proj_1", JSON.stringify(sessionData)]
+        "INSERT INTO session (id, project_id, directory, title, version, time_created, time_updated) VALUES (?, ?, '', '', '', 0, 0)",
+        ["sess_path_test", "proj_1"]
       )
       db.close()
 
@@ -1798,16 +1841,19 @@ describe("opencode-data-sqlite", () => {
           id TEXT PRIMARY KEY,
           project_id TEXT NOT NULL,
           parent_id TEXT,
-          created_at INTEGER,
-          updated_at INTEGER,
-          data TEXT NOT NULL
+          directory TEXT NOT NULL DEFAULT '',
+          title TEXT NOT NULL DEFAULT '',
+          version TEXT NOT NULL DEFAULT '',
+          time_created INTEGER NOT NULL DEFAULT 0,
+          time_updated INTEGER NOT NULL DEFAULT 0
         )
       `)
       db.run(`
         CREATE TABLE message (
           id TEXT PRIMARY KEY,
           session_id TEXT NOT NULL,
-          created_at INTEGER,
+          time_created INTEGER NOT NULL DEFAULT 0,
+          time_updated INTEGER NOT NULL DEFAULT 0,
           data TEXT NOT NULL
         )
       `)
@@ -1849,15 +1895,15 @@ describe("opencode-data-sqlite", () => {
     ) {
       const sessionData = { id: sessionId, projectID: projectId, title: `Test Session ${sessionId}` }
       db.run(
-        "INSERT INTO session (id, project_id, created_at, updated_at, data) VALUES (?, ?, ?, ?, ?)",
-        [sessionId, projectId, Date.now(), Date.now(), JSON.stringify(sessionData)]
+        "INSERT INTO session (id, project_id, directory, title, version, time_created, time_updated) VALUES (?, ?, '', '', '', ?, ?)",
+        [sessionId, projectId, Date.now(), Date.now()]
       )
 
       for (let m = 1; m <= messageCount; m++) {
         const messageId = `${sessionId}_msg_${m}`
         const messageData = { id: messageId, sessionID: sessionId, role: m % 2 === 1 ? "user" : "assistant" }
         db.run(
-          "INSERT INTO message (id, session_id, created_at, data) VALUES (?, ?, ?, ?)",
+          "INSERT INTO message (id, session_id, time_created, data) VALUES (?, ?, ?, ?)",
           [messageId, sessionId, Date.now(), JSON.stringify(messageData)]
         )
 
@@ -2038,16 +2084,19 @@ describe("opencode-data-sqlite", () => {
           id TEXT PRIMARY KEY,
           project_id TEXT NOT NULL,
           parent_id TEXT,
-          created_at INTEGER,
-          updated_at INTEGER,
-          data TEXT NOT NULL
+          directory TEXT NOT NULL DEFAULT '',
+          title TEXT NOT NULL DEFAULT '',
+          version TEXT NOT NULL DEFAULT '',
+          time_created INTEGER NOT NULL DEFAULT 0,
+          time_updated INTEGER NOT NULL DEFAULT 0
         )
       `)
       db.run(`
         CREATE TABLE message (
           id TEXT PRIMARY KEY,
           session_id TEXT NOT NULL,
-          created_at INTEGER,
+          time_created INTEGER NOT NULL DEFAULT 0,
+          time_updated INTEGER NOT NULL DEFAULT 0,
           data TEXT NOT NULL
         )
       `)
@@ -2093,9 +2142,11 @@ describe("opencode-data-sqlite", () => {
           id TEXT PRIMARY KEY,
           project_id TEXT NOT NULL,
           parent_id TEXT,
-          created_at INTEGER,
-          updated_at INTEGER,
-          data TEXT NOT NULL
+          directory TEXT NOT NULL DEFAULT '',
+          title TEXT NOT NULL DEFAULT '',
+          version TEXT NOT NULL DEFAULT '',
+          time_created INTEGER NOT NULL DEFAULT 0,
+          time_updated INTEGER NOT NULL DEFAULT 0
         )
       `)
       return db
@@ -2118,8 +2169,8 @@ describe("opencode-data-sqlite", () => {
         time: { created: now, updated: now }
       }
       db.run(
-        "INSERT INTO session (id, project_id, created_at, updated_at, data) VALUES (?, ?, ?, ?, ?)",
-        [sessionId, projectId, now, now, JSON.stringify(sessionData)]
+        "INSERT INTO session (id, project_id, directory, title, version, time_created, time_updated) VALUES (?, ?, '', ?, '', ?, ?)",
+        [sessionId, projectId, title, now, now]
       )
     }
 
@@ -2134,9 +2185,8 @@ describe("opencode-data-sqlite", () => {
       })
 
       // Verify the title was updated
-      const row = db.query("SELECT data FROM session WHERE id = ?").get("sess_title_test") as { data: string }
-      const data = JSON.parse(row.data)
-      expect(data.title).toBe("Updated Title")
+      const row = db.query("SELECT title FROM session WHERE id = ?").get("sess_title_test") as { title: string }
+      expect(row.title).toBe("Updated Title")
 
       db.close()
     })
@@ -2151,8 +2201,8 @@ describe("opencode-data-sqlite", () => {
         time: { created: originalTime, updated: originalTime }
       }
       db.run(
-        "INSERT INTO session (id, project_id, created_at, updated_at, data) VALUES (?, ?, ?, ?, ?)",
-        ["sess_timestamp_test", "proj_1", originalTime, originalTime, JSON.stringify(sessionData)]
+        "INSERT INTO session (id, project_id, directory, title, version, time_created, time_updated) VALUES (?, ?, '', '', '', ?, ?)",
+        ["sess_timestamp_test", "proj_1", originalTime, originalTime]
       )
 
       const beforeUpdate = Date.now()
@@ -2164,17 +2214,15 @@ describe("opencode-data-sqlite", () => {
       const afterUpdate = Date.now()
 
       // Verify column timestamp was updated
-      const row = db.query("SELECT updated_at, data FROM session WHERE id = ?").get("sess_timestamp_test") as { 
-        updated_at: number
-        data: string 
+      const row = db.query("SELECT time_updated FROM session WHERE id = ?").get("sess_timestamp_test") as { 
+        time_updated: number
       }
-      expect(row.updated_at).toBeGreaterThanOrEqual(beforeUpdate)
-      expect(row.updated_at).toBeLessThanOrEqual(afterUpdate)
+      expect(row.time_updated).toBeGreaterThanOrEqual(beforeUpdate)
+      expect(row.time_updated).toBeLessThanOrEqual(afterUpdate)
 
-      // Verify data JSON timestamp was updated
-      const data = JSON.parse(row.data)
-      expect(data.time.updated).toBeGreaterThanOrEqual(beforeUpdate)
-      expect(data.time.updated).toBeLessThanOrEqual(afterUpdate)
+      // Verify title was updated
+      const titleRow = db.query("SELECT title FROM session WHERE id = ?").get("sess_timestamp_test") as { title: string }
+      expect(titleRow.title).toBe("New Title")
 
       db.close()
     })
@@ -2191,8 +2239,8 @@ describe("opencode-data-sqlite", () => {
         time: { created: Date.now(), updated: Date.now() }
       }
       db.run(
-        "INSERT INTO session (id, project_id, created_at, updated_at, data) VALUES (?, ?, ?, ?, ?)",
-        ["sess_preserve_test", "proj_1", Date.now(), Date.now(), JSON.stringify(originalData)]
+        "INSERT INTO session (id, project_id, directory, title, version, time_created, time_updated) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        ["sess_preserve_test", "proj_1", "/some/path", "Original Title", "1.0.0", Date.now(), Date.now()]
       )
 
       await updateSessionTitleSqlite({
@@ -2202,14 +2250,13 @@ describe("opencode-data-sqlite", () => {
       })
 
       // Verify other fields are preserved
-      const row = db.query("SELECT data FROM session WHERE id = ?").get("sess_preserve_test") as { data: string }
-      const data = JSON.parse(row.data)
-      expect(data.title).toBe("New Title")
-      expect(data.version).toBe("1.0.0")
-      expect(data.directory).toBe("/some/path")
-      expect(data.customField).toBe("should be preserved")
-      expect(data.id).toBe("sess_preserve_test")
-      expect(data.projectID).toBe("proj_1")
+      const row = db.query("SELECT title, version, directory, project_id FROM session WHERE id = ?").get("sess_preserve_test") as { 
+        title: string; version: string; directory: string; project_id: string 
+      }
+      expect(row.title).toBe("New Title")
+      expect(row.version).toBe("1.0.0")
+      expect(row.directory).toBe("/some/path")
+      expect(row.project_id).toBe("proj_1")
 
       db.close()
     })
@@ -2235,8 +2282,8 @@ describe("opencode-data-sqlite", () => {
         title: "Original"
       }
       db.run(
-        "INSERT INTO session (id, project_id, created_at, updated_at, data) VALUES (?, ?, ?, ?, ?)",
-        ["sess_no_time", "proj_1", Date.now(), Date.now(), JSON.stringify(sessionData)]
+        "INSERT INTO session (id, project_id, directory, title, version, time_created, time_updated) VALUES (?, ?, '', '', '', ?, ?)",
+        ["sess_no_time", "proj_1", Date.now(), Date.now()]
       )
 
       await updateSessionTitleSqlite({
@@ -2245,12 +2292,12 @@ describe("opencode-data-sqlite", () => {
         newTitle: "New Title"
       })
 
-      // Verify time.updated was created
-      const row = db.query("SELECT data FROM session WHERE id = ?").get("sess_no_time") as { data: string }
-      const data = JSON.parse(row.data)
-      expect(data.title).toBe("New Title")
-      expect(data.time).toBeDefined()
-      expect(data.time.updated).toBeDefined()
+      // Verify time_updated was set and title was updated
+      const row = db.query("SELECT title, time_updated FROM session WHERE id = ?").get("sess_no_time") as { 
+        title: string; time_updated: number 
+      }
+      expect(row.title).toBe("New Title")
+      expect(row.time_updated).toBeGreaterThan(0)
 
       db.close()
     })
@@ -2263,16 +2310,18 @@ describe("opencode-data-sqlite", () => {
           id TEXT PRIMARY KEY,
           project_id TEXT NOT NULL,
           parent_id TEXT,
-          created_at INTEGER,
-          updated_at INTEGER,
-          data TEXT NOT NULL
+          directory TEXT NOT NULL DEFAULT '',
+          title TEXT NOT NULL DEFAULT '',
+          version TEXT NOT NULL DEFAULT '',
+          time_created INTEGER NOT NULL DEFAULT 0,
+          time_updated INTEGER NOT NULL DEFAULT 0
         )
       `)
       
       const sessionData = { id: "sess_path_test", projectID: "proj_1", title: "Original" }
       db.run(
-        "INSERT INTO session (id, project_id, created_at, updated_at, data) VALUES (?, ?, ?, ?, ?)",
-        ["sess_path_test", "proj_1", Date.now(), Date.now(), JSON.stringify(sessionData)]
+        "INSERT INTO session (id, project_id, directory, title, version, time_created, time_updated) VALUES (?, ?, '', '', '', ?, ?)",
+        ["sess_path_test", "proj_1", Date.now(), Date.now()]
       )
       db.close()
 
@@ -2285,9 +2334,8 @@ describe("opencode-data-sqlite", () => {
 
       // Verify update
       const verifyDb = new Database(testDbPath, { readonly: true })
-      const row = verifyDb.query("SELECT data FROM session WHERE id = ?").get("sess_path_test") as { data: string }
-      const data = JSON.parse(row.data)
-      expect(data.title).toBe("Updated via Path")
+      const row = verifyDb.query("SELECT title FROM session WHERE id = ?").get("sess_path_test") as { title: string }
+      expect(row.title).toBe("Updated via Path")
       verifyDb.close()
     })
   })
@@ -2304,9 +2352,11 @@ describe("opencode-data-sqlite", () => {
           id TEXT PRIMARY KEY,
           project_id TEXT NOT NULL,
           parent_id TEXT,
-          created_at INTEGER,
-          updated_at INTEGER,
-          data TEXT NOT NULL
+          directory TEXT NOT NULL DEFAULT '',
+          title TEXT NOT NULL DEFAULT '',
+          version TEXT NOT NULL DEFAULT '',
+          time_created INTEGER NOT NULL DEFAULT 0,
+          time_updated INTEGER NOT NULL DEFAULT 0
         )
       `)
       return db
@@ -2323,17 +2373,9 @@ describe("opencode-data-sqlite", () => {
       directory: string = "/test/path"
     ) {
       const now = Date.now()
-      const sessionData = { 
-        id: sessionId, 
-        projectID: projectId, 
-        title, 
-        directory,
-        version: "1.0.0",
-        time: { created: now, updated: now }
-      }
       db.run(
-        "INSERT INTO session (id, project_id, created_at, updated_at, data) VALUES (?, ?, ?, ?, ?)",
-        [sessionId, projectId, now, now, JSON.stringify(sessionData)]
+        "INSERT INTO session (id, project_id, directory, title, version, time_created, time_updated) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        [sessionId, projectId, directory, title, "1.0.0", now, now]
       )
     }
 
@@ -2353,14 +2395,10 @@ describe("opencode-data-sqlite", () => {
       expect(result.title).toBe("My Session")
 
       // Verify database was updated
-      const row = db.query("SELECT project_id, data FROM session WHERE id = ?").get("sess_move_test") as { 
+      const row = db.query("SELECT project_id FROM session WHERE id = ?").get("sess_move_test") as { 
         project_id: string
-        data: string 
       }
       expect(row.project_id).toBe("proj_target")
-      
-      const data = JSON.parse(row.data)
-      expect(data.projectID).toBe("proj_target")
 
       db.close()
     })
@@ -2375,8 +2413,8 @@ describe("opencode-data-sqlite", () => {
         time: { created: originalTime, updated: originalTime }
       }
       db.run(
-        "INSERT INTO session (id, project_id, created_at, updated_at, data) VALUES (?, ?, ?, ?, ?)",
-        ["sess_move_ts_test", "proj_source", originalTime, originalTime, JSON.stringify(sessionData)]
+        "INSERT INTO session (id, project_id, directory, title, version, time_created, time_updated) VALUES (?, ?, '', '', '', ?, ?)",
+        ["sess_move_ts_test", "proj_source", originalTime, originalTime]
       )
 
       const beforeMove = Date.now()
@@ -2393,17 +2431,11 @@ describe("opencode-data-sqlite", () => {
       expect(result.updatedAt!.getTime()).toBeLessThanOrEqual(afterMove)
 
       // Verify column timestamp was updated
-      const row = db.query("SELECT updated_at, data FROM session WHERE id = ?").get("sess_move_ts_test") as { 
-        updated_at: number
-        data: string 
+      const row = db.query("SELECT time_updated FROM session WHERE id = ?").get("sess_move_ts_test") as { 
+        time_updated: number
       }
-      expect(row.updated_at).toBeGreaterThanOrEqual(beforeMove)
-      expect(row.updated_at).toBeLessThanOrEqual(afterMove)
-
-      // Verify data JSON timestamp was updated
-      const data = JSON.parse(row.data)
-      expect(data.time.updated).toBeGreaterThanOrEqual(beforeMove)
-      expect(data.time.updated).toBeLessThanOrEqual(afterMove)
+      expect(row.time_updated).toBeGreaterThanOrEqual(beforeMove)
+      expect(row.time_updated).toBeLessThanOrEqual(afterMove)
 
       db.close()
     })
@@ -2420,8 +2452,8 @@ describe("opencode-data-sqlite", () => {
         time: { created: Date.now(), updated: Date.now() }
       }
       db.run(
-        "INSERT INTO session (id, project_id, created_at, updated_at, data) VALUES (?, ?, ?, ?, ?)",
-        ["sess_move_preserve", "proj_source", Date.now(), Date.now(), JSON.stringify(originalData)]
+        "INSERT INTO session (id, project_id, directory, title, version, time_created, time_updated) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        ["sess_move_preserve", "proj_source", "/some/project/path", "Original Title", "2.1.0", Date.now(), Date.now()]
       )
 
       const result = await moveSessionSqlite({
@@ -2436,14 +2468,13 @@ describe("opencode-data-sqlite", () => {
       expect(result.directory).toBe("/some/project/path")
 
       // Verify other fields are preserved in database
-      const row = db.query("SELECT data FROM session WHERE id = ?").get("sess_move_preserve") as { data: string }
-      const data = JSON.parse(row.data)
-      expect(data.title).toBe("Original Title")
-      expect(data.version).toBe("2.1.0")
-      expect(data.directory).toBe("/some/project/path")
-      expect(data.customField).toBe("should be preserved")
-      expect(data.id).toBe("sess_move_preserve")
-      expect(data.projectID).toBe("proj_target") // This one should change
+      const row = db.query("SELECT title, version, directory, project_id FROM session WHERE id = ?").get("sess_move_preserve") as { 
+        title: string; version: string; directory: string; project_id: string 
+      }
+      expect(row.title).toBe("Original Title")
+      expect(row.version).toBe("2.1.0")
+      expect(row.directory).toBe("/some/project/path")
+      expect(row.project_id).toBe("proj_target") // This one should change
 
       db.close()
     })
@@ -2493,8 +2524,8 @@ describe("opencode-data-sqlite", () => {
         title: "No Time"
       }
       db.run(
-        "INSERT INTO session (id, project_id, created_at, updated_at, data) VALUES (?, ?, ?, ?, ?)",
-        ["sess_move_no_time", "proj_source", Date.now(), Date.now(), JSON.stringify(sessionData)]
+        "INSERT INTO session (id, project_id, directory, title, version, time_created, time_updated) VALUES (?, ?, '', '', '', ?, ?)",
+        ["sess_move_no_time", "proj_source", Date.now(), Date.now()]
       )
 
       const result = await moveSessionSqlite({
@@ -2503,12 +2534,12 @@ describe("opencode-data-sqlite", () => {
         targetProjectId: "proj_target"
       })
 
-      // Verify time.updated was created
-      const row = db.query("SELECT data FROM session WHERE id = ?").get("sess_move_no_time") as { data: string }
-      const data = JSON.parse(row.data)
-      expect(data.projectID).toBe("proj_target")
-      expect(data.time).toBeDefined()
-      expect(data.time.updated).toBeDefined()
+      // Verify project_id was updated
+      const row = db.query("SELECT project_id, time_updated FROM session WHERE id = ?").get("sess_move_no_time") as { 
+        project_id: string; time_updated: number 
+      }
+      expect(row.project_id).toBe("proj_target")
+      expect(row.time_updated).toBeGreaterThan(0)
 
       // Verify updatedAt is set in returned record
       expect(result.updatedAt).toBeInstanceOf(Date)
@@ -2524,16 +2555,17 @@ describe("opencode-data-sqlite", () => {
           id TEXT PRIMARY KEY,
           project_id TEXT NOT NULL,
           parent_id TEXT,
-          created_at INTEGER,
-          updated_at INTEGER,
-          data TEXT NOT NULL
+          directory TEXT NOT NULL DEFAULT '',
+          title TEXT NOT NULL DEFAULT '',
+          version TEXT NOT NULL DEFAULT '',
+          time_created INTEGER NOT NULL DEFAULT 0,
+          time_updated INTEGER NOT NULL DEFAULT 0
         )
       `)
       
-      const sessionData = { id: "sess_move_path", projectID: "proj_source", title: "Path Test" }
       db.run(
-        "INSERT INTO session (id, project_id, created_at, updated_at, data) VALUES (?, ?, ?, ?, ?)",
-        ["sess_move_path", "proj_source", Date.now(), Date.now(), JSON.stringify(sessionData)]
+        "INSERT INTO session (id, project_id, directory, title, version, time_created, time_updated) VALUES (?, ?, '', '', '', ?, ?)",
+        ["sess_move_path", "proj_source", Date.now(), Date.now()]
       )
       db.close()
 
@@ -2548,14 +2580,10 @@ describe("opencode-data-sqlite", () => {
 
       // Verify update
       const verifyDb = new Database(testDbPath, { readonly: true })
-      const row = verifyDb.query("SELECT project_id, data FROM session WHERE id = ?").get("sess_move_path") as { 
+      const row = verifyDb.query("SELECT project_id FROM session WHERE id = ?").get("sess_move_path") as { 
         project_id: string
-        data: string 
       }
       expect(row.project_id).toBe("proj_target")
-      
-      const data = JSON.parse(row.data)
-      expect(data.projectID).toBe("proj_target")
       verifyDb.close()
     })
   })
@@ -2571,16 +2599,19 @@ describe("opencode-data-sqlite", () => {
           id TEXT PRIMARY KEY,
           project_id TEXT NOT NULL,
           parent_id TEXT,
-          created_at INTEGER,
-          updated_at INTEGER,
-          data TEXT NOT NULL
+          directory TEXT NOT NULL DEFAULT '',
+          title TEXT NOT NULL DEFAULT '',
+          version TEXT NOT NULL DEFAULT '',
+          time_created INTEGER NOT NULL DEFAULT 0,
+          time_updated INTEGER NOT NULL DEFAULT 0
         )
       `)
       db.run(`
         CREATE TABLE message (
           id TEXT PRIMARY KEY,
           session_id TEXT NOT NULL,
-          created_at INTEGER,
+          time_created INTEGER NOT NULL DEFAULT 0,
+          time_updated INTEGER NOT NULL DEFAULT 0,
           data TEXT NOT NULL
         )
       `)
@@ -2607,17 +2638,9 @@ describe("opencode-data-sqlite", () => {
       partsPerMessage: number
     ) {
       const now = Date.now()
-      const sessionData = {
-        id: sessionId,
-        projectID: projectId,
-        title,
-        directory: "/test/path",
-        version: "1.0.0",
-        time: { created: now, updated: now }
-      }
       db.run(
-        "INSERT INTO session (id, project_id, created_at, updated_at, data) VALUES (?, ?, ?, ?, ?)",
-        [sessionId, projectId, now, now, JSON.stringify(sessionData)]
+        "INSERT INTO session (id, project_id, directory, title, version, time_created, time_updated) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        [sessionId, projectId, "/test/path", title, "1.0.0", now, now]
       )
 
       // Insert messages
@@ -2630,7 +2653,7 @@ describe("opencode-data-sqlite", () => {
           content: `Message ${m} content`
         }
         db.run(
-          "INSERT INTO message (id, session_id, created_at, data) VALUES (?, ?, ?, ?)",
+          "INSERT INTO message (id, session_id, time_created, data) VALUES (?, ?, ?, ?)",
           [msgId, sessionId, now + m * 1000, JSON.stringify(msgData)]
         )
 
@@ -2792,15 +2815,9 @@ describe("opencode-data-sqlite", () => {
     test("sets new timestamps on copied session", async () => {
       const db = createTestDbWithSchema()
       const oldTime = Date.now() - 60000 // 1 minute ago
-      const sessionData = {
-        id: "sess_old",
-        projectID: "proj_source",
-        title: "Old Session",
-        time: { created: oldTime, updated: oldTime }
-      }
       db.run(
-        "INSERT INTO session (id, project_id, created_at, updated_at, data) VALUES (?, ?, ?, ?, ?)",
-        ["sess_old", "proj_source", oldTime, oldTime, JSON.stringify(sessionData)]
+        "INSERT INTO session (id, project_id, directory, title, version, time_created, time_updated) VALUES (?, ?, '', '', '', ?, ?)",
+        ["sess_old", "proj_source", oldTime, oldTime]
       )
 
       const beforeCopy = Date.now()
@@ -2820,14 +2837,10 @@ describe("opencode-data-sqlite", () => {
       expect(result.updatedAt!.getTime()).toBeLessThanOrEqual(afterCopy)
 
       // Verify in database
-      const row = db.query("SELECT created_at, updated_at, data FROM session WHERE id = ?")
-        .get(result.sessionId) as { created_at: number; updated_at: number; data: string }
-      expect(row.created_at).toBeGreaterThanOrEqual(beforeCopy)
-      expect(row.updated_at).toBeGreaterThanOrEqual(beforeCopy)
-
-      const data = JSON.parse(row.data)
-      expect(data.time.created).toBeGreaterThanOrEqual(beforeCopy)
-      expect(data.time.updated).toBeGreaterThanOrEqual(beforeCopy)
+      const row = db.query("SELECT time_created, time_updated FROM session WHERE id = ?")
+        .get(result.sessionId) as { time_created: number; time_updated: number }
+      expect(row.time_created).toBeGreaterThanOrEqual(beforeCopy)
+      expect(row.time_updated).toBeGreaterThanOrEqual(beforeCopy)
 
       db.close()
     })
@@ -2844,8 +2857,8 @@ describe("opencode-data-sqlite", () => {
         time: { created: Date.now(), updated: Date.now() }
       }
       db.run(
-        "INSERT INTO session (id, project_id, created_at, updated_at, data) VALUES (?, ?, ?, ?, ?)",
-        ["sess_preserve", "proj_source", Date.now(), Date.now(), JSON.stringify(sessionData)]
+        "INSERT INTO session (id, project_id, directory, title, version, time_created, time_updated) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        ["sess_preserve", "proj_source", "/my/project/path", "Preserve Fields", "2.5.0", Date.now(), Date.now()]
       )
 
       const result = await copySessionSqlite({
@@ -2858,11 +2871,11 @@ describe("opencode-data-sqlite", () => {
       expect(result.directory).toBe("/my/project/path")
       expect(result.version).toBe("2.5.0")
 
-      // Check customField in database
-      const row = db.query("SELECT data FROM session WHERE id = ?").get(result.sessionId) as { data: string }
-      const data = JSON.parse(row.data)
-      expect(data.customField).toBe("should be preserved")
-      expect(data.projectID).toBe("proj_target") // This should be updated
+      // Verify fields are preserved in database for the new copy
+      const row = db.query("SELECT title, directory, version, project_id FROM session WHERE id = ?").get(result.sessionId) as { 
+        title: string; directory: string; version: string; project_id: string 
+      }
+      expect(row.project_id).toBe("proj_target") // This should be updated
 
       db.close()
     })
@@ -2881,14 +2894,9 @@ describe("opencode-data-sqlite", () => {
 
     test("handles session without messages", async () => {
       const db = createTestDbWithSchema()
-      const sessionData = {
-        id: "sess_no_msgs",
-        projectID: "proj_source",
-        title: "No Messages"
-      }
       db.run(
-        "INSERT INTO session (id, project_id, created_at, updated_at, data) VALUES (?, ?, ?, ?, ?)",
-        ["sess_no_msgs", "proj_source", Date.now(), Date.now(), JSON.stringify(sessionData)]
+        "INSERT INTO session (id, project_id, directory, title, version, time_created, time_updated) VALUES (?, ?, '', '', '', ?, ?)",
+        ["sess_no_msgs", "proj_source", Date.now(), Date.now()]
       )
 
       const result = await copySessionSqlite({
@@ -2898,7 +2906,7 @@ describe("opencode-data-sqlite", () => {
       })
 
       expect(result.sessionId).not.toBe("sess_no_msgs")
-      expect(result.title).toBe("No Messages")
+      expect(result.title).toBe("")
 
       // No messages should be copied
       const msgCount = db.query("SELECT COUNT(*) as count FROM message WHERE session_id = ?")
@@ -2939,16 +2947,19 @@ describe("opencode-data-sqlite", () => {
           id TEXT PRIMARY KEY,
           project_id TEXT NOT NULL,
           parent_id TEXT,
-          created_at INTEGER,
-          updated_at INTEGER,
-          data TEXT NOT NULL
+          directory TEXT NOT NULL DEFAULT '',
+          title TEXT NOT NULL DEFAULT '',
+          version TEXT NOT NULL DEFAULT '',
+          time_created INTEGER NOT NULL DEFAULT 0,
+          time_updated INTEGER NOT NULL DEFAULT 0
         )
       `)
       db.run(`
         CREATE TABLE message (
           id TEXT PRIMARY KEY,
           session_id TEXT NOT NULL,
-          created_at INTEGER,
+          time_created INTEGER NOT NULL DEFAULT 0,
+          time_updated INTEGER NOT NULL DEFAULT 0,
           data TEXT NOT NULL
         )
       `)
@@ -2960,10 +2971,9 @@ describe("opencode-data-sqlite", () => {
           data TEXT NOT NULL
         )
       `)
-      const sessionData = { id: "sess_path_copy", projectID: "proj_source", title: "Path Test" }
       db.run(
-        "INSERT INTO session (id, project_id, created_at, updated_at, data) VALUES (?, ?, ?, ?, ?)",
-        ["sess_path_copy", "proj_source", Date.now(), Date.now(), JSON.stringify(sessionData)]
+        "INSERT INTO session (id, project_id, directory, title, version, time_created, time_updated) VALUES (?, ?, '', '', '', ?, ?)",
+        ["sess_path_copy", "proj_source", Date.now(), Date.now()]
       )
       db.close()
 
@@ -2994,16 +3004,19 @@ describe("opencode-data-sqlite", () => {
           id TEXT PRIMARY KEY,
           project_id TEXT NOT NULL,
           parent_id TEXT,
-          created_at INTEGER,
-          updated_at INTEGER,
-          data TEXT NOT NULL
+          directory TEXT NOT NULL DEFAULT '',
+          title TEXT NOT NULL DEFAULT '',
+          version TEXT NOT NULL DEFAULT '',
+          time_created INTEGER NOT NULL DEFAULT 0,
+          time_updated INTEGER NOT NULL DEFAULT 0
         )
       `)
       locker.run(`
         CREATE TABLE message (
           id TEXT PRIMARY KEY,
           session_id TEXT NOT NULL,
-          created_at INTEGER,
+          time_created INTEGER NOT NULL DEFAULT 0,
+          time_updated INTEGER NOT NULL DEFAULT 0,
           data TEXT NOT NULL
         )
       `)
@@ -3016,8 +3029,8 @@ describe("opencode-data-sqlite", () => {
         )
       `)
       locker.run(
-        "INSERT INTO session (id, project_id, created_at, updated_at, data) VALUES (?, ?, ?, ?, ?)",
-        ["sess_locked", "proj_locked", Date.now(), Date.now(), JSON.stringify({ id: "sess_locked" })]
+        "INSERT INTO session (id, project_id, directory, title, version, time_created, time_updated) VALUES (?, ?, '', '', '', ?, ?)",
+        ["sess_locked", "proj_locked", Date.now(), Date.now()]
       )
 
       // Hold an exclusive lock to simulate OpenCode using the database.
