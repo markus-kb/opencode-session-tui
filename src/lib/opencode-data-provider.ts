@@ -21,6 +21,7 @@
  * ```
  */
 import { resolve } from "node:path"
+import { existsSync } from "node:fs"
 import type {
   ProjectRecord,
   SessionRecord,
@@ -72,11 +73,12 @@ import {
 export type StorageBackend = "jsonl" | "sqlite"
 
 /**
- * Options for creating a data provider.
+ * Options for the provider factory.
  */
 export interface DataProviderOptions {
   /**
-   * Storage backend to use. Defaults to "jsonl".
+   * Storage backend to use.
+   * When omitted, auto-detects: SQLite if opencode.db exists, else JSONL.
    */
   backend?: StorageBackend
 
@@ -630,7 +632,13 @@ async function computeAggregateSqlite(
  * ```
  */
 export function createProvider(options: DataProviderOptions = {}): DataProvider {
-  const backend = options.backend ?? "jsonl"
+  // Auto-detect backend: prefer SQLite when opencode.db exists, fall back to JSONL.
+  // Explicit 'backend' option overrides auto-detection.
+  let backend = options.backend
+  if (!backend) {
+    const dbPath = options.dbPath ?? DEFAULT_SQLITE_PATH
+    backend = existsSync(dbPath) ? "sqlite" : "jsonl"
+  }
 
   // Validate backend value
   if (backend !== "jsonl" && backend !== "sqlite") {
@@ -669,6 +677,7 @@ export function createProviderFromGlobalOptions(globalOptions: {
   sqliteStrict?: boolean
   forceWrite?: boolean
 }): DataProvider {
+  // Explicit --sqlite flag or --db-path forces SQLite.
   if (globalOptions.experimentalSqlite || globalOptions.dbPath) {
     return createProvider({
       backend: "sqlite",
@@ -678,8 +687,18 @@ export function createProviderFromGlobalOptions(globalOptions: {
     })
   }
 
+  // Explicit --root forces JSONL (legacy mode).
+  // Explicit experimentalSqlite: false also forces JSONL (user has opted out).
+  if (globalOptions.root || globalOptions.experimentalSqlite === false) {
+    return createProvider({
+      backend: "jsonl",
+      root: globalOptions.root,
+    })
+  }
+
+  // Auto-detect: SQLite when opencode.db exists, else JSONL.
   return createProvider({
-    backend: "jsonl",
-    root: globalOptions.root,
+    sqliteStrict: globalOptions.sqliteStrict,
+    forceWrite: globalOptions.forceWrite,
   })
 }
