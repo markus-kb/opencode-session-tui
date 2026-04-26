@@ -31,7 +31,20 @@ export type AggregateTokenSummary = {
 // Chat History Types
 // ========================
 
-export type PartType = "text" | "subtask" | "tool" | "unknown"
+export type PartType =
+  | "text"
+  | "reasoning"
+  | "subtask"
+  | "tool"
+  | "step-start"
+  | "step-finish"
+  | "snapshot"
+  | "patch"
+  | "agent"
+  | "retry"
+  | "compaction"
+  | "file"
+  | "unknown"
 
 export interface ChatPart {
   partId: string
@@ -974,8 +987,17 @@ export async function loadMessageParts(
       const typeRaw = typeof raw.type === "string" ? raw.type : "unknown"
       const type: PartType =
         typeRaw === "text" ? "text" :
+        typeRaw === "reasoning" ? "reasoning" :
         typeRaw === "subtask" ? "subtask" :
         typeRaw === "tool" ? "tool" :
+        typeRaw === "step-start" ? "step-start" :
+        typeRaw === "step-finish" ? "step-finish" :
+        typeRaw === "snapshot" ? "snapshot" :
+        typeRaw === "patch" ? "patch" :
+        typeRaw === "agent" ? "agent" :
+        typeRaw === "retry" ? "retry" :
+        typeRaw === "compaction" ? "compaction" :
+        typeRaw === "file" ? "file" :
         "unknown"
 
       const extracted = extractPartContent(raw)
