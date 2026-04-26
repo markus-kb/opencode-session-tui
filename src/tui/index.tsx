@@ -1,7 +1,7 @@
 /**
  * TUI entrypoint module.
  *
- * Exports `launchTUI(args)` for starting the OpenCode Metadata TUI.
+ * Exports `launchTUI(args)` for starting the fork's OpenCode Metadata TUI.
  * This module serves as the public interface for launching the TUI,
  * allowing both direct execution and programmatic invocation from CLI.
  *

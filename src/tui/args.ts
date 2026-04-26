@@ -22,7 +22,7 @@ export interface TUIOptions {
  * Print TUI usage/help text to console.
  */
 export function printUsage(): void {
-  console.log(`OpenCode Metadata TUI
+  console.log(`OpenCode Metadata TUI (fork)
 Usage: bun run tui [-- --root /path/to/storage] [-- --experimental-sqlite] [-- --db /path/to/opencode.db]
 
 Storage options:
@@ -118,7 +118,7 @@ export function parseArgs(argv: string[] = process.argv.slice(2)): TUIOptions {
       process.exit(0)
     }
     if (token === "--version" || token === "-V") {
-      console.log("0.4.5")
+      console.log("0.4.6")
       process.exit(0)
     }
   }

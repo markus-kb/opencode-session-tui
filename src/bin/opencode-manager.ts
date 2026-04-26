@@ -23,12 +23,15 @@ const CLI_SUBCOMMANDS = new Set([
 const TUI_SUBCOMMANDS = new Set(["tui"])
 
 // Version from package.json
-const VERSION = "0.4.5"
+const VERSION = "0.4.6"
 
 function printHelp(): void {
-  console.log(`opencode-manager v${VERSION}
+  console.log(`opencode-manager v${VERSION} (fork)
 
 Inspect and manage OpenCode metadata stores via TUI or CLI.
+
+Forked from shuv1337/oc-manager and maintained here for the current
+OpenCode SQLite schema plus Windows compatibility.
 
 USAGE:
   opencode-manager [command] [options]

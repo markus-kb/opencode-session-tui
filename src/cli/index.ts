@@ -89,12 +89,12 @@ function createProgram(): Command {
 
   program
     .name("opencode-manager")
-    .description("CLI for managing OpenCode metadata stores")
-    .version("0.4.5")
+    .description("Fork of OpenCode Metadata Manager for managing OpenCode metadata stores")
+    .version("0.4.6")
     // Global options
     .option(
       "-r, --root <path>",
-      "Root path to OpenCode metadata store",
+      "Root path to OpenCode metadata store for this fork",
       DEFAULT_OPTIONS.root
     )
     .option(

@@ -1169,7 +1169,7 @@ const ConfirmBar = ({ state, busy }: { state: ConfirmState; busy: boolean }) => 
 const HelpScreen = ({ onDismiss }: { onDismiss: () => void }) => {
   return (
     <box style={{ flexDirection: "column", flexGrow: 1, padding: 2, border: true }}>
-      <text fg={PALETTE.primary}>OpenCode Metadata Manager — Help</text>
+      <text fg={PALETTE.primary}>OpenCode Metadata Manager (fork) — Help</text>
       <text fg={PALETTE.muted}>Quick reference for keys and actions</text>
       <Columns>
         <box style={{ flexDirection: "column", flexGrow: 1 }}>
@@ -2029,7 +2029,7 @@ export const App = ({
     <box style={{ flexDirection: "column", padding: 1, flexGrow: 1 }}>
       <box flexDirection="column" marginBottom={1}>
         <box style={{ flexDirection: "row", gap: 2 }}>
-          <text fg="#a5b4fc">OpenCode Metadata Manager</text>
+          <text fg="#a5b4fc">OpenCode Metadata Manager (fork)</text>
           <text fg={PALETTE.muted}>|</text>
           <text fg={PALETTE.accent}>Global Tokens: </text>
           {globalTokens?.total.kind === 'known' ? (
