@@ -4,6 +4,28 @@
 
 Terminal UI for inspecting, filtering, and pruning OpenCode metadata stored on disk. The app is written in TypeScript, runs on Bun, and renders with [`@opentui/react`](https://github.com/sst/opentui).
 
+## Install
+
+Install this fork globally from the git repository to get the `opencode-manager` command on your PATH:
+
+```bash
+bun add -g git+https://github.com/markus-kb/oc-manager-fork.git
+```
+
+Then run it from any directory:
+
+```bash
+opencode-manager --help
+opencode-manager --root ~/.local/share/opencode
+```
+
+If you only want to try it locally from the source checkout, use `bunx` or `bun run` instead of a global install:
+
+```bash
+bunx opencode-manager --help
+bun run src/bin/opencode-manager.ts --help
+```
+
 ## What this fork changes
 
 OpenCode migrated its storage layer from JSONL flat-files to a SQLite database (Drizzle ORM schema) in early 2025. The upstream repo predates that migration. This fork updates the SQLite backend to read the current schema and makes SQLite the default when `opencode.db` is detected:
