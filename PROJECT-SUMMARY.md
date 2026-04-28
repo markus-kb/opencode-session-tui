@@ -36,10 +36,12 @@ The codebase follows a dual-mode architecture with shared libraries:
 ### TUI Module (`src/tui/`)
 - `app.tsx` — Main TUI app with Projects, Sessions, Chat panels
 - `index.tsx` — Exports `launchTUI(options)`, `bootstrap(args)`
-- `args.ts` — TUI-specific arg parsing (`--root`, `--help`)
+- `args.ts` — TUI-specific arg parsing (`--root`, `--db`, `--experimental-sqlite`, `--help`)
 
 ### Shared Libraries (`src/lib/`)
-- `opencode-data.ts` — Data layer: load/save metadata, compute tokens, filtering, formatting
+- `opencode-data.ts` — Legacy JSON data layer: load/save metadata, compute tokens, filtering, formatting
+- `opencode-data-sqlite.ts` — Current OpenCode SQLite reader/writer for the Drizzle schema
+- `opencode-data-provider.ts` — Provider abstraction for JSONL, SQLite, and hybrid mode
 - `search.ts` — Fuzzy search via fast-fuzzy (sessions) and tokenized search (projects)
 - `clipboard.ts` — Cross-platform clipboard (`pbcopy`/`xclip`)
 
@@ -50,8 +52,11 @@ The codebase follows a dual-mode architecture with shared libraries:
 Metadata Layout & Helpers
 -------------------------
 - Storage root: `DEFAULT_ROOT` is `~/.local/share/opencode`; CLI `--root` values are resolved via `path.resolve` so relative paths and `~` are accepted.
+- Current OpenCode storage: `opencode.db` is read through the SQLite provider. Sessions come from the `session` table; messages and parts are loaded lazily from `message` and `part` only when chat, token, or search features need them.
+- Hybrid storage: when both `opencode.db` and legacy `storage/session` are present, the default provider merges both session models. Duplicate session IDs prefer SQLite.
 - Projects: metadata files live under `storage/project` and `storage/sessions`. `loadProjectRecords` walks both buckets, parses timestamps, expands `~`-style worktree paths, and determines `state` by stat-ing the directory so missing projects are surfaced inline.
 - Sessions: JSON files live under `storage/session/<projectId>/`. Records capture `title`, `version`, and both `createdAt`/`updatedAt` stamps; the loader can filter by `projectId` (used by the Sessions tab) and sorts primarily by the active timestamp (updated when available, else created).
+- Session listing is metadata-only. It must not parse large message/part JSON or `session_diff` payloads during startup or list refresh.
 - Formatting/utilities: `formatDisplayPath` shortens paths back to `~`, `formatDate` handles null-safe rendering, and `describeProject`/`describeSession` feed human-readable previews to confirm dialogs.
 - Destructive actions: `deleteProjectMetadata`/`deleteSessionMetadata` accept optional `dryRun` flags, record successes/failures per file, and `ensureDirectory` is available for future write paths.
 
@@ -81,6 +86,7 @@ Key Features
 - Help screen
   - Two-column, color-coded quick reference with “key chips”.
   - Clear grouping by Global, Projects, Sessions, Tips.
+  - Initial help screen defers session/token loading so startup remains interactive on Windows even with large OpenCode histories.
 - Status & confirmation bars
   - Status bar tint reflects `info` vs `error` states so reload/deletion feedback is obvious.
   - Confirmation bar shows up to five pending records (project/session descriptors) and states “Y/Enter confirm, N/Esc cancel” while disabling panel shortcuts until resolved.
@@ -103,6 +109,8 @@ Work Completed
 - Added session rename feature (Shift+R): inline text input with validation, updates JSON file, refreshes list.
 - Added session move feature (M): select target project, relocate session JSON, update projectID field.
 - Added session copy feature (P): select target project, create new session with generated ID, preserve original.
+- Deferred global token and chat-search session loading until after the initial help screen is dismissed.
+- Added hybrid session loading so current SQLite sessions display alongside legacy JSON sessions.
 
 ### CLI Implementation (Phase 1-4)
 - Created Commander-based CLI with global options and subcommand routing.
@@ -144,6 +152,13 @@ How To Run
 - `--quiet` — Suppress non-essential output
 - `--clipboard` — Copy output to clipboard
 - `--backup-dir <path>` — Backup before deletion
+- `--experimental-sqlite` — Force SQLite-only mode
+- `--db <path>` — Use a specific SQLite database path
+
+### Storage Behavior
+- Default provider auto-detection uses hybrid mode when both `opencode.db` and legacy JSON sessions exist.
+- Hybrid mode loads SQLite and JSON session metadata in parallel, deduplicates by `sessionId`, prefers SQLite on conflicts, and sorts once after merge.
+- Expensive chat content is lazy: session lists never scan `message`, `part`, or `session_diff` content.
 
 ### Exit Codes
 - 0: Success
@@ -183,6 +198,7 @@ Outstanding Recommendations (Not Yet Implemented)
   - Provide a monochrome theme option for minimal terminals.
 - Performance
   - Debounce UI reactions to large search queries; short-circuit expensive filters when query is empty.
+  - Consider SQLite full-text search for chat content if large histories make cross-session search slow.
 - Testing
   - Add integration tests for CLI commands with real fixture data.
   - Add basic snapshot/E2E tests for TUI rendering (if headless renderer available for @opentui).

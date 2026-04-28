@@ -17,6 +17,7 @@ import type {
   ChatMessage, 
   ChatRole,
   TokenBreakdown,
+  TokenSummary,
   ChatPart,
   PartType,
   DeleteResult,
@@ -891,6 +892,8 @@ interface MessageRow {
  * Assistant messages have tokens; User messages have agent + model.
  */
 interface MessageData {
+  id?: string
+  sessionID?: string
   role?: string
   time?: {
     created?: number
@@ -1129,6 +1132,9 @@ interface PartRow {
  * The discriminant is `type`.
  */
 interface PartData {
+  id?: string
+  sessionID?: string
+  messageID?: string
   type?: string
   // text / reasoning parts
   text?: unknown

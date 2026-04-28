@@ -29,6 +29,7 @@ Storage options:
   --root <path>             Root path to JSONL storage (default: ~/.local/share/opencode)
   --experimental-sqlite     Use SQLite backend instead of JSONL files
   --db <path>               Path to SQLite database (implies --experimental-sqlite)
+  Default                   Hybrid mode when both SQLite and legacy JSON sessions exist
   --sqlite-strict           Fail on SQLite warnings or malformed data
   --force-write             Wait for SQLite write locks before failing
 
@@ -83,7 +84,7 @@ Chat viewer (when open):
  */
 export function parseArgs(argv: string[] = process.argv.slice(2)): TUIOptions {
   let root = DEFAULT_ROOT
-  let backend: StorageBackend = "jsonl"
+  let backend: StorageBackend = "hybrid"
   let dbPath: string | undefined
   let sqliteStrict = false
   let forceWrite = false

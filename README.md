@@ -28,14 +28,23 @@ bun run src/bin/opencode-manager.ts --help
 
 ## What this fork changes
 
-OpenCode migrated its storage layer from JSONL flat-files to a SQLite database (Drizzle ORM schema) in early 2025. The upstream repo predates that migration. This fork updates the SQLite backend to read the current schema and makes SQLite the default when `opencode.db` is detected:
+OpenCode migrated its storage layer from JSONL flat-files to a SQLite database (Drizzle ORM schema) in early 2025. The upstream repo predates that migration. This fork updates the SQLite backend to read the current schema and uses hybrid mode by default when both `opencode.db` and legacy JSON sessions are present:
 
 - **Schema alignment** — `SessionRow`, `MessageRow`, `PartRow` interfaces updated to match the real Drizzle columns (`time_created`/`time_updated`; session has no JSON `data` blob; message/part carry a `data` JSON blob).
-- **Auto-detect backend** — `createProvider()` now picks SQLite automatically when `opencode.db` exists in the store root; JSONL remains the fallback for older installations. `--experimental-sqlite` is no longer required for normal use.
+- **Hybrid auto-detect** — `createProvider()` now reads both current SQLite sessions and legacy JSON sessions when both stores exist. SQLite-only and JSONL-only stores still work. `--experimental-sqlite` remains available to force SQLite-only mode.
+- **Startup performance** — TUI startup no longer scans sessions while the initial help screen is open. Session lists are metadata-only: they read session rows/files but do not parse messages, parts, or large diff payloads until chat, token, or search features need them.
 - **Write operations** — `updateSessionTitle`, `moveSession`, `copySession` rewritten for the column-based schema; `copySession` correctly rewrites `sessionID`/`messageID`/`id` fields inside copied message and part JSON blobs.
 - **All 13 part types** — `PartType` union expanded to cover `reasoning`, `step-start`, `step-finish`, `snapshot`, `patch`, `agent`, `retry`, `compaction`, `file` in addition to the original `text`, `subtask`, `tool`.
 - **Windows compatibility** — `closeIfOwned()` runs `PRAGMA wal_checkpoint(TRUNCATE)` before closing to release WAL handles; test `afterEach` hooks use a retry loop for `EBUSY`/`EPERM`; `chmod`-dependent CLI tests are skipped on Windows; path assertions normalised for cross-platform separators.
 - **`expandUserPath` fix** — Unix absolute paths stored in the database (e.g. `/tmp/foo`) are no longer mangled to Windows paths when the tool runs on Windows.
+
+## Storage modes
+
+- **Hybrid (default TUI/auto mode)** — merges `~/.local/share/opencode/opencode.db` sessions with legacy `storage/session/<projectId>/*.json` sessions. Duplicate session IDs prefer SQLite because that is the current OpenCode source of truth.
+- **SQLite-only** — pass `--experimental-sqlite` or `--db <path>` when you only want the current OpenCode database.
+- **JSONL-only** — pass `--root <path>` through CLI commands that explicitly use the legacy backend, or use a store without `opencode.db`.
+
+The session list is intentionally lightweight in all modes. Message JSON, part JSON, and large patch/diff payloads are loaded lazily for chat viewing, token summaries, and chat search.
 
 ## Installation
 ```bash

@@ -25,10 +25,10 @@ export { parseArgs, printUsage, type TUIOptions }
  */
 export async function launchTUI(options?: Partial<TUIOptions>): Promise<void> {
   const root = options?.root ?? DEFAULT_ROOT
-  const backend = options?.backend ?? (options?.dbPath ? "sqlite" : "jsonl")
+  const backend = options?.backend ?? (options?.dbPath ? "sqlite" : "hybrid")
   const sqliteStrict = options?.sqliteStrict ?? false
   const forceWrite = options?.forceWrite ?? false
-  const dbPath = backend === "sqlite" ? (options?.dbPath ?? DEFAULT_SQLITE_PATH) : undefined
+  const dbPath = backend === "sqlite" || backend === "hybrid" ? (options?.dbPath ?? DEFAULT_SQLITE_PATH) : undefined
 
   const renderer = await createCliRenderer()
   createRoot(renderer).render(

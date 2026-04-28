@@ -1618,8 +1618,17 @@ export const App = ({
     })
   }, [backend, root, resolvedDbPath, sqliteStrict, forceWrite, notify, setSqliteWarning])
 
+  useEffect(() => {
+    return () => {
+      provider.dispose?.()
+    }
+  }, [provider])
+
   // Load global tokens
   useEffect(() => {
+    if (showHelp) {
+      return
+    }
     let cancelled = false
     provider.loadSessionRecords().then((sessions) => {
       if (cancelled) return
@@ -1630,10 +1639,13 @@ export const App = ({
       }
     })
     return () => { cancelled = true }
-  }, [provider, tokenRefreshKey])
+  }, [provider, tokenRefreshKey, showHelp])
 
   // Load all sessions for chat search
   useEffect(() => {
+    if (showHelp) {
+      return
+    }
     let cancelled = false
     provider.loadSessionRecords().then((sessions) => {
       if (!cancelled) {
@@ -1641,7 +1653,7 @@ export const App = ({
       }
     })
     return () => { cancelled = true }
-  }, [provider, tokenRefreshKey])
+  }, [provider, tokenRefreshKey, showHelp])
 
   const requestConfirm = useCallback((state: ConfirmState) => {
     setConfirmState(state)
@@ -2045,12 +2057,12 @@ export const App = ({
         </box>
         <box style={{ flexDirection: "row", gap: 1 }}>
           <text fg={PALETTE.accent}>Storage:</text>
-          <text fg={backend === "sqlite" ? PALETTE.info : PALETTE.muted}>
-            {backend === "sqlite" ? "SQLite" : "JSONL"}
+          <text fg={backend === "sqlite" || backend === "hybrid" ? PALETTE.info : PALETTE.muted}>
+            {backend === "hybrid" ? "Hybrid" : backend === "sqlite" ? "SQLite" : "JSONL"}
           </text>
           <text fg={PALETTE.muted}>|</text>
           <text>
-            {backend === "sqlite"
+            {backend === "sqlite" || backend === "hybrid"
               ? `DB: ${formatDisplayPath(resolvedDbPath ?? "(default)")}`
               : `Root: ${formatDisplayPath(root)}`}
           </text>
@@ -2059,7 +2071,7 @@ export const App = ({
           Tabs: [1] Projects [2] Sessions | Active: {activeTab} | Global: Tab switch, / search, X clear, R reload, Q quit, ? help
         </text>
         {sessionFilter ? <text fg="#a3e635">Session filter: {sessionFilter}</text> : null}
-        {backend === "sqlite" && sqliteWarning ? (
+        {(backend === "sqlite" || backend === "hybrid") && sqliteWarning ? (
           <text fg={PALETTE.danger}>SQLite warning: {sqliteWarning}</text>
         ) : null}
       </box>

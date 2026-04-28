@@ -20,7 +20,7 @@
  * const sessions = await provider.loadSessionRecords({ projectId: 'abc123' })
  * ```
  */
-import { resolve } from "node:path"
+import { join, resolve } from "node:path"
 import { existsSync } from "node:fs"
 import { Database } from "bun:sqlite"
 import type {
@@ -73,7 +73,7 @@ import {
 /**
  * Storage backend type.
  */
-export type StorageBackend = "jsonl" | "sqlite"
+export type StorageBackend = "jsonl" | "sqlite" | "hybrid"
 
 /**
  * Options for the provider factory.
@@ -517,6 +517,243 @@ function createSqliteProvider(
   }
 }
 
+function isSqliteRecord(record: { filePath: string }): boolean {
+  return record.filePath.startsWith("sqlite:")
+}
+
+function reindex<T extends { index: number }>(records: T[]): T[] {
+  return records.map((record, idx) => ({ ...record, index: idx + 1 }))
+}
+
+function compareSessions(a: SessionRecord, b: SessionRecord): number {
+  const aTime = (a.updatedAt ?? a.createdAt)?.getTime() ?? 0
+  const bTime = (b.updatedAt ?? b.createdAt)?.getTime() ?? 0
+  if (bTime !== aTime) return bTime - aTime
+  return a.sessionId.localeCompare(b.sessionId)
+}
+
+function compareProjects(a: ProjectRecord, b: ProjectRecord): number {
+  const aTime = a.createdAt?.getTime() ?? 0
+  const bTime = b.createdAt?.getTime() ?? 0
+  if (bTime !== aTime) return bTime - aTime
+  return a.projectId.localeCompare(b.projectId)
+}
+
+/**
+ * Create a hybrid provider that reads current SQLite sessions alongside the
+ * legacy JSON session tree. Listing stays metadata-only; expensive message and
+ * part reads are routed lazily based on each record's source.
+ */
+function createHybridProvider(
+  root: string,
+  dbPath: string,
+  options?: { strict?: boolean; forceWrite?: boolean; onWarning?: (warning: string) => void }
+): DataProvider {
+  const jsonProvider = createJsonlProvider(root)
+  const sqliteProvider = createSqliteProvider(dbPath, options)
+  let allSessionsPromise: Promise<SessionRecord[]> | null = null
+  let allProjectsPromise: Promise<ProjectRecord[]> | null = null
+
+  async function loadAllSessions(): Promise<SessionRecord[]> {
+    if (!allSessionsPromise) {
+      allSessionsPromise = Promise.all([
+        jsonProvider.loadSessionRecords(),
+        sqliteProvider.loadSessionRecords(),
+      ]).then(([jsonSessions, sqliteSessions]) => {
+        const byId = new Map<string, SessionRecord>()
+        for (const session of jsonSessions) {
+          byId.set(session.sessionId, session)
+        }
+        for (const session of sqliteSessions) {
+          byId.set(session.sessionId, session)
+        }
+        return reindex(Array.from(byId.values()).sort(compareSessions))
+      })
+    }
+    return allSessionsPromise
+  }
+
+  async function loadAllProjects(): Promise<ProjectRecord[]> {
+    if (!allProjectsPromise) {
+      allProjectsPromise = Promise.all([
+        jsonProvider.loadProjectRecords(),
+        sqliteProvider.loadProjectRecords(),
+      ]).then(([jsonProjects, sqliteProjects]) => {
+        const byId = new Map<string, ProjectRecord>()
+        for (const project of jsonProjects) {
+          byId.set(project.projectId, project)
+        }
+        for (const project of sqliteProjects) {
+          byId.set(project.projectId, project)
+        }
+        return reindex(Array.from(byId.values()).sort(compareProjects))
+      })
+    }
+    return allProjectsPromise
+  }
+
+  function clearCaches(): void {
+    allSessionsPromise = null
+    allProjectsPromise = null
+  }
+
+  function sourceProvider(record: { filePath: string }): DataProvider {
+    return isSqliteRecord(record) ? sqliteProvider : jsonProvider
+  }
+
+  return {
+    backend: "hybrid",
+
+    dispose() {
+      jsonProvider.dispose?.()
+      sqliteProvider.dispose?.()
+    },
+
+    async loadProjectRecords() {
+      return loadAllProjects()
+    },
+
+    async loadSessionRecords(options?: SessionLoadOptions) {
+      const sessions = await loadAllSessions()
+      if (!options?.projectId) {
+        return sessions
+      }
+      return reindex(sessions.filter((session) => session.projectId === options.projectId))
+    },
+
+    async loadSessionChatIndex(sessionId: string) {
+      const sessions = await loadAllSessions()
+      const session = sessions.find((item) => item.sessionId === sessionId)
+      return session ? sourceProvider(session).loadSessionChatIndex(sessionId) : []
+    },
+
+    async loadMessageParts(messageId: string) {
+      const sqliteParts = await sqliteProvider.loadMessageParts(messageId)
+      if (sqliteParts.length > 0) {
+        return sqliteParts
+      }
+      return jsonProvider.loadMessageParts(messageId)
+    },
+
+    async hydrateChatMessageParts(message: ChatMessage) {
+      const sessions = await loadAllSessions()
+      const session = sessions.find((item) => item.sessionId === message.sessionId)
+      return session ? sourceProvider(session).hydrateChatMessageParts(message) : jsonProvider.hydrateChatMessageParts(message)
+    },
+
+    async deleteProjectMetadata(records: ProjectRecord[], options?: DeleteOptions) {
+      const sqliteRecords = records.filter(isSqliteRecord)
+      const jsonRecords = records.filter((record) => !isSqliteRecord(record))
+      const [jsonResult, sqliteResult] = await Promise.all([
+        jsonRecords.length ? jsonProvider.deleteProjectMetadata(jsonRecords, options) : Promise.resolve({ removed: [], failed: [] }),
+        sqliteRecords.length ? sqliteProvider.deleteProjectMetadata(sqliteRecords, options) : Promise.resolve({ removed: [], failed: [] }),
+      ])
+      clearCaches()
+      return { removed: [...jsonResult.removed, ...sqliteResult.removed], failed: [...jsonResult.failed, ...sqliteResult.failed] }
+    },
+
+    async deleteSessionMetadata(records: SessionRecord[], options?: DeleteOptions) {
+      const sqliteRecords = records.filter(isSqliteRecord)
+      const jsonRecords = records.filter((record) => !isSqliteRecord(record))
+      const [jsonResult, sqliteResult] = await Promise.all([
+        jsonRecords.length ? jsonProvider.deleteSessionMetadata(jsonRecords, options) : Promise.resolve({ removed: [], failed: [] }),
+        sqliteRecords.length ? sqliteProvider.deleteSessionMetadata(sqliteRecords, options) : Promise.resolve({ removed: [], failed: [] }),
+      ])
+      clearCaches()
+      return { removed: [...jsonResult.removed, ...sqliteResult.removed], failed: [...jsonResult.failed, ...sqliteResult.failed] }
+    },
+
+    async updateSessionTitle(session: SessionRecord, newTitle: string) {
+      await sourceProvider(session).updateSessionTitle(session, newTitle)
+      clearCaches()
+    },
+
+    async moveSession(session: SessionRecord, targetProjectId: string) {
+      const moved = await sourceProvider(session).moveSession(session, targetProjectId)
+      clearCaches()
+      return moved
+    },
+
+    async copySession(session: SessionRecord, targetProjectId: string) {
+      const copied = await sourceProvider(session).copySession(session, targetProjectId)
+      clearCaches()
+      return copied
+    },
+
+    async computeSessionTokenSummary(session: SessionRecord) {
+      return sourceProvider(session).computeSessionTokenSummary(session)
+    },
+
+    async computeProjectTokenSummary(projectId: string, sessions: SessionRecord[]) {
+      return aggregateMixedTokenSummaries(sessions.filter((session) => session.projectId === projectId), sourceProvider)
+    },
+
+    async computeGlobalTokenSummary(sessions: SessionRecord[]) {
+      return aggregateMixedTokenSummaries(sessions, sourceProvider)
+    },
+
+    async searchSessionsChat(sessions: SessionRecord[], query: string, options?: { maxResults?: number }) {
+      const maxResults = options?.maxResults ?? 100
+      const sqliteSessions = sessions.filter(isSqliteRecord)
+      const jsonSessions = sessions.filter((session) => !isSqliteRecord(session))
+      const sqliteResults = sqliteSessions.length
+        ? await sqliteProvider.searchSessionsChat(sqliteSessions, query, { maxResults })
+        : []
+      if (sqliteResults.length >= maxResults) {
+        return sqliteResults.slice(0, maxResults)
+      }
+      const jsonResults = jsonSessions.length
+        ? await jsonProvider.searchSessionsChat(jsonSessions, query, { maxResults: maxResults - sqliteResults.length })
+        : []
+      return [...sqliteResults, ...jsonResults]
+    },
+  }
+}
+
+async function aggregateMixedTokenSummaries(
+  sessions: SessionRecord[],
+  sourceProvider: (record: SessionRecord) => DataProvider
+): Promise<AggregateTokenSummary> {
+  if (sessions.length === 0) {
+    return {
+      total: { kind: "unknown", reason: "no_messages" },
+      knownOnly: { input: 0, output: 0, reasoning: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
+      unknownSessions: 0,
+    }
+  }
+
+  const knownOnly = { input: 0, output: 0, reasoning: 0, cacheRead: 0, cacheWrite: 0, total: 0 }
+  let unknownSessions = 0
+
+  for (const session of sessions) {
+    const summary = await sourceProvider(session).computeSessionTokenSummary(session)
+    if (summary.kind === "known") {
+      knownOnly.input += summary.tokens.input
+      knownOnly.output += summary.tokens.output
+      knownOnly.reasoning += summary.tokens.reasoning
+      knownOnly.cacheRead += summary.tokens.cacheRead
+      knownOnly.cacheWrite += summary.tokens.cacheWrite
+      knownOnly.total += summary.tokens.total
+    } else {
+      unknownSessions += 1
+    }
+  }
+
+  if (unknownSessions === sessions.length) {
+    return {
+      total: { kind: "unknown", reason: "missing" },
+      knownOnly: { input: 0, output: 0, reasoning: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
+      unknownSessions,
+    }
+  }
+
+  return {
+    total: { kind: "known", tokens: { ...knownOnly } },
+    knownOnly,
+    unknownSessions,
+  }
+}
+
 /**
  * Helper to aggregate token summaries from a batch-computed Map.
  *
@@ -602,7 +839,7 @@ function aggregateFromSummaries(
  *
  * @example
  * ```ts
- * // JSONL backend (default)
+ * // JSONL backend
  * const jsonlProvider = createProvider({ root: '~/.local/share/opencode' })
  *
  * // SQLite backend
@@ -613,24 +850,35 @@ function aggregateFromSummaries(
  * ```
  */
 export function createProvider(options: DataProviderOptions = {}): DataProvider {
-  // Auto-detect backend: prefer SQLite when opencode.db exists, fall back to JSONL.
+  // Auto-detect backend: prefer hybrid when both stores exist, then SQLite, then JSONL.
   // Explicit 'backend' option overrides auto-detection.
   let backend = options.backend
   if (!backend) {
     const dbPath = options.dbPath ?? DEFAULT_SQLITE_PATH
-    backend = existsSync(dbPath) ? "sqlite" : "jsonl"
+    const root = options.root ?? DEFAULT_ROOT
+    const hasSqlite = existsSync(dbPath)
+    const hasLegacySessions = existsSync(join(root, "storage", "session"))
+    backend = hasSqlite && hasLegacySessions ? "hybrid" : hasSqlite ? "sqlite" : "jsonl"
   }
 
   // Validate backend value
-  if (backend !== "jsonl" && backend !== "sqlite") {
+  if (backend !== "jsonl" && backend !== "sqlite" && backend !== "hybrid") {
     throw new Error(
-      `Invalid storage backend: "${backend}". Must be "jsonl" or "sqlite".`
+      `Invalid storage backend: "${backend}". Must be "jsonl", "sqlite", or "hybrid".`
     )
   }
 
   if (backend === "sqlite") {
     const dbPath = options.dbPath ?? DEFAULT_SQLITE_PATH
     return createSqliteProvider(dbPath, {
+      strict: options.sqliteStrict,
+      forceWrite: options.forceWrite,
+      onWarning: options.onWarning,
+    })
+  }
+
+  if (backend === "hybrid") {
+    return createHybridProvider(options.root ?? DEFAULT_ROOT, options.dbPath ?? DEFAULT_SQLITE_PATH, {
       strict: options.sqliteStrict,
       forceWrite: options.forceWrite,
       onWarning: options.onWarning,
@@ -668,17 +916,18 @@ export function createProviderFromGlobalOptions(globalOptions: {
     })
   }
 
-  // Explicit --root forces JSONL (legacy mode).
-  // Explicit experimentalSqlite: false also forces JSONL (user has opted out).
-  if (globalOptions.root || globalOptions.experimentalSqlite === false) {
+  // A non-default --root points at a specific legacy store, so keep CLI commands
+  // JSONL-only unless the user also opts into SQLite with --db/--experimental-sqlite.
+  if (globalOptions.root && resolve(globalOptions.root) !== resolve(DEFAULT_ROOT)) {
     return createProvider({
       backend: "jsonl",
       root: globalOptions.root,
     })
   }
 
-  // Auto-detect: SQLite when opencode.db exists, else JSONL.
+  // Auto-detect: hybrid when both stores exist, SQLite when only opencode.db exists, else JSONL.
   return createProvider({
+    root: globalOptions.root,
     sqliteStrict: globalOptions.sqliteStrict,
     forceWrite: globalOptions.forceWrite,
   })

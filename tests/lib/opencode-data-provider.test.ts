@@ -1,6 +1,7 @@
 import { describe, test, expect, beforeEach, afterEach } from "bun:test"
 import { Database } from "bun:sqlite"
-import { existsSync, unlinkSync, mkdirSync } from "node:fs"
+import { existsSync, unlinkSync, mkdirSync, mkdtempSync, writeFileSync, rmSync } from "node:fs"
+import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { FIXTURE_STORE_ROOT, FIXTURE_SQLITE_PATH } from "../helpers"
 import {
@@ -99,7 +100,7 @@ describe("opencode-data-provider", () => {
       const provider = createProvider()
 
       expect(provider).toBeDefined()
-      expect(provider.backend === "jsonl" || provider.backend === "sqlite").toBe(true)
+      expect(["jsonl", "sqlite", "hybrid"]).toContain(provider.backend)
 
       // Verify it has all expected methods
       expect(typeof provider.loadProjectRecords).toBe("function")
@@ -143,6 +144,82 @@ describe("opencode-data-provider", () => {
       expect(typeof provider.loadSessionRecords).toBe("function")
       expect(typeof provider.loadSessionChatIndex).toBe("function")
       expect(typeof provider.loadMessageParts).toBe("function")
+    })
+
+    test("hybrid provider merges SQLite and JSONL sessions metadata", async () => {
+      createTestDatabase(testDbPath)
+      const db = new Database(testDbPath)
+      db.run(
+        "INSERT INTO session (id, project_id, directory, title, version, time_created, time_updated) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        ["sqlite_session", "sqlite_project", "C:/sqlite", "SQLite Session", "1.0", 2000, 4000]
+      )
+      db.close()
+
+      const root = mkdtempSync(join(tmpdir(), "oc-manager-hybrid-"))
+      try {
+        const sessionDir = join(root, "storage", "session", "json_project")
+        mkdirSync(sessionDir, { recursive: true })
+        writeFileSync(
+          join(sessionDir, "json_session.json"),
+          JSON.stringify({
+            id: "json_session",
+            projectID: "json_project",
+            directory: "C:/json",
+            title: "JSON Session",
+            version: "1.0",
+            time: { created: 1000, updated: 3000 },
+          }),
+          "utf8"
+        )
+
+        const provider = createProvider({ backend: "hybrid", root, dbPath: testDbPath })
+        const sessions = await provider.loadSessionRecords()
+
+        expect(provider.backend).toBe("hybrid")
+        expect(sessions.map((session) => session.sessionId)).toEqual(["sqlite_session", "json_session"])
+        expect(sessions[0].filePath).toBe("sqlite:session:sqlite_session")
+        provider.dispose?.()
+      } finally {
+        rmSync(root, { recursive: true, force: true })
+      }
+    })
+
+    test("hybrid provider deduplicates sessions by preferring SQLite", async () => {
+      createTestDatabase(testDbPath)
+      const db = new Database(testDbPath)
+      db.run(
+        "INSERT INTO session (id, project_id, directory, title, version, time_created, time_updated) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        ["duplicate_session", "sqlite_project", "C:/sqlite", "SQLite Wins", "1.0", 2000, 4000]
+      )
+      db.close()
+
+      const root = mkdtempSync(join(tmpdir(), "oc-manager-hybrid-"))
+      try {
+        const sessionDir = join(root, "storage", "session", "json_project")
+        mkdirSync(sessionDir, { recursive: true })
+        writeFileSync(
+          join(sessionDir, "duplicate_session.json"),
+          JSON.stringify({
+            id: "duplicate_session",
+            projectID: "json_project",
+            directory: "C:/json",
+            title: "JSON Loses",
+            version: "1.0",
+            time: { created: 1000, updated: 9000 },
+          }),
+          "utf8"
+        )
+
+        const provider = createProvider({ backend: "hybrid", root, dbPath: testDbPath })
+        const sessions = await provider.loadSessionRecords()
+
+        expect(sessions).toHaveLength(1)
+        expect(sessions[0].title).toBe("SQLite Wins")
+        expect(sessions[0].filePath).toBe("sqlite:session:duplicate_session")
+        provider.dispose?.()
+      } finally {
+        rmSync(root, { recursive: true, force: true })
+      }
     })
 
     test("SQLite provider exposes dispose() to close persistent connection", () => {
@@ -196,17 +273,17 @@ describe("opencode-data-provider", () => {
     test("throws on invalid backend value", () => {
       expect(() => {
         createProvider({ backend: "invalid" as StorageBackend })
-      }).toThrow('Invalid storage backend: "invalid". Must be "jsonl" or "sqlite".')
+      }).toThrow('Invalid storage backend: "invalid". Must be "jsonl", "sqlite", or "hybrid".')
     })
   })
 
   describe("createProviderFromGlobalOptions", () => {
-    test("returns JSONL provider when experimentalSqlite is false", () => {
+    test("auto-detects a valid provider when experimentalSqlite is false", () => {
       const provider = createProviderFromGlobalOptions({
         experimentalSqlite: false,
       })
 
-      expect(provider.backend).toBe("jsonl")
+      expect(["jsonl", "sqlite", "hybrid"]).toContain(provider.backend)
     })
 
     test("returns JSONL provider when no SQLite options provided and no opencode.db", () => {
@@ -249,7 +326,7 @@ describe("opencode-data-provider", () => {
       expect(provider.backend).toBe("sqlite")
     })
 
-    test("uses custom root for JSONL provider", () => {
+    test("uses JSONL provider for custom root without SQLite options", () => {
       const customRoot = "/tmp/custom-root"
       const provider = createProviderFromGlobalOptions({
         root: customRoot,
