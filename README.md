@@ -57,6 +57,8 @@ The current TUI still renders through `src/tui/app.tsx`, but the rewrite prepara
 
 The target architecture keeps OpenTUI, but moves from a monolithic root component toward explicit screens, first-class overlays, shared data resources, scoped input handling, and a fast home dashboard that does not trigger expensive metadata scans.
 
+Regression coverage includes pure TUI state/resource-policy tests and process-level e2e checks for `opencode-manager --help` and `opencode-manager tui --help` so users can discover TUI storage modes without launching the interactive renderer.
+
 ## Installation
 ```bash
 # Clone the repo and install deps

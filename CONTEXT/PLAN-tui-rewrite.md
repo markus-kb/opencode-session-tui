@@ -9,6 +9,7 @@ Freeze the current TUI behavior with regression tests before major refactoring.
 - [ ] Capture startup behavior, including the initial home/help screen.
 - [x] Test that the initial home screen does not load sessions or compute tokens.
 - [x] Test home dismissal via Enter and Esc.
+- [x] Add process-level e2e coverage for binary TUI help paths.
 - [ ] Test help toggle behavior from the workspace.
 - [ ] Test keyboard precedence for search, confirmations, chat viewer, chat search, and panels.
 - [ ] Test project-to-session navigation.

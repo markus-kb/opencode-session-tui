@@ -62,8 +62,17 @@ OPTIONS:
   --help, -h                Show this help
   --version, -v             Show version
 
+TUI STORAGE OPTIONS:
+  opencode-manager tui --root <path>             Use a specific legacy JSONL storage root
+  opencode-manager tui --experimental-sqlite     Force SQLite-only mode
+  opencode-manager tui --db <path>               Use a specific SQLite database path
+
+STORAGE DEFAULT:
+  Hybrid mode is used by default when both opencode.db and legacy JSON sessions exist.
+
 EXAMPLES:
   opencode-manager tui                          # Launch TUI
+  opencode-manager tui --db ~/.local/share/opencode/opencode.db
   opencode-manager projects list --format json  # List projects as JSON
   opencode-manager sessions list --project X    # List sessions for project
   opencode-manager chat search --query "error"  # Search chat content

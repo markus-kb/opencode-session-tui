@@ -54,4 +54,15 @@ describe("TUI resource policy", () => {
     expect(getResourcePolicy(state).chat).toBe("search")
     expect(getResourcePolicy(closeOverlay(state)).chat).toBe("deferred")
   })
+
+  test("keeps home cheap even if overlay state is present", () => {
+    const state = openChatSearchOverlay(createInitialTuiState())
+
+    expect(getResourcePolicy(state)).toEqual({
+      projects: "deferred",
+      sessions: "deferred",
+      tokens: "deferred",
+      chat: "deferred",
+    })
+  })
 })

@@ -123,6 +123,7 @@ Work Completed
 - Added pure TUI state tests for home startup, screen transitions, and chat overlay transitions.
 - Extracted token formatting helpers into `src/tui/format.ts` with focused regression tests.
 - Added `src/tui/resource-policy.ts` to make data-loading decisions explicit before provider reads are moved into resource hooks.
+- Added process-level TUI entrypoint e2e tests for root help and `tui --help` so storage/default-mode help stays visible without launching the interactive renderer.
 
 ### CLI Implementation (Phase 1-4)
 - Created Commander-based CLI with global options and subcommand routing.
