@@ -41,6 +41,7 @@ import { getFailedHydrationMessage, hydrateChatSessionMessage, loadChatSessionMe
 import { getChatSearchSessions, searchChatSessions } from "./chat-search-resource"
 import { buildTuiCommands, type TuiCommandSet } from "./command-definitions"
 import { toCommandKey, toCommandScope, resolveCommand, type KeyRouteContext } from "./key-router"
+import { getInputLayer } from "./input-precedence"
 import { getHomeDashboardModel } from "./home-dashboard"
 import { detectStorageSources } from "./backend-resolver"
 import { PALETTE, SearchBar } from "./components"
@@ -396,8 +397,9 @@ export const App = ({
 
   const handleGlobalKey = useCallback(
     (key: KeyEvent) => {
-      // Search input mode takes precedence
-      if (searchActive) {
+      const inputLayer = getInputLayer({ screen: isHome ? "home" : activeTab, overlay: tuiState.overlay, searchActive, confirmActive: Boolean(confirmState) })
+
+      if (inputLayer === "searchInput") {
         if (key.name === "escape") {
           setSearchActive(false)
           setSearchQuery("")
@@ -418,7 +420,7 @@ export const App = ({
         }
         return
       }
-      if (confirmState) {
+      if (inputLayer === "confirm") {
         const cmdKey = toCommandKey(key)
         const cmdId = resolveCommand(cmdSet.registry, cmdKey, { screen: activeTab, overlay: null, searchActive, confirmActive: true })
         if (cmdId === "confirm:cancel") {
@@ -432,7 +434,7 @@ export const App = ({
         return
       }
 
-      if (chatViewerOpen) {
+      if (inputLayer === "chatViewer") {
         const cmdKey = toCommandKey(key)
         const cmdId = resolveCommand(cmdSet.registry, cmdKey, { screen: activeTab, overlay: tuiState.overlay, searchActive: false, confirmActive: false })
         if (cmdId === "chat:close") {
@@ -473,7 +475,7 @@ export const App = ({
         return
       }
 
-      if (chatSearchOpen) {
+      if (inputLayer === "chatSearch") {
         const cmdKey = toCommandKey(key)
         const cmdId = resolveCommand(cmdSet.registry, cmdKey, { screen: activeTab, overlay: tuiState.overlay, searchActive: false, confirmActive: false })
         if (cmdId === "search:close") {
@@ -511,7 +513,7 @@ export const App = ({
         return
       }
 
-      if (isHome) {
+      if (inputLayer === "home") {
         const cmdKey = toCommandKey(key)
         const cmdId = resolveCommand(cmdSet.registry, cmdKey, { screen: "home", overlay: null, searchActive: false, confirmActive: false })
         if (cmdId === "quit") {

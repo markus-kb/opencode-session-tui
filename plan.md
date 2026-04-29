@@ -19,6 +19,7 @@ Current progress:
 - [x] Phase 3 overlay frame extraction: `OverlayFrame` added to `src/tui/components.tsx` and used by chat overlays.
 - [x] Phase 4 screen state: home/workspace modeled through typed `TuiState.screen`.
 - [x] Phase 4 overlay state: chat viewer/search modeled through typed `TuiState.overlay`.
+- [x] Phase 4 input precedence seam: `src/tui/input-precedence.ts` makes search/confirm/overlay/home/workspace priority explicit.
 - [x] Phase 5 starter policy: screen/overlay-aware resource-loading policy added in `src/tui/resource-policy.ts`.
 - [x] E2E hardening: binary TUI help paths covered by process-level tests.
 - [x] Phase 5 session resource seam: root session metadata load shared by global tokens and chat search.
