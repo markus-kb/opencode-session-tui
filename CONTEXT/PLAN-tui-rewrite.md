@@ -180,7 +180,7 @@ Move overlays into dedicated components with scoped state and input.
 
 - [x] Extract help overlay.
 - [ ] Extract confirmation overlay.
-- [ ] Extract chat viewer overlay.
+- [x] Extract chat viewer overlay.
 - [ ] Extract chat search overlay.
 - [x] Extract project selector overlay.
 - [ ] Give each overlay a clear open/close lifecycle.
