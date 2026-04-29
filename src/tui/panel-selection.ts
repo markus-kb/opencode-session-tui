@@ -54,3 +54,14 @@ export function clampCursor(cursor: number, visibleCount: number): number {
   }
   return Math.min(cursor, visibleCount - 1)
 }
+
+export function getSelectedRecords<T extends { index: number }>(
+  records: T[],
+  selectedIndexes: Set<number>,
+  currentRecord: T | undefined,
+): T[] {
+  if (selectedIndexes.size === 0) {
+    return currentRecord ? [currentRecord] : []
+  }
+  return records.filter((record) => selectedIndexes.has(record.index))
+}

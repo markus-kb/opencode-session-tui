@@ -56,7 +56,7 @@ import { StatusBar, type NotificationLevel } from "./status-bar"
 import { HomeScreen } from "./home-screen"
 import { toProjectPanelAction } from "./project-panel-commands"
 import { toSessionPanelAction } from "./session-panel-commands"
-import { clampCursor, clearSelection, pruneSelectedIndexes, toggleAllVisibleIndexes, toggleSelectedIndex } from "./panel-selection"
+import { clampCursor, clearSelection, getSelectedRecords, pruneSelectedIndexes, toggleAllVisibleIndexes, toggleSelectedIndex } from "./panel-selection"
 
 type TabKey = TuiTab
 
@@ -267,12 +267,10 @@ const ProjectsPanel = forwardRef<PanelHandle, ProjectsPanelProps>(function Proje
     setSelectedIndexes((prev) => toggleSelectedIndex(prev, record?.index))
   }, [])
 
-  const selectedRecords = useMemo(() => {
-    if (selectedIndexes.size === 0) {
-      return currentRecord ? [currentRecord] : []
-    }
-    return records.filter((record) => selectedIndexes.has(record.index))
-  }, [records, selectedIndexes, currentRecord])
+  const selectedRecords = useMemo(
+    () => getSelectedRecords(records, selectedIndexes, currentRecord),
+    [records, selectedIndexes, currentRecord],
+  )
 
   const selectOptions: SelectOption[] = useMemo(() => {
     return visibleRecords.map((record) => {
@@ -567,12 +565,10 @@ const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(function Sessi
     setSelectedIndexes((prev) => toggleSelectedIndex(prev, session?.index))
   }, [])
 
-  const selectedSessions = useMemo(() => {
-    if (selectedIndexes.size === 0) {
-      return currentSession ? [currentSession] : []
-    }
-    return records.filter((record) => selectedIndexes.has(record.index))
-  }, [records, selectedIndexes, currentSession])
+  const selectedSessions = useMemo(
+    () => getSelectedRecords(records, selectedIndexes, currentSession),
+    [records, selectedIndexes, currentSession],
+  )
 
   const selectOptions: SelectOption[] = useMemo(() => {
     return visibleRecords.map((session, idx) => {
