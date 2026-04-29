@@ -456,23 +456,12 @@ describe("opencode-data-provider", () => {
       const row = verifyDb.query("SELECT title FROM session WHERE id = ?").get("test_update") as { title: string }
       expect(row.title).toBe("New Title")
       verifyDb.close()
+      provider.dispose()
     })
 
     test("moveSession works for SQLite backend", async () => {
-      // Create test database with the new column-based schema
+      createTestDatabase(testDbPath)
       const db = new Database(testDbPath)
-      db.run(`
-        CREATE TABLE session (
-          id TEXT PRIMARY KEY,
-          project_id TEXT NOT NULL,
-          parent_id TEXT,
-          directory TEXT NOT NULL DEFAULT '',
-          title TEXT NOT NULL DEFAULT '',
-          version TEXT NOT NULL DEFAULT '',
-          time_created INTEGER NOT NULL DEFAULT 0,
-          time_updated INTEGER NOT NULL DEFAULT 0
-        )
-      `)
       db.run(
         "INSERT INTO session (id, project_id, directory, title, version, time_created, time_updated) VALUES (?, ?, ?, ?, ?, ?, ?)",
         ["test_move", "proj_source", "/tmp", "Test", "1.0", Date.now(), Date.now()]

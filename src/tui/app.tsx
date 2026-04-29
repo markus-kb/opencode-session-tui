@@ -29,6 +29,7 @@ import {
 import { DEFAULT_SQLITE_PATH } from "../lib/opencode-data-sqlite"
 import { createProvider, type DataProvider, type StorageBackend } from "../lib/opencode-data-provider"
 import { createSearcher, type SearchCandidate } from "../lib/search"
+import { getGlobalTokenDisplayState, getHomeKeyAction, getWorkspaceDataLoadState } from "./app-state"
 
 type TabKey = "projects" | "sessions"
 
@@ -1618,6 +1619,17 @@ export const App = ({
     })
   }, [backend, root, resolvedDbPath, sqliteStrict, forceWrite, notify, setSqliteWarning])
 
+  const workspaceDataLoadState = useMemo(() => {
+    return getWorkspaceDataLoadState({
+      screen: showHelp ? { name: "home" } : { name: "workspace", activeTab },
+    })
+  }, [showHelp, activeTab])
+
+  const globalTokenDisplay = useMemo(
+    () => getGlobalTokenDisplayState(globalTokens, workspaceDataLoadState),
+    [globalTokens, workspaceDataLoadState],
+  )
+
   useEffect(() => {
     return () => {
       provider.dispose?.()
@@ -1626,7 +1638,7 @@ export const App = ({
 
   // Load global tokens
   useEffect(() => {
-    if (showHelp) {
+    if (!workspaceDataLoadState.enabled) {
       return
     }
     let cancelled = false
@@ -1639,11 +1651,11 @@ export const App = ({
       }
     })
     return () => { cancelled = true }
-  }, [provider, tokenRefreshKey, showHelp])
+  }, [provider, tokenRefreshKey, workspaceDataLoadState])
 
   // Load all sessions for chat search
   useEffect(() => {
-    if (showHelp) {
+    if (!workspaceDataLoadState.enabled) {
       return
     }
     let cancelled = false
@@ -1653,7 +1665,7 @@ export const App = ({
       }
     })
     return () => { cancelled = true }
-  }, [provider, tokenRefreshKey, showHelp])
+  }, [provider, tokenRefreshKey, workspaceDataLoadState])
 
   const requestConfirm = useCallback((state: ConfirmState) => {
     setConfirmState(state)
@@ -1952,8 +1964,12 @@ export const App = ({
       }
 
       if (showHelp) {
-        const letter = key.sequence?.toLowerCase()
-        if (key.name === "escape" || key.name === "return" || key.name === "enter" || letter === "?" || letter === "h") {
+        const action = getHomeKeyAction(key)
+        if (action === "quit") {
+          renderer.destroy()
+          return
+        }
+        if (action === "openWorkspace") {
           setShowHelp(false)
           return
         }
@@ -2044,15 +2060,15 @@ export const App = ({
           <text fg="#a5b4fc">OpenCode Metadata Manager (fork)</text>
           <text fg={PALETTE.muted}>|</text>
           <text fg={PALETTE.accent}>Global Tokens: </text>
-          {globalTokens?.total.kind === 'known' ? (
+          {globalTokenDisplay.kind === "known" ? (
             <>
-              <text fg={PALETTE.success}>{formatTokenCount(globalTokens.total.tokens.total)}</text>
-              {globalTokens.unknownSessions && globalTokens.unknownSessions > 0 ? (
-                <text fg={PALETTE.muted}> (+{globalTokens.unknownSessions} unknown)</text>
+              <text fg={PALETTE.success}>{formatTokenCount(globalTokenDisplay.summary.total.tokens.total)}</text>
+              {globalTokenDisplay.summary.unknownSessions && globalTokenDisplay.summary.unknownSessions > 0 ? (
+                <text fg={PALETTE.muted}> (+{globalTokenDisplay.summary.unknownSessions} unknown)</text>
               ) : null}
             </>
           ) : (
-            <text fg={PALETTE.muted}>{globalTokens ? '?' : 'loading...'}</text>
+            <text fg={PALETTE.muted}>{globalTokenDisplay.label}</text>
           )}
         </box>
         <box style={{ flexDirection: "row", gap: 1 }}>
