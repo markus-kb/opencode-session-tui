@@ -54,6 +54,7 @@ import { Bullet, Columns, KeyChip, OverlayFrame, PALETTE, SearchBar, Section } f
 import { ConfirmBar, type ConfirmState } from "./confirm-bar"
 import { StatusBar, type NotificationLevel } from "./status-bar"
 import { HomeScreen } from "./home-screen"
+import { toProjectPanelAction } from "./project-panel-commands"
 
 type TabKey = TuiTab
 
@@ -344,17 +345,18 @@ const ProjectsPanel = forwardRef<PanelHandle, ProjectsPanelProps>(function Proje
       }
       const cmdKey = toCommandKey(key)
       const cmdId = resolveCommand(cmdSet.registry, cmdKey, { screen: "projects", overlay: null, searchActive: false, confirmActive: false })
-      if (cmdId === "projects:toggleSelect") {
+      const action = toProjectPanelAction(cmdId)
+      if (action === "toggleSelect") {
         key.preventDefault()
         toggleSelection(currentRecord)
         return
       }
-      if (cmdId === "projects:toggleMissing") {
+      if (action === "toggleMissing") {
         setMissingOnly((prev) => !prev)
         setCursor(0)
         return
       }
-      if (cmdId === "projects:selectAll") {
+      if (action === "selectAll") {
         setSelectedIndexes((prev) => {
           if (visibleRecords.length === 0) {
             return prev
@@ -372,15 +374,15 @@ const ProjectsPanel = forwardRef<PanelHandle, ProjectsPanelProps>(function Proje
         })
         return
       }
-      if (cmdId === "projects:clearSelection") {
+      if (action === "clearSelection") {
         setSelectedIndexes(new Set())
         return
       }
-      if (cmdId === "projects:deleteSelected") {
+      if (action === "deleteSelected") {
         requestDeletion()
         return
       }
-      if (cmdId === "projects:navigateToSessions") {
+      if (action === "navigateToSessions") {
         if (currentRecord) {
           onNavigateToSessions(currentRecord.projectId)
         }

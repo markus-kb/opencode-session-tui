@@ -34,6 +34,7 @@ Current progress:
 - [x] Phase 6 complete: input precedence covered by key-router tests.
 - [x] Phase 7 home dashboard: static help screen replaced with tested storage/library/actions model and cheap source availability detection.
 - [x] Phase 7 home screen extraction: dashboard view moved to `src/tui/home-screen.tsx`.
+- [x] Phase 8 starter project panel seam: project panel command ids mapped through `src/tui/project-panel-commands.ts`.
 
 Safety rules for this workstream:
 
