@@ -37,6 +37,10 @@ export function isTokenSummaryEnabled(policy: ResourcePolicy): boolean {
   return policy.tokens === "summary"
 }
 
+export function isChatIndexEnabled(policy: ResourcePolicy): boolean {
+  return policy.chat === "index"
+}
+
 export function toWorkspaceDataLoadState(policy: ResourcePolicy): WorkspaceDataLoadState {
   if (policy.projects === "deferred" && policy.sessions === "deferred") {
     return { enabled: false, reason: "home" }

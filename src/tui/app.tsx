@@ -37,6 +37,7 @@ import { formatTokenCount } from "./format"
 import { getResourcePolicy, isProjectMetadataEnabled, isSessionMetadataEnabled, isTokenSummaryEnabled, toWorkspaceDataLoadState, type ResourcePolicy } from "./resource-policy"
 import { loadGlobalTokensFromSessionIndex, loadSessionIndex } from "./session-resource"
 import { loadProjectIndex } from "./project-resource"
+import { getFailedHydrationMessage, hydrateChatSessionMessage, loadChatSessionMessages } from "./chat-session-resource"
 import { buildTuiCommands, type TuiCommandSet } from "./command-definitions"
 import { toCommandKey, toCommandScope, resolveCommand, type KeyRouteContext } from "./key-router"
 import { getHomeDashboardModel } from "./home-dashboard"
@@ -265,9 +266,9 @@ export const App = ({
     setChatPartsCache(new Map())
 
     try {
-      const messages = await provider.loadSessionChatIndex(session.sessionId)
-      setChatMessages(messages)
-      if (messages.length > 0) {
+      const result = await loadChatSessionMessages(provider, resourcePolicy, session.sessionId)
+      setChatMessages(result.messages)
+      if (result.messages.length > 0) {
         setChatCursor(0)
       }
     } catch (err) {
@@ -276,7 +277,7 @@ export const App = ({
     } finally {
       setChatLoading(false)
     }
-  }, [provider])
+  }, [provider, resourcePolicy])
 
   const closeChatViewer = useCallback(() => {
     setTuiState((prev) => closeOverlay(prev))
@@ -299,24 +300,21 @@ export const App = ({
     }
 
     try {
-      const hydrated = await provider.hydrateChatMessageParts(message)
+      const hydrated = await hydrateChatSessionMessage(provider, resourcePolicy, message)
+      if (!hydrated) {
+        return
+      }
       setChatPartsCache(prev => new Map(prev).set(message.messageId, hydrated))
       setChatMessages(prev => prev.map(m =>
         m.messageId === message.messageId ? hydrated : m
       ))
     } catch (err) {
-      // On error, set a placeholder
-      const errorMsg: ChatMessage = {
-        ...message,
-        parts: [],
-        previewText: "[failed to load]",
-        totalChars: 0,
-      }
+      const errorMsg = getFailedHydrationMessage(message)
       setChatMessages(prev => prev.map(m =>
         m.messageId === message.messageId ? errorMsg : m
       ))
     }
-  }, [provider, chatPartsCache])
+  }, [provider, resourcePolicy, chatPartsCache])
 
   const copyChatMessage = useCallback((message: ChatMessage) => {
     if (!message.parts || message.parts.length === 0) {

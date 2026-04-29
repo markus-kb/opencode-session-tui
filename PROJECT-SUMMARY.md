@@ -40,6 +40,7 @@ The codebase follows a dual-mode architecture with shared libraries:
 - `resource-policy.ts` — Screen/overlay-aware loading policy for deferring metadata, token, and chat work
 - `session-resource.ts` — Shared root session-index loader used by global tokens and chat search
 - `project-resource.ts` — Shared root project-index loader and session-by-project filter used by session move/copy selectors
+- `chat-session-resource.ts` — Policy-gated chat viewer message-index and lazy hydration resource
 - `token-resource.ts` — Policy-gated token computation helpers used by project and session panels
 - `projects-panel.tsx` — Projects panel component fed by the root project index, with local filtering, selection, deletion, and project token display
 - `sessions-panel.tsx` — Sessions panel component with local sort/search/selection, rename, move/copy, chat entry, and token display
