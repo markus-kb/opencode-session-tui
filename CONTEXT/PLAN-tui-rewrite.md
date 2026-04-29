@@ -166,7 +166,7 @@ Exit criteria: startup feels instant and the UI clearly explains what has and ha
 Rebuild the main workspace from independent panels.
 
 - [x] Extract `ProjectsPanel` into its own module.
-- [ ] Extract `SessionsPanel` into its own module.
+- [x] Extract `SessionsPanel` into its own module.
 - [ ] Give each panel local selection, cursor, filtering, and refresh behavior.
 - [ ] Feed both panels from shared project/session resources.
 - [ ] Keep project-to-session navigation explicit through workspace actions.

@@ -1,0 +1,460 @@
+import type { KeyEvent, SelectOption } from "@opentui/core"
+import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useState } from "react"
+import { copyToClipboardSync } from "../lib/clipboard"
+import {
+  type AggregateTokenSummary,
+  type BatchOperationResult,
+  describeSession,
+  formatDate,
+  formatDisplayPath,
+  type ProjectRecord,
+  type SessionRecord,
+  type TokenSummary,
+} from "../lib/opencode-data"
+import type { DataProvider } from "../lib/opencode-data-provider"
+import { createSearcher, type SearchCandidate } from "../lib/search"
+import type { TuiCommandSet } from "./command-definitions"
+import { PALETTE } from "./components"
+import type { ConfirmState } from "./confirm-bar"
+import { formatAggregateSummaryShort, formatTokenCount } from "./format"
+import { toCommandKey, resolveCommand } from "./key-router"
+import { clampCursor, clearSelection, getSelectedRecords, pruneSelectedIndexes, toggleAllVisibleIndexes, toggleSelectedIndex } from "./panel-selection"
+import { ProjectSelector } from "./project-selector"
+import { filterSessionsByProject, reindexSessions } from "./project-resource"
+import type { ResourcePolicy } from "./resource-policy"
+import { toSessionPanelAction } from "./session-panel-commands"
+import type { NotificationLevel } from "./status-bar"
+import { computeFilteredProjectTokens, computeSessionTokens } from "./token-resource"
+import type { PanelHandle } from "./projects-panel"
+
+export type SessionsPanelProps = {
+  provider: DataProvider
+  active: boolean
+  locked: boolean
+  projectFilter: string | null
+  searchQuery: string
+  globalTokenSummary: AggregateTokenSummary | null
+  allProjects: ProjectRecord[]
+  allSessions: SessionRecord[]
+  resourcePolicy: ResourcePolicy
+  cmdSet: TuiCommandSet
+  onRefresh: () => void
+  onNotify: (message: string, level?: NotificationLevel) => void
+  requestConfirm: (state: ConfirmState) => void
+  onClearFilter: () => void
+  onOpenChatViewer: (session: SessionRecord) => void
+}
+
+const MAX_CONFIRM_PREVIEW = 5
+
+async function runBatchSessionOperation(
+  provider: DataProvider,
+  sessions: SessionRecord[],
+  targetProjectId: string,
+  mode: "move" | "copy"
+): Promise<BatchOperationResult> {
+  const succeeded: BatchOperationResult["succeeded"] = []
+  const failed: BatchOperationResult["failed"] = []
+
+  for (const session of sessions) {
+    try {
+      const newRecord =
+        mode === "move"
+          ? await provider.moveSession(session, targetProjectId)
+          : await provider.copySession(session, targetProjectId)
+      succeeded.push({ session, newRecord })
+    } catch (error) {
+      failed.push({
+        session,
+        error: error instanceof Error ? error.message : String(error),
+      })
+    }
+  }
+
+  return { succeeded, failed }
+}
+
+export const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(function SessionsPanel(
+  { provider, active, locked, projectFilter, searchQuery, globalTokenSummary, allProjects, allSessions, resourcePolicy, cmdSet, onRefresh, onNotify, requestConfirm, onClearFilter, onOpenChatViewer },
+  ref,
+) {
+  const [cursor, setCursor] = useState(0)
+  const [selectedIndexes, setSelectedIndexes] = useState<Set<number>>(new Set())
+  const [sortMode, setSortMode] = useState<"updated" | "created">("updated")
+  const [isRenaming, setIsRenaming] = useState(false)
+  const [renameValue, setRenameValue] = useState('')
+  const [isSelectingProject, setIsSelectingProject] = useState(false)
+  const [operationMode, setOperationMode] = useState<'move' | 'copy' | null>(null)
+  const [availableProjects, setAvailableProjects] = useState<ProjectRecord[]>([])
+  const [projectCursor, setProjectCursor] = useState(0)
+  const [currentTokenSummary, setCurrentTokenSummary] = useState<TokenSummary | null>(null)
+  const [filteredTokenSummary, setFilteredTokenSummary] = useState<AggregateTokenSummary | null>(null)
+
+  const records = useMemo(() => reindexSessions(filterSessionsByProject(allSessions, projectFilter || undefined)), [allSessions, projectFilter])
+
+  const searchCandidates = useMemo((): SearchCandidate<SessionRecord>[] => {
+    return records.map((session) => ({
+      item: session,
+      searchText: [session.title || "", session.sessionId, session.directory || "", session.projectId].join(" ").replace(/\s+/g, " ").trim(),
+    }))
+  }, [records])
+
+  const searcher = useMemo(() => createSearcher(searchCandidates), [searchCandidates])
+
+  const visibleRecords = useMemo(() => {
+    const sorted = [...records].sort((a, b) => {
+      const aDate = sortMode === "created" ? (a.createdAt ?? a.updatedAt) : (a.updatedAt ?? a.createdAt)
+      const bDate = sortMode === "created" ? (b.createdAt ?? b.updatedAt) : (b.updatedAt ?? b.createdAt)
+      const aTime = aDate?.getTime() ?? 0
+      const bTime = bDate?.getTime() ?? 0
+      if (bTime !== aTime) return bTime - aTime
+      return a.sessionId.localeCompare(b.sessionId)
+    })
+    const q = searchQuery.trim()
+    if (!q) return sorted
+
+    const results = searcher.search(q, { returnMatchData: true })
+    const matched = results
+      .map((match) => {
+        const session = match.item.item
+        const createdMs = session.createdAt?.getTime() ?? 0
+        const updatedMs = (session.updatedAt ?? session.createdAt)?.getTime() ?? 0
+        return { session, score: match.score, timeMs: sortMode === "created" ? createdMs : updatedMs }
+      })
+      .sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score
+        if (b.timeMs !== a.timeMs) return b.timeMs - a.timeMs
+        return a.session.sessionId.localeCompare(b.session.sessionId)
+      })
+      .map((m) => m.session)
+
+    const MAX_RESULTS = 200
+    return matched.length > MAX_RESULTS ? matched.slice(0, MAX_RESULTS) : matched
+  }, [records, sortMode, searchQuery, searcher])
+  const currentSession = visibleRecords[cursor]
+
+  useEffect(() => {
+    setSelectedIndexes((prev) => pruneSelectedIndexes(prev, records.map((record) => record.index)))
+  }, [records])
+
+  useEffect(() => {
+    setCursor((prev) => clampCursor(prev, visibleRecords.length))
+  }, [visibleRecords.length])
+
+  useEffect(() => {
+    setCurrentTokenSummary(null)
+    if (!currentSession) return
+    let cancelled = false
+    computeSessionTokens(provider, resourcePolicy, currentSession).then((summary) => {
+      if (!cancelled && summary) setCurrentTokenSummary(summary)
+    })
+    return () => { cancelled = true }
+  }, [currentSession, provider, resourcePolicy])
+
+  useEffect(() => {
+    setFilteredTokenSummary(null)
+    if (records.length === 0) return
+    let cancelled = false
+    if (projectFilter) {
+      computeFilteredProjectTokens(provider, resourcePolicy, projectFilter, records).then((summary) => {
+        if (!cancelled && summary) setFilteredTokenSummary(summary)
+      })
+    }
+    return () => { cancelled = true }
+  }, [records, projectFilter, provider, resourcePolicy])
+
+  const toggleSelection = useCallback((session: SessionRecord | undefined) => {
+    setSelectedIndexes((prev) => toggleSelectedIndex(prev, session?.index))
+  }, [])
+
+  const selectedSessions = useMemo(
+    () => getSelectedRecords(records, selectedIndexes, currentSession),
+    [records, selectedIndexes, currentSession],
+  )
+
+  const selectOptions: SelectOption[] = useMemo(() => {
+    return visibleRecords.map((session, idx) => {
+      const selected = selectedIndexes.has(session.index)
+      const prefix = selected ? "[*]" : "[ ]"
+      const primary = session.title && session.title.trim().length > 0 ? session.title : session.sessionId
+      const label = `${prefix} #${idx + 1} ${primary} (${session.version || "unknown"})`
+      const stampBase = sortMode === "created" ? (session.createdAt ?? session.updatedAt) : (session.updatedAt ?? session.createdAt)
+      const stamp = stampBase ? `${sortMode}: ${formatDate(stampBase)}` : `${sortMode}: ?`
+      return { name: label, description: stamp, value: session.index }
+    })
+  }, [visibleRecords, selectedIndexes, sortMode])
+
+  const requestDeletion = useCallback(() => {
+    if (selectedSessions.length === 0) {
+      onNotify("No sessions selected for deletion.", "error")
+      return
+    }
+    requestConfirm({
+      title: `Delete ${selectedSessions.length} session entr${selectedSessions.length === 1 ? "y" : "ies"}?`,
+      details: selectedSessions.slice(0, MAX_CONFIRM_PREVIEW).map((session) => describeSession(session, { fullPath: true })),
+      onConfirm: async () => {
+        const { removed, failed } = await provider.deleteSessionMetadata(selectedSessions)
+        setSelectedIndexes(clearSelection())
+        const msg = failed.length ? `Removed ${removed.length} session file(s). Failed: ${failed.length}` : `Removed ${removed.length} session file(s).`
+        onNotify(msg, failed.length ? "error" : "info")
+        onRefresh()
+      },
+    })
+  }, [selectedSessions, onNotify, requestConfirm, onRefresh, provider])
+
+  const executeRename = useCallback(async () => {
+    if (!currentSession || !renameValue.trim()) {
+      onNotify('Title cannot be empty', 'error')
+      setIsRenaming(false)
+      return
+    }
+    if (renameValue.length > 200) {
+      onNotify('Title too long (max 200 characters)', 'error')
+      return
+    }
+    try {
+      await provider.updateSessionTitle(currentSession, renameValue.trim())
+      onNotify(`Renamed to "${renameValue.trim()}"`)
+      setIsRenaming(false)
+      setRenameValue('')
+      onRefresh()
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error)
+      onNotify(`Rename failed: ${msg}`, 'error')
+    }
+  }, [currentSession, renameValue, onNotify, onRefresh, provider])
+
+  const executeTransfer = useCallback(async (targetProject: ProjectRecord, mode: 'move' | 'copy') => {
+    setIsSelectingProject(false)
+    setOperationMode(null)
+
+    const result = await runBatchSessionOperation(provider, selectedSessions, targetProject.projectId, mode)
+    setSelectedIndexes(clearSelection())
+
+    const successCount = result.succeeded.length
+    const failCount = result.failed.length
+    const verb = mode === 'move' ? 'moved' : 'copied'
+
+    if (failCount === 0) {
+      onNotify(`Successfully ${verb} ${successCount} session(s) to ${targetProject.projectId}`)
+    } else {
+      onNotify(`${verb} ${successCount} session(s), ${failCount} failed`, 'error')
+    }
+
+    onRefresh()
+  }, [selectedSessions, provider, onNotify, onRefresh])
+
+  const handleKey = useCallback(
+    (key: KeyEvent) => {
+      if (!active || locked) return
+
+      if (isSelectingProject) {
+        if (key.name === 'escape') {
+          setIsSelectingProject(false)
+          setOperationMode(null)
+          return
+        }
+        if (key.name === 'return' || key.name === 'enter') {
+          const targetProject = availableProjects[projectCursor]
+          if (targetProject && operationMode) void executeTransfer(targetProject, operationMode)
+          return
+        }
+        return
+      }
+
+      if (isRenaming) {
+        if (key.name === 'escape') {
+          setIsRenaming(false)
+          setRenameValue('')
+          return
+        }
+        if (key.name === 'return' || key.name === 'enter') {
+          void executeRename()
+          return
+        }
+        if (key.name === 'backspace') {
+          setRenameValue(prev => prev.slice(0, -1))
+          return
+        }
+        const ch = key.sequence
+        if (ch && ch.length === 1 && !key.ctrl && !key.meta) setRenameValue(prev => prev + ch)
+        return
+      }
+
+      const cmdKey = toCommandKey(key)
+      const cmdId = resolveCommand(cmdSet.registry, cmdKey, { screen: "sessions", overlay: null, searchActive: false, confirmActive: false })
+      const action = toSessionPanelAction(cmdId)
+      if (action === "toggleSelect") {
+        key.preventDefault()
+        toggleSelection(currentSession)
+        return
+      }
+      if (action === "selectAll") {
+        setSelectedIndexes((prev) => toggleAllVisibleIndexes(prev, visibleRecords.map((session) => session.index)))
+        return
+      }
+      if (action === "toggleSort") {
+        setSortMode((prev) => (prev === "updated" ? "created" : "updated"))
+        return
+      }
+      if (action === "clearFilter") {
+        if (projectFilter) onClearFilter()
+        return
+      }
+      if (action === "clearSelection") {
+        setSelectedIndexes(clearSelection())
+        return
+      }
+      if (action === "deleteSelected") {
+        requestDeletion()
+        return
+      }
+      if (action === "copyId") {
+        if (currentSession) {
+          copyToClipboardSync(currentSession.sessionId)
+          onNotify(`Copied ID ${currentSession.sessionId} to clipboard`)
+        }
+        return
+      }
+      if (action === "renameSession") {
+        if (currentSession) {
+          setIsRenaming(true)
+          setRenameValue(currentSession.title || '')
+        }
+        return
+      }
+      if (action === "moveSessions") {
+        if (selectedSessions.length === 0) {
+          onNotify('No sessions selected for move', 'error')
+          return
+        }
+        const filtered = projectFilter ? allProjects.filter(p => p.projectId !== projectFilter) : allProjects
+        setAvailableProjects(filtered)
+        setProjectCursor(0)
+        setOperationMode('move')
+        setIsSelectingProject(true)
+        return
+      }
+      if (action === "copySessions") {
+        if (selectedSessions.length === 0) {
+          onNotify('No sessions selected for copy', 'error')
+          return
+        }
+        setAvailableProjects(allProjects)
+        setProjectCursor(0)
+        setOperationMode('copy')
+        setIsSelectingProject(true)
+        return
+      }
+      if (action === "viewChat") {
+        if (currentSession) onOpenChatViewer(currentSession)
+        return
+      }
+      if (action === "sessionInfo") {
+        if (currentSession) {
+          const title = currentSession.title && currentSession.title.trim().length > 0 ? currentSession.title : currentSession.sessionId
+          onNotify(`Session ${title} [${currentSession.sessionId}] -> ${formatDisplayPath(currentSession.directory)}`)
+        }
+      }
+    },
+    [active, locked, currentSession, projectFilter, onClearFilter, onNotify, requestDeletion, toggleSelection, isRenaming, executeRename, isSelectingProject, availableProjects, projectCursor, operationMode, executeTransfer, selectedSessions, allProjects, onOpenChatViewer, cmdSet, visibleRecords],
+  )
+
+  useImperativeHandle(ref, () => ({ handleKey, refresh: () => { onRefresh() } }), [handleKey, onRefresh])
+
+  return (
+    <box title="Sessions" style={{ border: true, borderColor: active ? "#22c55e" : "#374151", flexDirection: "column", flexGrow: active ? 6 : 4, padding: 1 }}>
+      <box flexDirection="column" marginBottom={1}>
+        <text>Filter: {projectFilter ? `project ${projectFilter}` : "none"} | Sort: {sortMode} | Search: {searchQuery ? `${searchQuery} (fuzzy)` : "(none)"} | Selected: {selectedIndexes.size}</text>
+        <text>Keys: Space select, A select all, S sort, D delete, Y copy ID, V view chat, F search chats, Shift+R rename, M move, P copy, C clear filter, Esc clear</text>
+      </box>
+
+      {isRenaming ? (
+        <box style={{ border: true, borderColor: PALETTE.key, padding: 1, marginBottom: 1 }}>
+          <text>Rename: </text>
+          <text fg={PALETTE.key}>{renameValue}</text>
+          <text fg={PALETTE.muted}> (Enter confirm, Esc cancel)</text>
+        </box>
+      ) : null}
+
+      {isSelectingProject && operationMode ? (
+        <ProjectSelector
+          projects={availableProjects}
+          cursor={projectCursor}
+          onCursorChange={setProjectCursor}
+          onSelect={(project) => executeTransfer(project, operationMode)}
+          onCancel={() => {
+            setIsSelectingProject(false)
+            setOperationMode(null)
+          }}
+          operationMode={operationMode}
+          sessionCount={selectedSessions.length}
+        />
+      ) : null}
+
+      {allSessions.length === 0 && records.length === 0 ? (
+        <text>No sessions found.</text>
+      ) : visibleRecords.length === 0 ? (
+        <text>No sessions found.</text>
+      ) : (
+        <box style={{ flexGrow: 1, flexDirection: "column" }}>
+          <select
+            style={{ flexGrow: 1 }}
+            options={selectOptions}
+            selectedIndex={Math.min(cursor, selectOptions.length - 1)}
+            onChange={(index) => setCursor(index)}
+            onSelect={(index) => {
+              const session = visibleRecords[index]
+              if (session) {
+                const title = session.title && session.title.trim().length > 0 ? session.title : session.sessionId
+                onNotify(`Session ${title} [${session.sessionId}] -> ${formatDisplayPath(session.directory)}`)
+              }
+            }}
+            focused={active && !locked && !isSelectingProject && !isRenaming}
+            showScrollIndicator
+            showDescription={false}
+            wrapSelection={false}
+          />
+          {currentSession ? (
+            <box title="Details" style={{ border: true, marginTop: 1, padding: 1 }}>
+              <text>Session: {currentSession.sessionId}  Version: {currentSession.version || "unknown"}</text>
+              <text>Title: {currentSession.title && currentSession.title.trim().length > 0 ? currentSession.title : "(no title)"}</text>
+              <text>Project: {currentSession.projectId}</text>
+              <text>Updated: {formatDate(currentSession.updatedAt || currentSession.createdAt)}</text>
+              <text>Directory:</text>
+              <text>{formatDisplayPath(currentSession.directory, { fullPath: true })}</text>
+              <box style={{ marginTop: 1 }}>
+                <text fg={PALETTE.accent}>Tokens: </text>
+                {currentTokenSummary?.kind === 'known' ? (
+                  <>
+                    <text>In: {formatTokenCount(currentTokenSummary.tokens.input)} </text>
+                    <text>Out: {formatTokenCount(currentTokenSummary.tokens.output)} </text>
+                    <text>Reason: {formatTokenCount(currentTokenSummary.tokens.reasoning)} </text>
+                    <text>Cache R: {formatTokenCount(currentTokenSummary.tokens.cacheRead)} </text>
+                    <text>Cache W: {formatTokenCount(currentTokenSummary.tokens.cacheWrite)} </text>
+                    <text fg={PALETTE.success}>Total: {formatTokenCount(currentTokenSummary.tokens.total)}</text>
+                  </>
+                ) : (
+                  <text fg={PALETTE.muted}>{currentTokenSummary ? '?' : 'loading...'}</text>
+                )}
+              </box>
+              {projectFilter && filteredTokenSummary ? (
+                <box style={{ marginTop: 1 }}>
+                  <text fg={PALETTE.info}>Filtered ({projectFilter}): </text>
+                  <text>{formatAggregateSummaryShort(filteredTokenSummary)}</text>
+                </box>
+              ) : null}
+              {globalTokenSummary ? (
+                <box>
+                  <text fg={PALETTE.primary}>Global: </text>
+                  <text>{formatAggregateSummaryShort(globalTokenSummary)}</text>
+                </box>
+              ) : null}
+              <text fg={PALETTE.muted} style={{ marginTop: 1 }}>Press Y to copy ID</text>
+            </box>
+          ) : null}
+        </box>
+      )}
+    </box>
+  )
+})

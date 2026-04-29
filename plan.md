@@ -41,6 +41,7 @@ Current progress:
 - [x] Phase 8 cursor seam: shared cursor clamping moved into `src/tui/panel-selection.ts`.
 - [x] Phase 8 selected-record seam: current-row fallback selection moved into `src/tui/panel-selection.ts`.
 - [x] Phase 8 projects panel extraction: `ProjectsPanel` moved to `src/tui/projects-panel.tsx`.
+- [x] Phase 8 sessions panel extraction: `SessionsPanel` moved to `src/tui/sessions-panel.tsx`.
 - [x] Phase 9 project selector extraction: move/copy project selector moved to `src/tui/project-selector.tsx`.
 - [x] Phase 9 help screen extraction: registry-backed help screen moved to `src/tui/help-screen.tsx`.
 - [x] Phase 9 chat viewer extraction: chat viewer overlay moved to `src/tui/chat-viewer.tsx`.
