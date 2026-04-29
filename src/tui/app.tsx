@@ -44,6 +44,7 @@ import { toCommandKey, toCommandScope, resolveCommand, type KeyRouteContext } fr
 import { getHomeDashboardModel } from "./home-dashboard"
 import { detectStorageSources } from "./backend-resolver"
 import { PALETTE, SearchBar } from "./components"
+import { nextWorkspaceRefreshKey } from "./workspace-refresh"
 import { ConfirmBar, type ConfirmState } from "./confirm-bar"
 import { cancelConfirmation, finishConfirmation, requestConfirmation, startConfirmation } from "./confirm-lifecycle"
 import { StatusBar, type NotificationLevel } from "./status-bar"
@@ -139,6 +140,9 @@ export const App = ({
   const resourcePolicy = useMemo(() => getResourcePolicy(tuiState), [tuiState])
   const workspaceDataLoadState = useMemo(() => toWorkspaceDataLoadState(resourcePolicy), [resourcePolicy])
   const cmdSet = useMemo(() => buildTuiCommands(), [])
+  const refreshWorkspaceResources = useCallback(() => {
+    setTokenRefreshKey(nextWorkspaceRefreshKey)
+  }, [])
 
   const globalTokenDisplay = useMemo(
     () => getGlobalTokenDisplayState(globalTokens, workspaceDataLoadState),
@@ -563,7 +567,7 @@ export const App = ({
 
       if (cmdId === "reload") {
         clearTokenCache()
-        setTokenRefreshKey((k) => k + 1)
+        refreshWorkspaceResources()
         if (activeTab === "projects") {
           projectsRef.current?.refresh()
         } else {
@@ -581,7 +585,7 @@ export const App = ({
       const handler = activeTab === "projects" ? projectsRef.current : sessionsRef.current
       handler?.handleKey(key)
     },
-    [activeTab, cancelConfirm, cmdSet, confirmState, executeConfirm, notify, renderer, searchActive, searchQuery, isHome, switchTab, chatViewerOpen, chatMessages, chatCursor, closeChatViewer, copyChatMessage, chatSearchOpen, chatSearchResults, chatSearchCursor, closeChatSearch, executeChatSearch, handleChatSearchResult, openChatSearch, tuiState.overlay],
+    [activeTab, cancelConfirm, cmdSet, confirmState, executeConfirm, notify, renderer, searchActive, searchQuery, isHome, switchTab, chatViewerOpen, chatMessages, chatCursor, closeChatViewer, copyChatMessage, chatSearchOpen, chatSearchResults, chatSearchCursor, closeChatSearch, executeChatSearch, handleChatSearchResult, openChatSearch, tuiState.overlay, refreshWorkspaceResources],
   )
 
   useKeyboard(handleGlobalKey)
@@ -660,7 +664,7 @@ export const App = ({
             allSessions={allSessions}
             resourcePolicy={resourcePolicy}
             cmdSet={cmdSet}
-            onRefresh={() => setTokenRefreshKey((k) => k + 1)}
+            onRefresh={refreshWorkspaceResources}
             onNotify={notify}
             requestConfirm={requestConfirm}
             onNavigateToSessions={handleNavigateToSessions}
@@ -677,7 +681,7 @@ export const App = ({
             allSessions={allSessions}
             resourcePolicy={resourcePolicy}
             cmdSet={cmdSet}
-            onRefresh={() => setTokenRefreshKey((k) => k + 1)}
+            onRefresh={refreshWorkspaceResources}
             onNotify={notify}
             requestConfirm={requestConfirm}
             onClearFilter={clearSessionFilter}

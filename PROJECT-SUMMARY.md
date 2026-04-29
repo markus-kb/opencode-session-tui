@@ -43,6 +43,7 @@ The codebase follows a dual-mode architecture with shared libraries:
 - `chat-session-resource.ts` — Policy-gated chat viewer message-index and lazy hydration resource
 - `chat-search-resource.ts` — Policy-gated scoped chat search resource for cross-session search overlays
 - `token-resource.ts` — Policy-gated token computation helpers used by project and session panels
+- `workspace-refresh.ts` — Shared workspace refresh-key helper used by root reload and panel refresh callbacks
 - `projects-panel.tsx` — Projects panel component fed by the root project index, with local filtering, selection, deletion, and project token display
 - `sessions-panel.tsx` — Sessions panel component with local sort/search/selection, rename, move/copy, chat entry, and token display
 - `command-registry.ts` — Typed command registry with scope-aware key lookup
