@@ -56,6 +56,7 @@ import { StatusBar, type NotificationLevel } from "./status-bar"
 import { HomeScreen } from "./home-screen"
 import { toProjectPanelAction } from "./project-panel-commands"
 import { toSessionPanelAction } from "./session-panel-commands"
+import { clearSelection, toggleAllVisibleIndexes, toggleSelectedIndex } from "./panel-selection"
 
 type TabKey = TuiTab
 
@@ -283,18 +284,7 @@ const ProjectsPanel = forwardRef<PanelHandle, ProjectsPanelProps>(function Proje
   }, [currentRecord, allSessions, provider, resourcePolicy])
 
   const toggleSelection = useCallback((record: ProjectRecord | undefined) => {
-    if (!record) {
-      return
-    }
-    setSelectedIndexes((prev) => {
-      const next = new Set(prev)
-      if (next.has(record.index)) {
-        next.delete(record.index)
-      } else {
-        next.add(record.index)
-      }
-      return next
-    })
+    setSelectedIndexes((prev) => toggleSelectedIndex(prev, record?.index))
   }, [])
 
   const selectedRecords = useMemo(() => {
@@ -329,7 +319,7 @@ const ProjectsPanel = forwardRef<PanelHandle, ProjectsPanelProps>(function Proje
         .map((record) => describeProject(record, { fullPath: true })),
       onConfirm: async () => {
         const { removed, failed } = await provider.deleteProjectMetadata(selectedRecords)
-        setSelectedIndexes(new Set())
+        setSelectedIndexes(clearSelection())
         const msg = failed.length
           ? `Removed ${removed.length} project file(s). Failed: ${failed.length}`
           : `Removed ${removed.length} project file(s).`
@@ -358,25 +348,11 @@ const ProjectsPanel = forwardRef<PanelHandle, ProjectsPanelProps>(function Proje
         return
       }
       if (action === "selectAll") {
-        setSelectedIndexes((prev) => {
-          if (visibleRecords.length === 0) {
-            return prev
-          }
-          const next = new Set(prev)
-          const allVisibleSelected = visibleRecords.every((record) => next.has(record.index))
-          for (const record of visibleRecords) {
-            if (allVisibleSelected) {
-              next.delete(record.index)
-            } else {
-              next.add(record.index)
-            }
-          }
-          return next
-        })
+        setSelectedIndexes((prev) => toggleAllVisibleIndexes(prev, visibleRecords.map((record) => record.index)))
         return
       }
       if (action === "clearSelection") {
-        setSelectedIndexes(new Set())
+        setSelectedIndexes(clearSelection())
         return
       }
       if (action === "deleteSelected") {
@@ -628,18 +604,7 @@ const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(function Sessi
   }, [records, projectFilter, provider, resourcePolicy])
 
   const toggleSelection = useCallback((session: SessionRecord | undefined) => {
-    if (!session) {
-      return
-    }
-    setSelectedIndexes((prev) => {
-      const next = new Set(prev)
-      if (next.has(session.index)) {
-        next.delete(session.index)
-      } else {
-        next.add(session.index)
-      }
-      return next
-    })
+    setSelectedIndexes((prev) => toggleSelectedIndex(prev, session?.index))
   }, [])
 
   const selectedSessions = useMemo(() => {
@@ -677,7 +642,7 @@ const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(function Sessi
         .map((session) => describeSession(session, { fullPath: true })),
       onConfirm: async () => {
         const { removed, failed } = await provider.deleteSessionMetadata(selectedSessions)
-        setSelectedIndexes(new Set())
+        setSelectedIndexes(clearSelection())
         const msg = failed.length
           ? `Removed ${removed.length} session file(s). Failed: ${failed.length}`
           : `Removed ${removed.length} session file(s).`
@@ -723,7 +688,7 @@ const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(function Sessi
       mode
     )
 
-    setSelectedIndexes(new Set())
+    setSelectedIndexes(clearSelection())
 
     const successCount = result.succeeded.length
     const failCount = result.failed.length
@@ -794,21 +759,7 @@ const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(function Sessi
         return
       }
       if (action === "selectAll") {
-        setSelectedIndexes((prev) => {
-          if (visibleRecords.length === 0) {
-            return prev
-          }
-          const next = new Set(prev)
-          const allVisibleSelected = visibleRecords.every((session) => next.has(session.index))
-          for (const session of visibleRecords) {
-            if (allVisibleSelected) {
-              next.delete(session.index)
-            } else {
-              next.add(session.index)
-            }
-          }
-          return next
-        })
+        setSelectedIndexes((prev) => toggleAllVisibleIndexes(prev, visibleRecords.map((session) => session.index)))
         return
       }
       if (action === "toggleSort") {
@@ -822,7 +773,7 @@ const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(function Sessi
         return
       }
       if (action === "clearSelection") {
-        setSelectedIndexes(new Set())
+        setSelectedIndexes(clearSelection())
         return
       }
       if (action === "deleteSelected") {
