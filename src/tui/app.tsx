@@ -52,6 +52,7 @@ import { getHomeDashboardModel, type HomeDashboardModel } from "./home-dashboard
 import { detectStorageSources } from "./backend-resolver"
 import { Bullet, Columns, KeyChip, PALETTE, SearchBar, Section } from "./components"
 import { ConfirmBar, type ConfirmState } from "./confirm-bar"
+import { StatusBar, type NotificationLevel } from "./status-bar"
 
 type TabKey = TuiTab
 
@@ -59,8 +60,6 @@ type PanelHandle = {
   handleKey: (key: KeyEvent) => void
   refresh: () => void
 }
-
-type NotificationLevel = "info" | "error"
 
 type ProjectsPanelProps = {
   provider: DataProvider
@@ -999,21 +998,6 @@ const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(function Sessi
     </box>
   )
 })
-
-const StatusBar = ({ status, level }: { status: string; level: NotificationLevel }) => (
-  <box
-    style={{
-      border: true,
-      borderColor: level === "error" ? "#ef4444" : "#3b82f6",
-      paddingLeft: 1,
-      paddingRight: 1,
-      height: 3,
-      marginTop: 1,
-    }}
-  >
-    <text fg={level === "error" ? "#ef4444" : "#38bdf8"}>{status}</text>
-  </box>
-)
 
 const SCOPE_SECTION_TITLES: Record<string, string> = {
   home: "Home",
