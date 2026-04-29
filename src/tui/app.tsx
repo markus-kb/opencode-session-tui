@@ -42,6 +42,7 @@ import { getHomeDashboardModel } from "./home-dashboard"
 import { detectStorageSources } from "./backend-resolver"
 import { PALETTE, SearchBar } from "./components"
 import { nextWorkspaceRefreshKey } from "./workspace-refresh"
+import { getProjectSessionsNavigation } from "./workspace-navigation"
 import { ConfirmBar, type ConfirmState } from "./confirm-bar"
 import { cancelConfirmation, finishConfirmation, requestConfirmation, startConfirmation } from "./confirm-lifecycle"
 import { StatusBar, type NotificationLevel } from "./status-bar"
@@ -590,9 +591,10 @@ export const App = ({
 
   const handleNavigateToSessions = useCallback(
     (projectId: string) => {
-      setSessionFilter(projectId)
-      setTuiState((prev) => applyNavigationEvent(prev, { type: "openWorkspace", activeTab: "sessions" }))
-      notify(`Filtering sessions by ${projectId}`)
+      const navigation = getProjectSessionsNavigation(projectId)
+      setSessionFilter(navigation.sessionFilter)
+      setTuiState((prev) => applyNavigationEvent(prev, { type: "openWorkspace", activeTab: navigation.activeTab }))
+      notify(navigation.status)
     },
     [notify],
   )
