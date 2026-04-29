@@ -37,6 +37,7 @@ Current progress:
 - [x] Phase 8 starter project panel seam: project panel command ids mapped through `src/tui/project-panel-commands.ts`.
 - [x] Phase 8 starter session panel seam: session panel command ids mapped through `src/tui/session-panel-commands.ts`.
 - [x] Phase 8 panel selection seam: shared selection helpers added in `src/tui/panel-selection.ts` and used by both panels.
+- [x] Phase 8 selection pruning seam: stale selected-index pruning moved into `src/tui/panel-selection.ts`.
 
 Safety rules for this workstream:
 

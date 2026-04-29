@@ -56,7 +56,7 @@ import { StatusBar, type NotificationLevel } from "./status-bar"
 import { HomeScreen } from "./home-screen"
 import { toProjectPanelAction } from "./project-panel-commands"
 import { toSessionPanelAction } from "./session-panel-commands"
-import { clearSelection, toggleAllVisibleIndexes, toggleSelectedIndex } from "./panel-selection"
+import { clearSelection, pruneSelectedIndexes, toggleAllVisibleIndexes, toggleSelectedIndex } from "./panel-selection"
 
 type TabKey = TuiTab
 
@@ -239,22 +239,7 @@ const ProjectsPanel = forwardRef<PanelHandle, ProjectsPanelProps>(function Proje
   }, [refreshRecords])
 
   useEffect(() => {
-    setSelectedIndexes((prev) => {
-      if (prev.size === 0) {
-        return prev
-      }
-      const validIndexes = new Set(records.map((record) => record.index))
-      let changed = false
-      const next = new Set<number>()
-      for (const index of prev) {
-        if (validIndexes.has(index)) {
-          next.add(index)
-        } else {
-          changed = true
-        }
-      }
-      return changed ? next : prev
-    })
+    setSelectedIndexes((prev) => pruneSelectedIndexes(prev, records.map((record) => record.index)))
   }, [records])
 
   useEffect(() => {
@@ -537,22 +522,7 @@ const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(function Sessi
   const currentSession = visibleRecords[cursor]
 
   useEffect(() => {
-    setSelectedIndexes((prev) => {
-      if (prev.size === 0) {
-        return prev
-      }
-      const validIndexes = new Set(records.map((record) => record.index))
-      let changed = false
-      const next = new Set<number>()
-      for (const index of prev) {
-        if (validIndexes.has(index)) {
-          next.add(index)
-        } else {
-          changed = true
-        }
-      }
-      return changed ? next : prev
-    })
+    setSelectedIndexes((prev) => pruneSelectedIndexes(prev, records.map((record) => record.index)))
   }, [records])
 
   useEffect(() => {

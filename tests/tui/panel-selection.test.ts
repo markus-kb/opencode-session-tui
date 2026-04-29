@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { clearSelection, toggleAllVisibleIndexes, toggleSelectedIndex } from "../../src/tui/panel-selection"
+import { clearSelection, pruneSelectedIndexes, toggleAllVisibleIndexes, toggleSelectedIndex } from "../../src/tui/panel-selection"
 
 describe("panel selection helpers", () => {
   test("toggles one selected index", () => {
@@ -22,5 +22,19 @@ describe("panel selection helpers", () => {
 
   test("clears all selection", () => {
     expect([...clearSelection()]).toEqual([])
+  })
+
+  test("prunes selected indexes that are no longer valid", () => {
+    expect([...pruneSelectedIndexes(new Set([1, 2, 3]), [1, 3])]).toEqual([1, 3])
+  })
+
+  test("returns the same set when no pruning is needed", () => {
+    const selected = new Set([1, 3])
+    expect(pruneSelectedIndexes(selected, [1, 2, 3])).toBe(selected)
+  })
+
+  test("returns the same empty set when selection is empty", () => {
+    const selected = new Set<number>()
+    expect(pruneSelectedIndexes(selected, [1, 2, 3])).toBe(selected)
   })
 })

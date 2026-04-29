@@ -30,3 +30,20 @@ export function toggleAllVisibleIndexes(selected: Set<number>, visibleIndexes: n
 export function clearSelection(): Set<number> {
   return new Set()
 }
+
+export function pruneSelectedIndexes(selected: Set<number>, validIndexes: number[]): Set<number> {
+  if (selected.size === 0) {
+    return selected
+  }
+  const valid = new Set(validIndexes)
+  let changed = false
+  const next = new Set<number>()
+  for (const index of selected) {
+    if (valid.has(index)) {
+      next.add(index)
+    } else {
+      changed = true
+    }
+  }
+  return changed ? next : selected
+}
