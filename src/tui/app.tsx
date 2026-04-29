@@ -660,9 +660,12 @@ export const App = ({
             active={activeTab === "projects"}
             locked={Boolean(confirmState) || isHome}
             searchQuery={activeTab === "projects" ? searchQuery : ""}
+            allProjects={allProjects}
+            projectIndexLoaded={projectIndexLoaded}
             allSessions={allSessions}
             resourcePolicy={resourcePolicy}
             cmdSet={cmdSet}
+            onRefresh={() => setTokenRefreshKey((k) => k + 1)}
             onNotify={notify}
             requestConfirm={requestConfirm}
             onNavigateToSessions={handleNavigateToSessions}
