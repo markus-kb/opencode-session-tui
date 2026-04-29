@@ -33,6 +33,9 @@ import {
   getGlobalTokenDisplayState,
   getHomeKeyAction,
   getWorkspaceDataLoadState,
+  closeOverlay,
+  openChatSearchOverlay,
+  openChatViewerOverlay,
   openHome,
   openWorkspace,
   switchWorkspaceTab,
@@ -1547,7 +1550,7 @@ export const App = ({
   const [tokenRefreshKey, setTokenRefreshKey] = useState(0)
 
   // Chat viewer state
-  const [chatViewerOpen, setChatViewerOpen] = useState(false)
+  const chatViewerOpen = tuiState.overlay?.name === "chatViewer"
   const [chatSession, setChatSession] = useState<SessionRecord | null>(null)
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
   const [chatCursor, setChatCursor] = useState(0)
@@ -1556,7 +1559,7 @@ export const App = ({
   const [chatPartsCache, setChatPartsCache] = useState<Map<string, ChatMessage>>(new Map())
 
   // Chat search overlay state
-  const [chatSearchOpen, setChatSearchOpen] = useState(false)
+  const chatSearchOpen = tuiState.overlay?.name === "chatSearch"
   const [chatSearchQuery, setChatSearchQuery] = useState("")
   const [chatSearchResults, setChatSearchResults] = useState<ChatSearchResult[]>([])
   const [chatSearchCursor, setChatSearchCursor] = useState(0)
@@ -1665,7 +1668,7 @@ export const App = ({
 
   // Chat viewer controls
   const openChatViewer = useCallback(async (session: SessionRecord) => {
-    setChatViewerOpen(true)
+    setTuiState((prev) => openChatViewerOverlay(prev, session.sessionId))
     setChatSession(session)
     setChatMessages([])
     setChatCursor(0)
@@ -1688,7 +1691,7 @@ export const App = ({
   }, [provider])
 
   const closeChatViewer = useCallback(() => {
-    setChatViewerOpen(false)
+    setTuiState((prev) => closeOverlay(prev))
     setChatSession(null)
     setChatMessages([])
     setChatCursor(0)
@@ -1739,7 +1742,7 @@ export const App = ({
 
   // Chat search controls
   const openChatSearch = useCallback(() => {
-    setChatSearchOpen(true)
+    setTuiState((prev) => openChatSearchOverlay(prev))
     setChatSearchQuery("")
     setChatSearchResults([])
     setChatSearchCursor(0)
@@ -1747,7 +1750,7 @@ export const App = ({
   }, [])
 
   const closeChatSearch = useCallback(() => {
-    setChatSearchOpen(false)
+    setTuiState((prev) => closeOverlay(prev))
     setChatSearchQuery("")
     setChatSearchResults([])
     setChatSearchCursor(0)

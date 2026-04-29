@@ -62,7 +62,7 @@ Exit criteria: shared UI primitives live outside the root app and can be reused 
 Replace scattered booleans with one coherent app navigation model.
 
 - [x] Replace `showHelp` with explicit typed screen state.
-- [ ] Replace `chatViewerOpen` and `chatSearchOpen` with explicit screen or overlay state.
+- [x] Replace `chatViewerOpen` and `chatSearchOpen` with explicit screen or overlay state.
 - [x] Preserve current tab state as part of workspace state.
 - [ ] Model modal precedence explicitly instead of relying on long `if` ordering.
 - [ ] Define typed navigation events, such as open workspace, open help, open chat, close overlay, and quit.

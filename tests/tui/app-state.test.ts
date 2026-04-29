@@ -4,6 +4,10 @@ import {
   getHomeKeyAction,
   getWorkspaceDataLoadState,
   getGlobalTokenDisplayState,
+  closeOverlay,
+  getActiveOverlay,
+  openChatSearchOverlay,
+  openChatViewerOverlay,
   openHome,
   openWorkspace,
   switchWorkspaceTab,
@@ -25,6 +29,11 @@ describe("TUI app state", () => {
     expect(getWorkspaceDataLoadState(workspace)).toEqual({ enabled: true })
   })
 
+  test("starts without an active overlay", () => {
+    expect(createInitialTuiState().overlay).toBeNull()
+    expect(getActiveOverlay(createInitialTuiState())).toBeNull()
+  })
+
   test("opens workspace on the requested tab", () => {
     expect(openWorkspace(createInitialTuiState()).screen).toEqual({
       name: "workspace",
@@ -38,10 +47,25 @@ describe("TUI app state", () => {
   })
 
   test("returns to home without preserving workspace loading", () => {
-    const state = openHome(openWorkspace(createInitialTuiState(), "sessions"))
+    const state = openHome(openChatSearchOverlay(openWorkspace(createInitialTuiState(), "sessions")))
 
     expect(state.screen).toEqual({ name: "home" })
+    expect(state.overlay).toBeNull()
     expect(getWorkspaceDataLoadState(state)).toEqual({ enabled: false, reason: "home" })
+  })
+
+  test("opens and closes chat overlays explicitly", () => {
+    const workspace = openWorkspace(createInitialTuiState(), "sessions")
+    const chatViewer = openChatViewerOverlay(workspace, "session-1")
+
+    expect(chatViewer.overlay).toEqual({ name: "chatViewer", sessionId: "session-1" })
+    expect(getActiveOverlay(chatViewer)).toBe("chatViewer")
+
+    const chatSearch = openChatSearchOverlay(chatViewer)
+    expect(chatSearch.overlay).toEqual({ name: "chatSearch" })
+    expect(getActiveOverlay(chatSearch)).toBe("chatSearch")
+
+    expect(closeOverlay(chatSearch).overlay).toBeNull()
   })
 
   test("switches workspace tabs explicitly", () => {

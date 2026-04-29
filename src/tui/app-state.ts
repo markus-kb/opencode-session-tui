@@ -11,8 +11,13 @@ export type TuiScreen =
   | { name: "home" }
   | { name: "workspace"; activeTab: TuiTab }
 
+export type TuiOverlay =
+  | { name: "chatViewer"; sessionId: string }
+  | { name: "chatSearch" }
+
 export type TuiState = {
   screen: TuiScreen
+  overlay: TuiOverlay | null
 }
 
 export type WorkspaceDataLoadState =
@@ -30,7 +35,7 @@ export type GlobalTokenDisplayState =
 type KeyLike = Pick<KeyEvent, "name" | "sequence" | "ctrl" | "meta">
 
 export function createInitialTuiState(): TuiState {
-  return { screen: { name: "home" } }
+  return { screen: { name: "home" }, overlay: null }
 }
 
 export function openWorkspace(state: TuiState, activeTab: TuiTab = "projects"): TuiState {
@@ -38,7 +43,23 @@ export function openWorkspace(state: TuiState, activeTab: TuiTab = "projects"): 
 }
 
 export function openHome(state: TuiState): TuiState {
-  return { ...state, screen: { name: "home" } }
+  return { ...state, screen: { name: "home" }, overlay: null }
+}
+
+export function openChatViewerOverlay(state: TuiState, sessionId: string): TuiState {
+  return { ...state, overlay: { name: "chatViewer", sessionId } }
+}
+
+export function openChatSearchOverlay(state: TuiState): TuiState {
+  return { ...state, overlay: { name: "chatSearch" } }
+}
+
+export function closeOverlay(state: TuiState): TuiState {
+  return { ...state, overlay: null }
+}
+
+export function getActiveOverlay(state: TuiState): TuiOverlay["name"] | null {
+  return state.overlay?.name ?? null
 }
 
 export function switchWorkspaceTab(state: TuiState, direction: "next" | "prev" | TuiTab): TuiState {
