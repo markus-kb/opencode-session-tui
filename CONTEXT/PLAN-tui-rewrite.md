@@ -49,7 +49,7 @@ Exit criteria: a written screen/state model exists, including navigation transit
 Introduce clean building blocks without changing visible behavior.
 
 - [ ] Extract `StatusBar` from `src/tui/app.tsx`.
-- [ ] Extract `ConfirmBar` from `src/tui/app.tsx`.
+- [x] Extract `ConfirmBar` from `src/tui/app.tsx`.
 - [x] Extract `KeyChip`, `Section`, `Row`, `Bullet`, and related layout helpers.
 - [x] Extract `SearchBar`.
 - [ ] Extract common overlay frame and pane frame components.
