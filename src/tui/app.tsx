@@ -50,7 +50,7 @@ import { buildTuiCommands, type TuiCommandSet } from "./command-definitions"
 import { toCommandKey, toCommandScope, resolveCommand, type KeyRouteContext } from "./key-router"
 import { getHomeDashboardModel } from "./home-dashboard"
 import { detectStorageSources } from "./backend-resolver"
-import { OverlayFrame, PALETTE, SearchBar } from "./components"
+import { PALETTE, SearchBar } from "./components"
 import { ConfirmBar, type ConfirmState } from "./confirm-bar"
 import { StatusBar, type NotificationLevel } from "./status-bar"
 import { HomeScreen } from "./home-screen"
@@ -59,6 +59,7 @@ import { toSessionPanelAction } from "./session-panel-commands"
 import { clampCursor, clearSelection, getSelectedRecords, pruneSelectedIndexes, toggleAllVisibleIndexes, toggleSelectedIndex } from "./panel-selection"
 import { ProjectSelector } from "./project-selector"
 import { ChatViewer } from "./chat-viewer"
+import { ChatSearchOverlay } from "./chat-search-overlay"
 
 type TabKey = TuiTab
 
@@ -1501,98 +1502,15 @@ export const App = ({
 
       {/* Chat Search Overlay */}
       {chatSearchOpen ? (
-        <OverlayFrame
-          title={`Search Chat Content ${sessionFilter ? `(project: ${sessionFilter})` : "(all sessions)"}`}
-          borderColor={PALETTE.info}
-        >
-          {/* Search input */}
-          <box style={{ flexDirection: "row", marginBottom: 1 }}>
-            <text fg={PALETTE.accent}>Search: </text>
-            <text fg={PALETTE.key}>{chatSearchQuery}</text>
-            <text fg={PALETTE.muted}>_</text>
-            {chatSearching ? <text fg={PALETTE.info}> (searching...)</text> : null}
-          </box>
-
-          <box style={{ marginBottom: 1 }}>
-            <text fg={PALETTE.muted}>
-              Searching {sessionFilter ? allSessions.filter(s => s.projectId === sessionFilter).length : allSessions.length} sessions | Found: {chatSearchResults.length} matches
-            </text>
-          </box>
-
-          {chatSearchResults.length === 0 && chatSearchQuery && !chatSearching ? (
-            <text fg={PALETTE.muted}>No results found. Try a different search term.</text>
-          ) : chatSearchResults.length > 0 ? (
-            <box style={{ flexDirection: "row", gap: 1, flexGrow: 1 }}>
-              {/* Results list */}
-              <box
-                style={{
-                  border: true,
-                  borderColor: PALETTE.muted,
-                  flexGrow: 4,
-                  flexDirection: "column",
-                  padding: 1,
-                }}
-                title="Results"
-              >
-                <select
-                  options={chatSearchResults.map((r, idx) => ({
-                    name: `${r.sessionTitle.slice(0, 25)} | ${r.role === "user" ? "[user]" : "[asst]"} ${r.matchedText.slice(0, 40)}...`,
-                    description: "",
-                    value: idx,
-                  }))}
-                  selectedIndex={chatSearchCursor}
-                  onChange={setChatSearchCursor}
-                  focused={true}
-                  showScrollIndicator
-                  wrapSelection={false}
-                />
-              </box>
-
-              {/* Preview pane */}
-              <box
-                style={{
-                  border: true,
-                  borderColor: chatSearchResults[chatSearchCursor]?.role === "user" ? PALETTE.accent : PALETTE.primary,
-                  flexGrow: 6,
-                  flexDirection: "column",
-                  padding: 1,
-                  overflow: "hidden",
-                }}
-                title={chatSearchResults[chatSearchCursor] ? `${chatSearchResults[chatSearchCursor].role} message` : "Preview"}
-              >
-                {chatSearchResults[chatSearchCursor] ? (
-                  <box style={{ flexDirection: "column" }}>
-                    <box style={{ flexDirection: "row", marginBottom: 1 }}>
-                      <text fg={PALETTE.accent}>Session: </text>
-                      <text>{chatSearchResults[chatSearchCursor].sessionTitle}</text>
-                    </box>
-                    <box style={{ flexDirection: "row", marginBottom: 1 }}>
-                      <text fg={PALETTE.accent}>Time: </text>
-                      <text>{formatDate(chatSearchResults[chatSearchCursor].createdAt)}</text>
-                      <text fg={PALETTE.muted}> | </text>
-                      <text fg={PALETTE.accent}>Type: </text>
-                      <text>{chatSearchResults[chatSearchCursor].partType}</text>
-                    </box>
-                    <box style={{ flexGrow: 1 }}>
-                      <text>{chatSearchResults[chatSearchCursor].fullText.slice(0, 1500)}{chatSearchResults[chatSearchCursor].fullText.length > 1500 ? "\n[... truncated]" : ""}</text>
-                    </box>
-                  </box>
-                ) : (
-                  <text fg={PALETTE.muted}>Select a result to preview</text>
-                )}
-              </box>
-            </box>
-          ) : (
-            <text fg={PALETTE.muted}>Type a search query and press Enter to search chat content.</text>
-          )}
-
-          {/* Footer */}
-          <box style={{ marginTop: 1 }}>
-            <text fg={PALETTE.muted}>
-              Type query, Enter to search | Esc close | Up/Down navigate | Enter on result opens chat
-            </text>
-          </box>
-        </OverlayFrame>
+        <ChatSearchOverlay
+          sessionFilter={sessionFilter}
+          allSessions={allSessions}
+          query={chatSearchQuery}
+          searching={chatSearching}
+          results={chatSearchResults}
+          cursor={chatSearchCursor}
+          onCursorChange={setChatSearchCursor}
+        />
       ) : null}
 
       <StatusBar status={status} level={statusLevel} />

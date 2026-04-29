@@ -43,6 +43,7 @@ The codebase follows a dual-mode architecture with shared libraries:
 - `token-resource.ts` — Policy-gated token computation helpers used by project and session panels
 - `command-registry.ts` — Typed command registry with scope-aware key lookup
 - `command-definitions.ts` — All TUI keybindings as typed Command objects with home key reference generator
+- `chat-search-overlay.tsx` — First-class chat search overlay component for scoped cross-session results and previews
 - `index.tsx` — Exports `launchTUI(options)`, `bootstrap(args)`
 - `args.ts` — TUI-specific arg parsing (`--root`, `--db`, `--experimental-sqlite`, `--help`)
 

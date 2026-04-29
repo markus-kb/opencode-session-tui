@@ -43,6 +43,7 @@ Current progress:
 - [x] Phase 9 project selector extraction: move/copy project selector moved to `src/tui/project-selector.tsx`.
 - [x] Phase 9 help screen extraction: registry-backed help screen moved to `src/tui/help-screen.tsx`.
 - [x] Phase 9 chat viewer extraction: chat viewer overlay moved to `src/tui/chat-viewer.tsx`.
+- [x] Phase 9 chat search extraction: chat search overlay moved to `src/tui/chat-search-overlay.tsx`.
 
 Safety rules for this workstream:
 
