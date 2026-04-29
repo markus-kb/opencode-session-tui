@@ -460,7 +460,8 @@ Recommended sequence:
 - Completed: root-level project index shared by session move/copy selectors through `src/tui/project-resource.ts`.
 - Completed: SessionsPanel derives filtered sessions from root `allSessions` via `filterSessionsByProject`; ProjectsPanel receives root `allSessions` for token computation.
 - Completed: Panel token computations gated through `token-resource.ts` and resource policy — no direct `provider.compute*` calls in panel effects.
-- Next: chat session/search resources; avoid duplicate `provider.loadProjectRecords()` calls.
+- Completed: Command registry (`command-registry.ts`) and all TUI command definitions (`command-definitions.ts`) with scope-aware key lookup and home key reference generation.
+- Next: wire App key routing through command registry; generate help content from registry.
 
 ## Open Decisions
 

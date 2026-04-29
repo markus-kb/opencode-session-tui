@@ -41,6 +41,8 @@ The codebase follows a dual-mode architecture with shared libraries:
 - `session-resource.ts` — Shared root session-index loader used by global tokens and chat search
 - `project-resource.ts` — Shared root project-index loader and session-by-project filter used by session move/copy selectors
 - `token-resource.ts` — Policy-gated token computation helpers used by project and session panels
+- `command-registry.ts` — Typed command registry with scope-aware key lookup
+- `command-definitions.ts` — All TUI keybindings as typed Command objects with home key reference generator
 - `index.tsx` — Exports `launchTUI(options)`, `bootstrap(args)`
 - `args.ts` — TUI-specific arg parsing (`--root`, `--db`, `--experimental-sqlite`, `--help`)
 

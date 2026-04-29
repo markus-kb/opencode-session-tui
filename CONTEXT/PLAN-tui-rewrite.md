@@ -97,22 +97,13 @@ Move provider calls and derived loading state into dedicated hooks/resources.
 - [ ] Create a chat session resource for message index and lazy hydration.
 - [ ] Create a chat search resource for scoped search.
 - [ ] Ensure data resources are refreshable through a single refresh pathway.
-- [ ] Avoid duplicate `provider.loadSessionRecords()` calls across the app.
+- [x] Avoid duplicate `provider.loadSessionRecords()` calls across the app.
 - [ ] Avoid duplicate `provider.loadProjectRecords()` calls across the app.
 
-Potential hooks:
-
-```ts
-useProjectIndex(provider, { enabled })
-useSessionIndex(provider, { enabled, projectId })
-useTokenSummaries(provider, { enabled, sessions })
-useChatSession(provider, { sessionId })
-useChatSearch(provider, { sessions, query })
-```
-
-Exit criteria: render components consume resource state instead of directly orchestrating provider calls.
-
 ## Phase 6: Rebuild Input Handling
+
+- [x] Introduce a command registry as the source of truth for keybindings.
+- [ ] Separate global commands from screen, panel, and overlay commands.
 
 Replace the single global keyboard router with scoped command handling.
 

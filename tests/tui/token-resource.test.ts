@@ -149,4 +149,36 @@ describe("TUI token resource", () => {
     expect(result).toBeNull()
     expect(provider.calls.projectTokens).toBe(0)
   })
+
+  test("integration: home policy blocks all token computations without provider calls", async () => {
+    const provider = createProvider()
+    const homePolicy = getResourcePolicy(createInitialTuiState())
+    const sessions = [createSession("s1", "project-a")]
+
+    const r1 = await computeProjectTokens(provider, homePolicy, "project-a", sessions)
+    const r2 = await computeSessionTokens(provider, homePolicy, sessions[0])
+    const r3 = await computeFilteredProjectTokens(provider, homePolicy, "project-a", sessions)
+
+    expect(r1).toBeNull()
+    expect(r2).toBeNull()
+    expect(r3).toBeNull()
+    expect(provider.calls.projectTokens).toBe(0)
+    expect(provider.calls.sessionTokens).toBe(0)
+  })
+
+  test("integration: workspace policy enables all token computations with single provider call each", async () => {
+    const provider = createProvider()
+    const wsPolicy = getResourcePolicy(openWorkspace(createInitialTuiState(), "sessions"))
+    const sessions = [createSession("s1", "project-a")]
+
+    const r1 = await computeProjectTokens(provider, wsPolicy, "project-a", sessions)
+    const r2 = await computeSessionTokens(provider, wsPolicy, sessions[0])
+    const r3 = await computeFilteredProjectTokens(provider, wsPolicy, "project-a", sessions)
+
+    expect(r1).not.toBeNull()
+    expect(r2).not.toBeNull()
+    expect(r3).not.toBeNull()
+    expect(provider.calls.projectTokens).toBe(2)
+    expect(provider.calls.sessionTokens).toBe(1)
+  })
 })

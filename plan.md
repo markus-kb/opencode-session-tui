@@ -21,7 +21,8 @@ Current progress:
 - [x] Phase 5 project resource seam: root project index shared by session move/copy selectors; `isProjectMetadataEnabled` policy helper.
 - [x] Phase 5 panel session derivation: SessionsPanel derives filtered sessions from root allSessions; ProjectsPanel receives root allSessions for token computation.
 - [x] Phase 5 token resource seam: panel token computations gated through token-resource.ts and resource policy.
-- [ ] Phase 5 next: chat session/search resources; avoid duplicate provider.loadProjectRecords().
+- [x] Phase 6 starter command registry: typed Command/CommandScope model, scope-aware key lookup, home key reference generation.
+- [ ] Phase 6 next: wire App key routing through command registry; generate help from registry.
 
 Safety rules for this workstream:
 
