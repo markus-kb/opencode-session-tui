@@ -59,3 +59,31 @@ export const Columns = ({ children }: ChildrenProps) => {
 }
 
 export const KeyChip = ({ k }: { k: string }) => <text fg={PALETTE.key}>[{k}]</text>
+
+export const OverlayFrame = ({
+  title,
+  borderColor,
+  children,
+}: {
+  title: string
+  borderColor: string
+} & ChildrenProps) => (
+  <box
+    title={title}
+    style={{
+      position: "absolute",
+      top: 2,
+      left: 2,
+      right: 2,
+      bottom: 2,
+      border: true,
+      borderColor,
+      flexDirection: "column",
+      padding: 1,
+      zIndex: 200,
+    }}
+    backgroundColor="#1a1a2e"
+  >
+    {children}
+  </box>
+)

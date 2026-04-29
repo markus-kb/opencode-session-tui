@@ -50,7 +50,7 @@ import { buildTuiCommands, type TuiCommandSet } from "./command-definitions"
 import { toCommandKey, toCommandScope, resolveCommand, type KeyRouteContext } from "./key-router"
 import { getHomeDashboardModel, type HomeDashboardModel } from "./home-dashboard"
 import { detectStorageSources } from "./backend-resolver"
-import { Bullet, Columns, KeyChip, PALETTE, SearchBar, Section } from "./components"
+import { Bullet, Columns, KeyChip, OverlayFrame, PALETTE, SearchBar, Section } from "./components"
 import { ConfirmBar, type ConfirmState } from "./confirm-bar"
 import { StatusBar, type NotificationLevel } from "./status-bar"
 
@@ -1190,22 +1190,7 @@ const ChatViewer = ({
   const title = session.title && session.title.trim() ? session.title : session.sessionId
 
   return (
-    <box
-      title={`Chat: ${title} (READ-ONLY)`}
-      style={{
-        position: 'absolute',
-        top: 2,
-        left: 2,
-        right: 2,
-        bottom: 2,
-        border: true,
-        borderColor: PALETTE.primary,
-        flexDirection: 'column',
-        padding: 1,
-        zIndex: 200,
-      }}
-      backgroundColor="#1a1a2e"
-    >
+    <OverlayFrame title={`Chat: ${title} (READ-ONLY)`} borderColor={PALETTE.primary}>
       {/* Header */}
       <box style={{ flexDirection: "row", marginBottom: 1 }}>
         <text fg={PALETTE.accent}>Session: </text>
@@ -1296,7 +1281,7 @@ const ChatViewer = ({
           Esc close | Up/Down navigate | PgUp/PgDn jump | Y copy message
         </text>
       </box>
-    </box>
+    </OverlayFrame>
   )
 }
 
@@ -1944,21 +1929,9 @@ export const App = ({
 
       {/* Chat Search Overlay */}
       {chatSearchOpen ? (
-        <box
+        <OverlayFrame
           title={`Search Chat Content ${sessionFilter ? `(project: ${sessionFilter})` : "(all sessions)"}`}
-          style={{
-            position: 'absolute',
-            top: 2,
-            left: 2,
-            right: 2,
-            bottom: 2,
-            border: true,
-            borderColor: PALETTE.info,
-            flexDirection: 'column',
-            padding: 1,
-            zIndex: 200,
-          }}
-          backgroundColor="#1a1a2e"
+          borderColor={PALETTE.info}
         >
           {/* Search input */}
           <box style={{ flexDirection: "row", marginBottom: 1 }}>
@@ -2047,7 +2020,7 @@ export const App = ({
               Type query, Enter to search | Esc close | Up/Down navigate | Enter on result opens chat
             </text>
           </box>
-        </box>
+        </OverlayFrame>
       ) : null}
 
       <StatusBar status={status} level={statusLevel} />

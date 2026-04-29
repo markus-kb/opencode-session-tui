@@ -16,6 +16,7 @@ Current progress:
 - [x] Phase 3 shared UI primitives: `Section`, `Row`, `Bullet`, `Columns`, `KeyChip`, and `SearchBar` extracted to `src/tui/components.tsx`.
 - [x] Phase 3 confirm bar extraction: `ConfirmBar` and `ConfirmState` moved to `src/tui/confirm-bar.tsx`.
 - [x] Phase 3 status bar extraction: `StatusBar` and `NotificationLevel` moved to `src/tui/status-bar.tsx`.
+- [x] Phase 3 overlay frame extraction: `OverlayFrame` added to `src/tui/components.tsx` and used by chat overlays.
 - [x] Phase 4 screen state: home/workspace modeled through typed `TuiState.screen`.
 - [x] Phase 4 overlay state: chat viewer/search modeled through typed `TuiState.overlay`.
 - [x] Phase 5 starter policy: screen/overlay-aware resource-loading policy added in `src/tui/resource-policy.ts`.
