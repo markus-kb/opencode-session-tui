@@ -41,9 +41,10 @@ import {
   type TuiTab,
 } from "./app-state"
 import { formatAggregateSummaryShort, formatTokenCount } from "./format"
-import { getResourcePolicy, isProjectMetadataEnabled, isSessionMetadataEnabled, isTokenSummaryEnabled, toWorkspaceDataLoadState } from "./resource-policy"
+import { getResourcePolicy, isProjectMetadataEnabled, isSessionMetadataEnabled, isTokenSummaryEnabled, toWorkspaceDataLoadState, type ResourcePolicy } from "./resource-policy"
 import { loadGlobalTokensFromSessionIndex, loadSessionIndex } from "./session-resource"
 import { loadProjectIndex, filterSessionsByProject, reindexSessions } from "./project-resource"
+import { computeProjectTokens, computeSessionTokens, computeFilteredProjectTokens } from "./token-resource"
 
 type TabKey = TuiTab
 
@@ -67,6 +68,7 @@ type ProjectsPanelProps = {
   locked: boolean
   searchQuery: string
   allSessions: SessionRecord[]
+  resourcePolicy: ResourcePolicy
   onNotify: (message: string, level?: NotificationLevel) => void
   requestConfirm: (state: ConfirmState) => void
   onNavigateToSessions: (projectId: string) => void
@@ -81,6 +83,7 @@ type SessionsPanelProps = {
   globalTokenSummary: AggregateTokenSummary | null
   allProjects: ProjectRecord[]
   allSessions: SessionRecord[]
+  resourcePolicy: ResourcePolicy
   onRefresh: () => void
   onNotify: (message: string, level?: NotificationLevel) => void
   requestConfirm: (state: ConfirmState) => void
@@ -238,7 +241,7 @@ const ProjectSelector = ({
 }
 
 const ProjectsPanel = forwardRef<PanelHandle, ProjectsPanelProps>(function ProjectsPanel(
-  { provider, active, locked, searchQuery, allSessions, onNotify, requestConfirm, onNavigateToSessions },
+  { provider, active, locked, searchQuery, allSessions, resourcePolicy, onNotify, requestConfirm, onNavigateToSessions },
   ref,
 ) {
   const [records, setRecords] = useState<ProjectRecord[]>([])
@@ -322,19 +325,19 @@ const ProjectsPanel = forwardRef<PanelHandle, ProjectsPanelProps>(function Proje
   // Compute token summary for current project
   useEffect(() => {
     setCurrentProjectTokens(null)
-    if (!currentRecord || allSessions.length === 0) {
+    if (!currentRecord) {
       return
     }
     let cancelled = false
-    provider.computeProjectTokenSummary(currentRecord.projectId, allSessions).then((summary) => {
-      if (!cancelled) {
+    computeProjectTokens(provider, resourcePolicy, currentRecord.projectId, allSessions).then((summary) => {
+      if (!cancelled && summary) {
         setCurrentProjectTokens(summary)
       }
     })
     return () => {
       cancelled = true
     }
-  }, [currentRecord, allSessions, provider])
+  }, [currentRecord, allSessions, provider, resourcePolicy])
 
   const toggleSelection = useCallback((record: ProjectRecord | undefined) => {
     if (!record) {
@@ -530,7 +533,7 @@ const ProjectsPanel = forwardRef<PanelHandle, ProjectsPanelProps>(function Proje
 })
 
 const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(function SessionsPanel(
-  { provider, active, locked, projectFilter, searchQuery, globalTokenSummary, allProjects, allSessions, onRefresh, onNotify, requestConfirm, onClearFilter, onOpenChatViewer },
+  { provider, active, locked, projectFilter, searchQuery, globalTokenSummary, allProjects, allSessions, resourcePolicy, onRefresh, onNotify, requestConfirm, onClearFilter, onOpenChatViewer },
   ref,
 ) {
   const [cursor, setCursor] = useState(0)
@@ -647,15 +650,15 @@ const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(function Sessi
       return
     }
     let cancelled = false
-    provider.computeSessionTokenSummary(currentSession).then((summary) => {
-      if (!cancelled) {
+    computeSessionTokens(provider, resourcePolicy, currentSession).then((summary) => {
+      if (!cancelled && summary) {
         setCurrentTokenSummary(summary)
       }
     })
     return () => {
       cancelled = true
     }
-  }, [currentSession, provider])
+  }, [currentSession, provider, resourcePolicy])
 
   // Compute filtered token summary (deferred to avoid UI freeze)
   useEffect(() => {
@@ -666,10 +669,9 @@ const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(function Sessi
 
     let cancelled = false
 
-    // Compute filtered (project-only) if filter is active.
     if (projectFilter) {
-      provider.computeProjectTokenSummary(projectFilter, records).then((summary) => {
-        if (!cancelled) {
+      computeFilteredProjectTokens(provider, resourcePolicy, projectFilter, records).then((summary) => {
+        if (!cancelled && summary) {
           setFilteredTokenSummary(summary)
         }
       })
@@ -678,7 +680,7 @@ const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(function Sessi
     return () => {
       cancelled = true
     }
-  }, [records, projectFilter, provider])
+  }, [records, projectFilter, provider, resourcePolicy])
 
   const toggleSelection = useCallback((session: SessionRecord | undefined) => {
     if (!session) {
@@ -2053,6 +2055,7 @@ export const App = ({
             locked={Boolean(confirmState) || isHome}
             searchQuery={activeTab === "projects" ? searchQuery : ""}
             allSessions={allSessions}
+            resourcePolicy={resourcePolicy}
             onNotify={notify}
             requestConfirm={requestConfirm}
             onNavigateToSessions={handleNavigateToSessions}
@@ -2067,6 +2070,7 @@ export const App = ({
             globalTokenSummary={globalTokens}
             allProjects={allProjects}
             allSessions={allSessions}
+            resourcePolicy={resourcePolicy}
             onRefresh={() => setTokenRefreshKey((k) => k + 1)}
             onNotify={notify}
             requestConfirm={requestConfirm}

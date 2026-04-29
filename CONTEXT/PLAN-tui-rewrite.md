@@ -93,7 +93,7 @@ Move provider calls and derived loading state into dedicated hooks/resources.
 - [x] Create a shared project index resource.
 - [x] Create a root-level shared session index resource for global tokens and chat search.
 - [x] Move panel session loading onto the shared session index resource.
-- [ ] Create token summary resources that can be enabled only after the workspace opens.
+- [x] Create token summary resources that can be enabled only after the workspace opens.
 - [ ] Create a chat session resource for message index and lazy hydration.
 - [ ] Create a chat search resource for scoped search.
 - [ ] Ensure data resources are refreshable through a single refresh pathway.

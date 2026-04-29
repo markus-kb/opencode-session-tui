@@ -20,7 +20,8 @@ Current progress:
 - [x] Phase 5 session resource seam: root session metadata load shared by global tokens and chat search.
 - [x] Phase 5 project resource seam: root project index shared by session move/copy selectors; `isProjectMetadataEnabled` policy helper.
 - [x] Phase 5 panel session derivation: SessionsPanel derives filtered sessions from root allSessions; ProjectsPanel receives root allSessions for token computation.
-- [ ] Phase 5 next: token summary resource hooks; chat session/search resources.
+- [x] Phase 5 token resource seam: panel token computations gated through token-resource.ts and resource policy.
+- [ ] Phase 5 next: chat session/search resources; avoid duplicate provider.loadProjectRecords().
 
 Safety rules for this workstream:
 

@@ -459,7 +459,8 @@ Recommended sequence:
 - Completed: root-level global tokens and chat search share a session index through `src/tui/session-resource.ts`.
 - Completed: root-level project index shared by session move/copy selectors through `src/tui/project-resource.ts`.
 - Completed: SessionsPanel derives filtered sessions from root `allSessions` via `filterSessionsByProject`; ProjectsPanel receives root `allSessions` for token computation.
-- Next: token summary resource hooks; chat session/search resources.
+- Completed: Panel token computations gated through `token-resource.ts` and resource policy — no direct `provider.compute*` calls in panel effects.
+- Next: chat session/search resources; avoid duplicate `provider.loadProjectRecords()` calls.
 
 ## Open Decisions
 

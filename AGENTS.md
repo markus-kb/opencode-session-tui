@@ -8,24 +8,31 @@ This file contains critical operational details that AI agents should know when 
 
 ## Project-Specific Configuration
 
-<!-- Add project-specific settings, file paths, or configuration notes here -->
-
-- **Package Manager**: <!-- e.g., npm, yarn, pnpm, bun -->
-- **Build Command**: <!-- e.g., npm run build -->
-- **Test Command**: <!-- e.g., npm test -->
+- **Package Manager**: bun
+- **Test Command**: `bun test`
+- **Typecheck Command**: `bunx tsc --noEmit`
 - **Lint Command**: <!-- e.g., npm run lint -->
 
 ## Critical Operational Details
 
-<!-- Document important patterns, conventions, or requirements that AI should follow -->
+### Strict Red-Green TDD (Non-Negotiable)
+
+Every code change MUST follow Red → Green → Refactor:
+
+1. **Red**: Write a failing test FIRST. Run it. Confirm it fails.
+2. **Green**: Write the minimal production code to make the test pass. Run it. Confirm it passes.
+3. **Refactor**: Clean up while keeping all tests green. Run the full suite.
+
+This applies to ALL changes — pure functions, resource seams, panel wiring, integration tests. No production code without a preceding failing test. No "I'll add the test later."
 
 ### Code Style & Conventions
 - <!-- e.g., Use TypeScript strict mode -->
 - <!-- e.g., Prefer functional components in React -->
 
 ### Architecture Notes
-- <!-- e.g., State management approach -->
-- <!-- e.g., API layer patterns -->
+- TUI rewrite in progress: monolithic `App` being decomposed into typed screens, overlays, shared data resources, and scoped input handling.
+- Root-level data (session index, project index) loads once through resource seams (`session-resource.ts`, `project-resource.ts`) and is shared across panels — panels must not issue duplicate `provider.loadSessionRecords()` or `provider.loadProjectRecords()` calls.
+- Resource loading is gated through `resource-policy.ts` so the home screen defers all expensive work.
 
 ### Environment Setup
 - <!-- e.g., Required environment variables -->
@@ -33,11 +40,10 @@ This file contains critical operational details that AI agents should know when 
 
 ## Common Gotchas & Lessons Learned
 
-<!-- Document pitfalls, edge cases, or hard-won knowledge that will help AI agents avoid mistakes -->
-
-1. <!-- e.g., Always run migrations before tests -->
-2. <!-- e.g., The CI uses a different Node version than local -->
-3. <!-- e.g., Certain tests require Docker to be running -->
+1. Always run `bun test` and `bunx tsc --noEmit` before committing — both must pass with zero failures.
+2. The SQLite test fixtures intentionally produce "malformed JSON" and "missing tables" warnings in test output — these are expected and not failures.
+3. One pre-existing flaky clipboard test in `tests/cli/commands/chat.test.ts` (~line 900) sometimes fails in full-suite runs but passes when isolated; not caused by TUI rewrite work.
+4. When wiring panels to shared resources, write the integration regression test FIRST (Red), then wire the panel (Green). Do not wire first and add tests after.
 
 ## Protected Files
 

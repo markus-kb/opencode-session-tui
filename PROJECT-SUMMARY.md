@@ -40,6 +40,7 @@ The codebase follows a dual-mode architecture with shared libraries:
 - `resource-policy.ts` — Screen/overlay-aware loading policy for deferring metadata, token, and chat work
 - `session-resource.ts` — Shared root session-index loader used by global tokens and chat search
 - `project-resource.ts` — Shared root project-index loader and session-by-project filter used by session move/copy selectors
+- `token-resource.ts` — Policy-gated token computation helpers used by project and session panels
 - `index.tsx` — Exports `launchTUI(options)`, `bootstrap(args)`
 - `args.ts` — TUI-specific arg parsing (`--root`, `--db`, `--experimental-sqlite`, `--help`)
 
@@ -100,6 +101,7 @@ Key Features
   - Root project metadata loads once through `project-resource.ts`; session move/copy selectors reuse that index instead of issuing duplicate root-level project scans.
   - SessionsPanel derives filtered session records from root `allSessions` via `filterSessionsByProject` and `reindexSessions` instead of calling `provider.loadSessionRecords({ projectId })`.
   - ProjectsPanel receives root `allSessions` for project token computation instead of issuing its own `provider.loadSessionRecords()` call.
+  - Panel token computations (project, session, filtered) are gated through `token-resource.ts` and resource policy instead of calling `provider.compute*` directly.
   - The initial home screen reports token loading as deferred until workspace entry.
 - Status & confirmation bars
   - Status bar tint reflects `info` vs `error` states so reload/deletion feedback is obvious.
@@ -133,6 +135,7 @@ Work Completed
 - Added `src/tui/session-resource.ts` and regression tests so root-level global tokens and chat search share one session metadata index.
 - Added `src/tui/project-resource.ts` and regression tests so root-level project index is shared by session move/copy selectors; added `isProjectMetadataEnabled` policy helper.
 - Wired panels to derive session records from root `allSessions` instead of independent `provider.loadSessionRecords()` calls; added `filterSessionsByProject` and `reindexSessions` pure helpers with tests.
+- Added `src/tui/token-resource.ts` and regression tests so panel token computations are gated through resource policy instead of direct `provider.compute*` calls.
 
 ### CLI Implementation (Phase 1-4)
 - Created Commander-based CLI with global options and subcommand routing.
