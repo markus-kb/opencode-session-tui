@@ -15,7 +15,8 @@ Current progress:
 - [x] Phase 3 starter extraction: token formatting helpers moved to `src/tui/format.ts` with tests.
 - [x] Phase 4 screen state: home/workspace modeled through typed `TuiState.screen`.
 - [x] Phase 4 overlay state: chat viewer/search modeled through typed `TuiState.overlay`.
-- [ ] Phase 5 next: separate data-loading policy and provider reads from rendering.
+- [x] Phase 5 starter policy: screen/overlay-aware resource-loading policy added in `src/tui/resource-policy.ts`.
+- [ ] Phase 5 next: move project/session provider reads into shared resource hooks.
 
 Safety rules for this workstream:
 

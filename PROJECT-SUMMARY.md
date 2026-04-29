@@ -37,6 +37,7 @@ The codebase follows a dual-mode architecture with shared libraries:
 - `app.tsx` — Main TUI app with Projects, Sessions, Chat panels
 - `app-state.ts` — Typed TUI state helpers for home/workspace screens, chat overlays, startup loading state, and transition tests
 - `format.ts` — Token display formatting helpers shared by TUI components and tests
+- `resource-policy.ts` — Screen/overlay-aware loading policy for deferring metadata, token, and chat work
 - `index.tsx` — Exports `launchTUI(options)`, `bootstrap(args)`
 - `args.ts` — TUI-specific arg parsing (`--root`, `--db`, `--experimental-sqlite`, `--help`)
 
@@ -92,6 +93,7 @@ Key Features
 - TUI state model
   - Home/workspace navigation now uses typed `TuiState.screen` instead of a standalone help boolean.
   - Chat viewer/search visibility now derives from typed `TuiState.overlay` instead of standalone booleans.
+  - Resource loading is gated through `resource-policy.ts` so home defers all expensive work while workspace enables metadata/token summaries and chat overlays opt into chat work.
   - The initial home screen reports token loading as deferred until workspace entry.
 - Status & confirmation bars
   - Status bar tint reflects `info` vs `error` states so reload/deletion feedback is obvious.
@@ -120,6 +122,7 @@ Work Completed
 - Added TUI rewrite preparation docs: `CONTEXT/PLAN-tui-rewrite.md` and `CONTEXT/TUI-TARGET-MODEL.md`.
 - Added pure TUI state tests for home startup, screen transitions, and chat overlay transitions.
 - Extracted token formatting helpers into `src/tui/format.ts` with focused regression tests.
+- Added `src/tui/resource-policy.ts` to make data-loading decisions explicit before provider reads are moved into resource hooks.
 
 ### CLI Implementation (Phase 1-4)
 - Created Commander-based CLI with global options and subcommand routing.

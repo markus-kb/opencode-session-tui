@@ -32,7 +32,6 @@ import {
   createInitialTuiState,
   getGlobalTokenDisplayState,
   getHomeKeyAction,
-  getWorkspaceDataLoadState,
   closeOverlay,
   openChatSearchOverlay,
   openChatViewerOverlay,
@@ -42,6 +41,7 @@ import {
   type TuiTab,
 } from "./app-state"
 import { formatAggregateSummaryShort, formatTokenCount } from "./format"
+import { getResourcePolicy, isSessionMetadataEnabled, isTokenSummaryEnabled, toWorkspaceDataLoadState } from "./resource-policy"
 
 type TabKey = TuiTab
 
@@ -1592,7 +1592,8 @@ export const App = ({
     })
   }, [backend, root, resolvedDbPath, sqliteStrict, forceWrite, notify, setSqliteWarning])
 
-  const workspaceDataLoadState = useMemo(() => getWorkspaceDataLoadState(tuiState), [tuiState])
+  const resourcePolicy = useMemo(() => getResourcePolicy(tuiState), [tuiState])
+  const workspaceDataLoadState = useMemo(() => toWorkspaceDataLoadState(resourcePolicy), [resourcePolicy])
 
   const globalTokenDisplay = useMemo(
     () => getGlobalTokenDisplayState(globalTokens, workspaceDataLoadState),
@@ -1607,7 +1608,7 @@ export const App = ({
 
   // Load global tokens
   useEffect(() => {
-    if (!workspaceDataLoadState.enabled) {
+    if (!isTokenSummaryEnabled(resourcePolicy)) {
       return
     }
     let cancelled = false
@@ -1620,11 +1621,11 @@ export const App = ({
       }
     })
     return () => { cancelled = true }
-  }, [provider, tokenRefreshKey, workspaceDataLoadState])
+  }, [provider, resourcePolicy, tokenRefreshKey])
 
   // Load all sessions for chat search
   useEffect(() => {
-    if (!workspaceDataLoadState.enabled) {
+    if (!isSessionMetadataEnabled(resourcePolicy)) {
       return
     }
     let cancelled = false
@@ -1634,7 +1635,7 @@ export const App = ({
       }
     })
     return () => { cancelled = true }
-  }, [provider, tokenRefreshKey, workspaceDataLoadState])
+  }, [provider, resourcePolicy, tokenRefreshKey])
 
   const requestConfirm = useCallback((state: ConfirmState) => {
     setConfirmState(state)

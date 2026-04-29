@@ -455,7 +455,8 @@ Recommended sequence:
 - Completed: token formatting helpers are extracted into `src/tui/format.ts`.
 - Completed: home/workspace navigation is represented by typed `TuiState.screen`.
 - Completed: chat viewer/search visibility is represented by typed `TuiState.overlay`.
-- Next: introduce explicit resource-loading policy before moving provider reads out of render components.
+- Completed: explicit resource-loading policy lives in `src/tui/resource-policy.ts`.
+- Next: move provider reads out of render components and into shared resource hooks.
 
 ## Open Decisions
 
