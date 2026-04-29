@@ -52,6 +52,7 @@ import { getHomeDashboardModel } from "./home-dashboard"
 import { detectStorageSources } from "./backend-resolver"
 import { PALETTE, SearchBar } from "./components"
 import { ConfirmBar, type ConfirmState } from "./confirm-bar"
+import { cancelConfirmation, finishConfirmation, requestConfirmation, startConfirmation } from "./confirm-lifecycle"
 import { StatusBar, type NotificationLevel } from "./status-bar"
 import { HomeScreen } from "./home-screen"
 import { toProjectPanelAction } from "./project-panel-commands"
@@ -1022,28 +1023,33 @@ export const App = ({
   }, [allSessions, provider, resourcePolicy, sessionIndexLoaded])
 
   const requestConfirm = useCallback((state: ConfirmState) => {
-    setConfirmState(state)
-    setConfirmBusy(false)
+    const snapshot = requestConfirmation(state)
+    setConfirmState(snapshot.state)
+    setConfirmBusy(snapshot.busy)
   }, [])
 
   const cancelConfirm = useCallback(() => {
-    setConfirmState(null)
-    setConfirmBusy(false)
+    const snapshot = cancelConfirmation()
+    setConfirmState(snapshot.state)
+    setConfirmBusy(snapshot.busy)
   }, [])
 
   const executeConfirm = useCallback(async () => {
-    if (!confirmState || confirmBusy) {
+    const started = startConfirmation(confirmState, confirmBusy)
+    if (!started.canExecute) {
       return
     }
     try {
-      setConfirmBusy(true)
-      await confirmState.onConfirm()
+      setConfirmState(started.snapshot.state)
+      setConfirmBusy(started.snapshot.busy)
+      await started.snapshot.state?.onConfirm()
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
       notify(`Action failed: ${message}`, "error")
     } finally {
-      setConfirmBusy(false)
-      setConfirmState(null)
+      const snapshot = finishConfirmation()
+      setConfirmState(snapshot.state)
+      setConfirmBusy(snapshot.busy)
     }
   }, [confirmState, confirmBusy, notify])
 

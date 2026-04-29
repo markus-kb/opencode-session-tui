@@ -44,6 +44,7 @@ Current progress:
 - [x] Phase 9 help screen extraction: registry-backed help screen moved to `src/tui/help-screen.tsx`.
 - [x] Phase 9 chat viewer extraction: chat viewer overlay moved to `src/tui/chat-viewer.tsx`.
 - [x] Phase 9 chat search extraction: chat search overlay moved to `src/tui/chat-search-overlay.tsx`.
+- [x] Phase 9 confirmation lifecycle seam: confirmation request/cancel/start/finish helpers moved to `src/tui/confirm-lifecycle.ts`.
 
 Safety rules for this workstream:
 

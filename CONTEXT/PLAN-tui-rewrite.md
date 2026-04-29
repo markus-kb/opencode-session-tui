@@ -179,7 +179,7 @@ Exit criteria: the workspace is composed from isolated panels rather than embedd
 Move overlays into dedicated components with scoped state and input.
 
 - [x] Extract help overlay.
-- [ ] Extract confirmation overlay.
+- [x] Extract confirmation lifecycle.
 - [x] Extract chat viewer overlay.
 - [x] Extract chat search overlay.
 - [x] Extract project selector overlay.
