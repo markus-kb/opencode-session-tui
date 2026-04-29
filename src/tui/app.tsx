@@ -24,11 +24,7 @@ import {
   createInitialTuiState,
   getGlobalTokenDisplayState,
 
-  closeOverlay,
-  openChatSearchOverlay,
-  openChatViewerOverlay,
-  openHome,
-  openWorkspace,
+  applyNavigationEvent,
   switchWorkspaceTab,
   type TuiOverlay,
   type TuiTab,
@@ -263,7 +259,7 @@ export const App = ({
 
   // Chat viewer controls
   const openChatViewer = useCallback(async (session: SessionRecord) => {
-    setTuiState((prev) => openChatViewerOverlay(prev, session.sessionId))
+    setTuiState((prev) => applyNavigationEvent(prev, { type: "openChat", sessionId: session.sessionId }))
     setChatSession(session)
     setChatMessages([])
     setChatCursor(0)
@@ -286,7 +282,7 @@ export const App = ({
   }, [provider, resourcePolicy])
 
   const closeChatViewer = useCallback(() => {
-    setTuiState((prev) => closeOverlay(prev))
+    setTuiState((prev) => applyNavigationEvent(prev, { type: "closeOverlay" }))
     setChatSession(null)
     setChatMessages([])
     setChatCursor(0)
@@ -334,7 +330,7 @@ export const App = ({
 
   // Chat search controls
   const openChatSearch = useCallback(() => {
-    setTuiState((prev) => openChatSearchOverlay(prev))
+    setTuiState((prev) => applyNavigationEvent(prev, { type: "openChatSearch" }))
     setChatSearchQuery("")
     setChatSearchResults([])
     setChatSearchCursor(0)
@@ -342,7 +338,7 @@ export const App = ({
   }, [])
 
   const closeChatSearch = useCallback(() => {
-    setTuiState((prev) => closeOverlay(prev))
+    setTuiState((prev) => applyNavigationEvent(prev, { type: "closeOverlay" }))
     setChatSearchQuery("")
     setChatSearchResults([])
     setChatSearchCursor(0)
@@ -521,7 +517,7 @@ export const App = ({
           return
         }
         if (cmdId === "homeDismiss") {
-          setTuiState((prev) => openWorkspace(prev))
+          setTuiState((prev) => applyNavigationEvent(prev, { type: "openWorkspace" }))
           return
         }
         return
@@ -537,7 +533,7 @@ export const App = ({
       }
 
       if (cmdId === "help") {
-        setTuiState((prev) => openHome(prev))
+        setTuiState((prev) => applyNavigationEvent(prev, { type: "openHome" }))
         return
       }
 
@@ -595,7 +591,7 @@ export const App = ({
   const handleNavigateToSessions = useCallback(
     (projectId: string) => {
       setSessionFilter(projectId)
-      setTuiState((prev) => openWorkspace(prev, "sessions"))
+      setTuiState((prev) => applyNavigationEvent(prev, { type: "openWorkspace", activeTab: "sessions" }))
       notify(`Filtering sessions by ${projectId}`)
     },
     [notify],

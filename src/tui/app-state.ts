@@ -20,6 +20,13 @@ export type TuiState = {
   overlay: TuiOverlay | null
 }
 
+export type NavigationEvent =
+  | { type: "openWorkspace"; activeTab?: TuiTab }
+  | { type: "openHome" }
+  | { type: "openChat"; sessionId: string }
+  | { type: "openChatSearch" }
+  | { type: "closeOverlay" }
+
 export type WorkspaceDataLoadState =
   | { enabled: true }
   | { enabled: false; reason: "home" }
@@ -72,6 +79,21 @@ export function switchWorkspaceTab(state: TuiState, direction: "next" | "prev" |
   }
 
   return openWorkspace(state, state.screen.activeTab === "projects" ? "sessions" : "projects")
+}
+
+export function applyNavigationEvent(state: TuiState, event: NavigationEvent): TuiState {
+  switch (event.type) {
+    case "openWorkspace":
+      return openWorkspace(state, event.activeTab)
+    case "openHome":
+      return openHome(state)
+    case "openChat":
+      return openChatViewerOverlay(state, event.sessionId)
+    case "openChatSearch":
+      return openChatSearchOverlay(state)
+    case "closeOverlay":
+      return closeOverlay(state)
+  }
 }
 
 export function getWorkspaceDataLoadState(state: TuiState): WorkspaceDataLoadState {

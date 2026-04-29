@@ -6,6 +6,7 @@ import {
   getGlobalTokenDisplayState,
   closeOverlay,
   getActiveOverlay,
+  applyNavigationEvent,
   openChatSearchOverlay,
   openChatViewerOverlay,
   openHome,
@@ -86,6 +87,17 @@ describe("TUI app state", () => {
       name: "workspace",
       activeTab: "sessions",
     })
+  })
+
+  test("applies typed navigation events", () => {
+    const initial = createInitialTuiState()
+    const workspace = applyNavigationEvent(initial, { type: "openWorkspace", activeTab: "sessions" })
+
+    expect(workspace.screen).toEqual({ name: "workspace", activeTab: "sessions" })
+    expect(applyNavigationEvent(workspace, { type: "openChat", sessionId: "session-1" }).overlay).toEqual({ name: "chatViewer", sessionId: "session-1" })
+    expect(applyNavigationEvent(workspace, { type: "openChatSearch" }).overlay).toEqual({ name: "chatSearch" })
+    expect(applyNavigationEvent(openChatSearchOverlay(workspace), { type: "closeOverlay" }).overlay).toBeNull()
+    expect(applyNavigationEvent(workspace, { type: "openHome" }).screen).toEqual({ name: "home" })
   })
 
   test("maps home dismiss keys to workspace entry", () => {

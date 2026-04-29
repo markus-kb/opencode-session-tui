@@ -35,7 +35,7 @@ The codebase follows a dual-mode architecture with shared libraries:
 
 ### TUI Module (`src/tui/`)
 - `app.tsx` — Main TUI app with Projects, Sessions, Chat panels
-- `app-state.ts` — Typed TUI state helpers for home/workspace screens, chat overlays, startup loading state, and transition tests
+- `app-state.ts` — Typed TUI state helpers and navigation events for home/workspace screens, chat overlays, startup loading state, and transition tests
 - `format.ts` — Token display formatting helpers shared by TUI components and tests
 - `resource-policy.ts` — Screen/overlay-aware loading policy for deferring metadata, token, and chat work
 - `session-resource.ts` — Shared root session-index loader used by global tokens and chat search

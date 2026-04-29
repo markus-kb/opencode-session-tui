@@ -20,6 +20,7 @@ Current progress:
 - [x] Phase 4 screen state: home/workspace modeled through typed `TuiState.screen`.
 - [x] Phase 4 overlay state: chat viewer/search modeled through typed `TuiState.overlay`.
 - [x] Phase 4 input precedence seam: `src/tui/input-precedence.ts` makes search/confirm/overlay/home/workspace priority explicit.
+- [x] Phase 4 navigation event seam: `applyNavigationEvent` centralizes typed open workspace/home/chat/search/close overlay events.
 - [x] Phase 5 starter policy: screen/overlay-aware resource-loading policy added in `src/tui/resource-policy.ts`.
 - [x] E2E hardening: binary TUI help paths covered by process-level tests.
 - [x] Phase 5 session resource seam: root session metadata load shared by global tokens and chat search.
