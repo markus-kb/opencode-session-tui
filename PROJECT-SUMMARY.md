@@ -98,6 +98,8 @@ Key Features
   - Resource loading is gated through `resource-policy.ts` so home defers all expensive work while workspace enables metadata/token summaries and chat overlays opt into chat work.
   - Root session metadata loads once through `session-resource.ts`; global tokens and chat search reuse that index instead of issuing duplicate root-level session scans.
   - Root project metadata loads once through `project-resource.ts`; session move/copy selectors reuse that index instead of issuing duplicate root-level project scans.
+  - SessionsPanel derives filtered session records from root `allSessions` via `filterSessionsByProject` and `reindexSessions` instead of calling `provider.loadSessionRecords({ projectId })`.
+  - ProjectsPanel receives root `allSessions` for project token computation instead of issuing its own `provider.loadSessionRecords()` call.
   - The initial home screen reports token loading as deferred until workspace entry.
 - Status & confirmation bars
   - Status bar tint reflects `info` vs `error` states so reload/deletion feedback is obvious.
@@ -130,6 +132,7 @@ Work Completed
 - Added process-level TUI entrypoint e2e tests for root help and `tui --help` so storage/default-mode help stays visible without launching the interactive renderer.
 - Added `src/tui/session-resource.ts` and regression tests so root-level global tokens and chat search share one session metadata index.
 - Added `src/tui/project-resource.ts` and regression tests so root-level project index is shared by session move/copy selectors; added `isProjectMetadataEnabled` policy helper.
+- Wired panels to derive session records from root `allSessions` instead of independent `provider.loadSessionRecords()` calls; added `filterSessionsByProject` and `reindexSessions` pure helpers with tests.
 
 ### CLI Implementation (Phase 1-4)
 - Created Commander-based CLI with global options and subcommand routing.

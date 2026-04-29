@@ -27,3 +27,7 @@ export function filterSessionsByProject(
 
   return sessions.filter((s) => s.projectId === projectId)
 }
+
+export function reindexSessions(sessions: SessionRecord[]): SessionRecord[] {
+  return sessions.map((s, i) => ({ ...s, index: i }))
+}

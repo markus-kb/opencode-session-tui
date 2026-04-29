@@ -43,7 +43,7 @@ import {
 import { formatAggregateSummaryShort, formatTokenCount } from "./format"
 import { getResourcePolicy, isProjectMetadataEnabled, isSessionMetadataEnabled, isTokenSummaryEnabled, toWorkspaceDataLoadState } from "./resource-policy"
 import { loadGlobalTokensFromSessionIndex, loadSessionIndex } from "./session-resource"
-import { loadProjectIndex } from "./project-resource"
+import { loadProjectIndex, filterSessionsByProject, reindexSessions } from "./project-resource"
 
 type TabKey = TuiTab
 
@@ -66,6 +66,7 @@ type ProjectsPanelProps = {
   active: boolean
   locked: boolean
   searchQuery: string
+  allSessions: SessionRecord[]
   onNotify: (message: string, level?: NotificationLevel) => void
   requestConfirm: (state: ConfirmState) => void
   onNavigateToSessions: (projectId: string) => void
@@ -79,6 +80,8 @@ type SessionsPanelProps = {
   searchQuery: string
   globalTokenSummary: AggregateTokenSummary | null
   allProjects: ProjectRecord[]
+  allSessions: SessionRecord[]
+  onRefresh: () => void
   onNotify: (message: string, level?: NotificationLevel) => void
   requestConfirm: (state: ConfirmState) => void
   onClearFilter: () => void
@@ -235,7 +238,7 @@ const ProjectSelector = ({
 }
 
 const ProjectsPanel = forwardRef<PanelHandle, ProjectsPanelProps>(function ProjectsPanel(
-  { provider, active, locked, searchQuery, onNotify, requestConfirm, onNavigateToSessions },
+  { provider, active, locked, searchQuery, allSessions, onNotify, requestConfirm, onNavigateToSessions },
   ref,
 ) {
   const [records, setRecords] = useState<ProjectRecord[]>([])
@@ -245,7 +248,6 @@ const ProjectsPanel = forwardRef<PanelHandle, ProjectsPanelProps>(function Proje
   const [cursor, setCursor] = useState(0)
   const [selectedIndexes, setSelectedIndexes] = useState<Set<number>>(new Set())
   // Token state for projects
-  const [allSessions, setAllSessions] = useState<SessionRecord[]>([])
   const [currentProjectTokens, setCurrentProjectTokens] = useState<AggregateTokenSummary | null>(null)
 
   const missingCount = useMemo(() => records.filter((record) => record.state === "missing").length, [records])
@@ -316,17 +318,6 @@ const ProjectsPanel = forwardRef<PanelHandle, ProjectsPanelProps>(function Proje
       return Math.min(prev, visibleRecords.length - 1)
     })
   }, [visibleRecords.length])
-
-  // Load all sessions once for token computation
-  useEffect(() => {
-    let cancelled = false
-    provider.loadSessionRecords().then((sessions) => {
-      if (!cancelled) {
-        setAllSessions(sessions)
-      }
-    })
-    return () => { cancelled = true }
-  }, [provider, records]) // Re-fetch when projects change (implies sessions may have changed)
 
   // Compute token summary for current project
   useEffect(() => {
@@ -539,12 +530,9 @@ const ProjectsPanel = forwardRef<PanelHandle, ProjectsPanelProps>(function Proje
 })
 
 const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(function SessionsPanel(
-  { provider, active, locked, projectFilter, searchQuery, globalTokenSummary, allProjects, onNotify, requestConfirm, onClearFilter, onOpenChatViewer },
+  { provider, active, locked, projectFilter, searchQuery, globalTokenSummary, allProjects, allSessions, onRefresh, onNotify, requestConfirm, onClearFilter, onOpenChatViewer },
   ref,
 ) {
-  const [records, setRecords] = useState<SessionRecord[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [cursor, setCursor] = useState(0)
   const [selectedIndexes, setSelectedIndexes] = useState<Set<number>>(new Set())
   const [sortMode, setSortMode] = useState<"updated" | "created">("updated")
@@ -557,6 +545,8 @@ const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(function Sessi
   // Token state
   const [currentTokenSummary, setCurrentTokenSummary] = useState<TokenSummary | null>(null)
   const [filteredTokenSummary, setFilteredTokenSummary] = useState<AggregateTokenSummary | null>(null)
+
+  const records = useMemo(() => reindexSessions(filterSessionsByProject(allSessions, projectFilter || undefined)), [allSessions, projectFilter])
 
   // Build fuzzy search candidates using the shared search library
   const searchCandidates = useMemo((): SearchCandidate<SessionRecord>[] => {
@@ -621,31 +611,6 @@ const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(function Sessi
     return matched
   }, [records, sortMode, searchQuery, searcher])
   const currentSession = visibleRecords[cursor]
-
-  const refreshRecords = useCallback(
-    async (silent = false) => {
-      setLoading(true)
-      setError(null)
-      try {
-        const data = await provider.loadSessionRecords({ projectId: projectFilter || undefined })
-        setRecords(data)
-        if (!silent) {
-          onNotify(`Loaded ${data.length} session(s).`)
-        }
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error)
-        setError(message)
-        onNotify(`Failed to load sessions: ${message}`, "error")
-      } finally {
-        setLoading(false)
-      }
-    },
-    [provider, projectFilter, onNotify],
-  )
-
-  useEffect(() => {
-    void refreshRecords(true)
-  }, [refreshRecords])
 
   useEffect(() => {
     setSelectedIndexes((prev) => {
@@ -770,10 +735,10 @@ const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(function Sessi
           ? `Removed ${removed.length} session file(s). Failed: ${failed.length}`
           : `Removed ${removed.length} session file(s).`
         onNotify(msg, failed.length ? "error" : "info")
-        await refreshRecords(true)
+        onRefresh()
       },
     })
-  }, [selectedSessions, onNotify, requestConfirm, refreshRecords, provider])
+  }, [selectedSessions, onNotify, requestConfirm, onRefresh, provider])
 
   const executeRename = useCallback(async () => {
     if (!currentSession || !renameValue.trim()) {
@@ -790,12 +755,12 @@ const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(function Sessi
       onNotify(`Renamed to "${renameValue.trim()}"`)
       setIsRenaming(false)
       setRenameValue('')
-      await refreshRecords(true)
+      onRefresh()
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error)
       onNotify(`Rename failed: ${msg}`, 'error')
     }
-  }, [currentSession, renameValue, onNotify, refreshRecords, provider])
+  }, [currentSession, renameValue, onNotify, onRefresh, provider])
 
   const executeTransfer = useCallback(async (
     targetProject: ProjectRecord,
@@ -826,8 +791,8 @@ const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(function Sessi
       )
     }
 
-    await refreshRecords(true)
-  }, [selectedSessions, provider, onNotify, refreshRecords])
+    onRefresh()
+  }, [selectedSessions, provider, onNotify, onRefresh])
 
   const handleKey = useCallback(
     (key: KeyEvent) => {
@@ -981,10 +946,10 @@ const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(function Sessi
     () => ({
       handleKey,
       refresh: () => {
-        void refreshRecords(true)
+        onRefresh()
       },
     }),
-    [handleKey, refreshRecords],
+    [handleKey, onRefresh],
   )
 
   return (
@@ -1026,10 +991,8 @@ const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(function Sessi
         />
       ) : null}
 
-      {error ? (
-        <text fg="red">{error}</text>
-      ) : loading ? (
-        <text>Loading sessions...</text>
+      {allSessions.length === 0 && records.length === 0 ? (
+        <text>No sessions found.</text>
       ) : visibleRecords.length === 0 ? (
         <text>No sessions found.</text>
       ) : (
@@ -2089,6 +2052,7 @@ export const App = ({
             active={activeTab === "projects"}
             locked={Boolean(confirmState) || isHome}
             searchQuery={activeTab === "projects" ? searchQuery : ""}
+            allSessions={allSessions}
             onNotify={notify}
             requestConfirm={requestConfirm}
             onNavigateToSessions={handleNavigateToSessions}
@@ -2102,6 +2066,8 @@ export const App = ({
             searchQuery={activeTab === "sessions" ? searchQuery : ""}
             globalTokenSummary={globalTokens}
             allProjects={allProjects}
+            allSessions={allSessions}
+            onRefresh={() => setTokenRefreshKey((k) => k + 1)}
             onNotify={notify}
             requestConfirm={requestConfirm}
             onClearFilter={clearSessionFilter}

@@ -3,7 +3,8 @@ import type { DataProvider } from "../../src/lib/opencode-data-provider"
 import type { ProjectRecord, SessionRecord } from "../../src/lib/opencode-data"
 import { createInitialTuiState, openWorkspace } from "../../src/tui/app-state"
 import { getResourcePolicy } from "../../src/tui/resource-policy"
-import { loadProjectIndex, filterSessionsByProject } from "../../src/tui/project-resource"
+import { loadProjectIndex, filterSessionsByProject, reindexSessions } from "../../src/tui/project-resource"
+import { loadSessionIndex } from "../../src/tui/session-resource"
 
 function createProject(id: string): ProjectRecord {
   return {
@@ -115,5 +116,70 @@ describe("TUI project resource", () => {
     const filtered = filterSessionsByProject(sessions, "project-z")
 
     expect(filtered).toEqual([])
+  })
+
+  test("reindexes filtered sessions with sequential indices", () => {
+    const sessions = [
+      { ...createSession("s1", "project-a"), index: 5 },
+      { ...createSession("s2", "project-a"), index: 12 },
+      { ...createSession("s3", "project-a"), index: 99 },
+    ]
+
+    const reindexed = reindexSessions(sessions)
+
+    expect(reindexed.map((s) => s.index)).toEqual([0, 1, 2])
+    expect(reindexed.map((s) => s.sessionId)).toEqual(["s1", "s2", "s3"])
+  })
+
+  test("reindexes empty array without error", () => {
+    expect(reindexSessions([])).toEqual([])
+  })
+
+  test("panel derivation pipeline: root index → filter → reindex without extra provider calls", async () => {
+    const sessions = [
+      { ...createSession("s1", "project-a"), index: 0 },
+      { ...createSession("s2", "project-b"), index: 1 },
+      { ...createSession("s3", "project-a"), index: 2 },
+      { ...createSession("s4", "project-c"), index: 3 },
+    ]
+    const provider = createProvider([], sessions)
+    const policy = getResourcePolicy(openWorkspace(createInitialTuiState(), "sessions"))
+
+    // Root loads session index once
+    const index = await loadSessionIndex(provider, policy)
+    expect(provider.calls.sessions).toBe(1)
+
+    // Panel derives records from root index without calling provider again
+    const panelRecords = reindexSessions(filterSessionsByProject(index.records, "project-a"))
+    expect(provider.calls.sessions).toBe(1)
+    expect(panelRecords.map((s) => s.sessionId)).toEqual(["s1", "s3"])
+    expect(panelRecords.map((s) => s.index)).toEqual([0, 1])
+  })
+
+  test("panel derivation pipeline: no filter returns all sessions reindexed", async () => {
+    const sessions = [
+      { ...createSession("s1", "project-a"), index: 5 },
+      { ...createSession("s2", "project-b"), index: 10 },
+    ]
+    const provider = createProvider([], sessions)
+    const policy = getResourcePolicy(openWorkspace(createInitialTuiState(), "sessions"))
+
+    const index = await loadSessionIndex(provider, policy)
+    const panelRecords = reindexSessions(filterSessionsByProject(index.records, undefined))
+    expect(provider.calls.sessions).toBe(1)
+    expect(panelRecords.map((s) => s.sessionId)).toEqual(["s1", "s2"])
+    expect(panelRecords.map((s) => s.index)).toEqual([0, 1])
+  })
+
+  test("panel derivation pipeline: home policy defers root index, panel records stay empty", async () => {
+    const sessions = [createSession("s1", "project-a")]
+    const provider = createProvider([], sessions)
+
+    const index = await loadSessionIndex(provider, getResourcePolicy(createInitialTuiState()))
+    expect(index.kind).toBe("deferred")
+    expect(provider.calls.sessions).toBe(0)
+
+    const panelRecords = reindexSessions(filterSessionsByProject(index.records, "project-a"))
+    expect(panelRecords).toEqual([])
   })
 })

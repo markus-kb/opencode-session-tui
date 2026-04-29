@@ -458,7 +458,8 @@ Recommended sequence:
 - Completed: explicit resource-loading policy lives in `src/tui/resource-policy.ts`.
 - Completed: root-level global tokens and chat search share a session index through `src/tui/session-resource.ts`.
 - Completed: root-level project index shared by session move/copy selectors through `src/tui/project-resource.ts`.
-- Next: move panel session/project provider reads out of render components and into shared resources; token summary resource hooks.
+- Completed: SessionsPanel derives filtered sessions from root `allSessions` via `filterSessionsByProject`; ProjectsPanel receives root `allSessions` for token computation.
+- Next: token summary resource hooks; chat session/search resources.
 
 ## Open Decisions
 
