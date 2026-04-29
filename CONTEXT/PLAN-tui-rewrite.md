@@ -54,7 +54,7 @@ Introduce clean building blocks without changing visible behavior.
 - [x] Extract `SearchBar`.
 - [x] Extract common overlay frame and pane frame components.
 - [x] Move token formatting helpers out of `app.tsx` where appropriate.
-- [ ] Keep behavior unchanged while reducing the size of `app.tsx`.
+- [x] Keep behavior unchanged while reducing the size of `app.tsx`.
 
 Exit criteria: shared UI primitives live outside the root app and can be reused by new screens.
 

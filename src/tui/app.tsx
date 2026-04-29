@@ -48,11 +48,12 @@ import { loadProjectIndex, filterSessionsByProject, reindexSessions } from "./pr
 import { computeProjectTokens, computeSessionTokens, computeFilteredProjectTokens } from "./token-resource"
 import { buildTuiCommands, type TuiCommandSet } from "./command-definitions"
 import { toCommandKey, toCommandScope, resolveCommand, type KeyRouteContext } from "./key-router"
-import { getHomeDashboardModel, type HomeDashboardModel } from "./home-dashboard"
+import { getHomeDashboardModel } from "./home-dashboard"
 import { detectStorageSources } from "./backend-resolver"
 import { Bullet, Columns, KeyChip, OverlayFrame, PALETTE, SearchBar, Section } from "./components"
 import { ConfirmBar, type ConfirmState } from "./confirm-bar"
 import { StatusBar, type NotificationLevel } from "./status-bar"
+import { HomeScreen } from "./home-screen"
 
 type TabKey = TuiTab
 
@@ -1057,51 +1058,6 @@ const HelpScreen = ({ cmdSet, onDismiss }: { cmdSet: TuiCommandSet; onDismiss: (
     </box>
   )
 }
-
-const HomeScreen = ({ model }: { model: HomeDashboardModel }) => (
-  <box style={{ flexDirection: "column", flexGrow: 1, padding: 2, border: true }}>
-    <text fg={PALETTE.primary}>{model.title}</text>
-    <text fg={PALETTE.muted}>{model.subtitle}</text>
-    <Columns>
-      <box style={{ flexDirection: "column", flexGrow: 1 }}>
-        <Section title="Storage">
-          {model.storage.map((item) => (
-            <Bullet key={item.label}>
-              <text fg={PALETTE.accent}>{item.label}: </text>
-              <text>{item.value}</text>
-            </Bullet>
-          ))}
-        </Section>
-        <Section title="Library">
-          {model.library.map((item) => (
-            <Bullet key={item.label}>
-              <text fg={PALETTE.accent}>{item.label}: </text>
-              <text>{item.value}</text>
-            </Bullet>
-          ))}
-        </Section>
-      </box>
-      <box style={{ flexDirection: "column", flexGrow: 1 }}>
-        <Section title="Primary Actions">
-          {model.actions.map((action) => (
-            <Bullet key={action.key}>
-              <KeyChip k={action.key} />
-              <text> — {action.label}</text>
-            </Bullet>
-          ))}
-        </Section>
-        <Section title="Status">
-          <Bullet>
-            <text>Workspace reads are deferred on this screen.</text>
-          </Bullet>
-          <Bullet>
-            <text>Open the workspace to load project and session metadata.</text>
-          </Bullet>
-        </Section>
-      </box>
-    </Columns>
-  </box>
-)
 
 type ChatViewerProps = {
   session: SessionRecord

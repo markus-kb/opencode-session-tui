@@ -33,6 +33,7 @@ Current progress:
 - [x] Phase 6 CLI usage: TUI usage keybinding text generated from the command registry.
 - [x] Phase 6 complete: input precedence covered by key-router tests.
 - [x] Phase 7 home dashboard: static help screen replaced with tested storage/library/actions model and cheap source availability detection.
+- [x] Phase 7 home screen extraction: dashboard view moved to `src/tui/home-screen.tsx`.
 
 Safety rules for this workstream:
 
