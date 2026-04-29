@@ -7,8 +7,8 @@ This plan prepares the OpenTUI app for a fundamental rewrite without losing the 
 Freeze the current TUI behavior with regression tests before major refactoring.
 
 - [ ] Capture startup behavior, including the initial home/help screen.
-- [ ] Test that the initial home screen does not load sessions or compute tokens.
-- [ ] Test home dismissal via Enter and Esc.
+- [x] Test that the initial home screen does not load sessions or compute tokens.
+- [x] Test home dismissal via Enter and Esc.
 - [ ] Test help toggle behavior from the workspace.
 - [ ] Test keyboard precedence for search, confirmations, chat viewer, chat search, and panels.
 - [ ] Test project-to-session navigation.
@@ -52,7 +52,7 @@ Introduce clean building blocks without changing visible behavior.
 - [ ] Extract `KeyChip`, `Section`, `Row`, `Bullet`, and related layout helpers.
 - [ ] Extract `SearchBar`.
 - [ ] Extract common overlay frame and pane frame components.
-- [ ] Move token and date/path formatting helpers out of `app.tsx` where appropriate.
+- [x] Move token formatting helpers out of `app.tsx` where appropriate.
 - [ ] Keep behavior unchanged while reducing the size of `app.tsx`.
 
 Exit criteria: shared UI primitives live outside the root app and can be reused by new screens.

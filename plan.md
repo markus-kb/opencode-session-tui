@@ -1,3 +1,31 @@
+# Active Plan: TUI Rewrite Preparation
+
+The active workstream is preparing the OpenTUI app for a fundamental rewrite while preserving current behavior with red-green TDD and atomic commits.
+
+Primary references:
+
+- `CONTEXT/PLAN-tui-rewrite.md` — phased rewrite preparation checklist.
+- `CONTEXT/TUI-TARGET-MODEL.md` — target product/screen/overlay/resource model.
+- `PROJECT-SUMMARY.md` — current implemented architecture summary.
+
+Current progress:
+
+- [x] Phase 1 starter regression seam: home startup state, deferred data loading, home key behavior.
+- [x] Phase 2 target model: dashboard-first app, explicit screens, overlays, ownership boundaries, loading rules.
+- [x] Phase 3 starter extraction: token formatting helpers moved to `src/tui/format.ts` with tests.
+- [x] Phase 4 screen state: home/workspace modeled through typed `TuiState.screen`.
+- [x] Phase 4 overlay state: chat viewer/search modeled through typed `TuiState.overlay`.
+- [ ] Phase 5 next: separate data-loading policy and provider reads from rendering.
+
+Safety rules for this workstream:
+
+- Do not modify real OpenCode sessions during tests.
+- Use temp paths, fixtures, or pure state helpers for write/read regression tests.
+- Keep each step covered by a red-green test and committed atomically.
+- Keep this file, `CONTEXT/PLAN-tui-rewrite.md`, `CONTEXT/TUI-TARGET-MODEL.md`, `README.md`, and `PROJECT-SUMMARY.md` current as architecture changes land.
+
+---
+
 # SQLite Support Implementation Backlog
 
 Implementation backlog for adding experimental SQLite support to oc-manager.

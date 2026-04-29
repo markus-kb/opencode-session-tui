@@ -449,6 +449,14 @@ Recommended sequence:
 - Move provider reads into resources.
 - Recompose workspace and overlays.
 
+## Migration Status
+
+- Completed: initial home startup state is protected by pure state tests.
+- Completed: token formatting helpers are extracted into `src/tui/format.ts`.
+- Completed: home/workspace navigation is represented by typed `TuiState.screen`.
+- Completed: chat viewer/search visibility is represented by typed `TuiState.overlay`.
+- Next: introduce explicit resource-loading policy before moving provider reads out of render components.
+
 ## Open Decisions
 
 - Whether Enter on a session should show inline details, open chat, or keep the current status-message behavior.

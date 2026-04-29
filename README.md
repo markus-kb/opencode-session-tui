@@ -33,6 +33,7 @@ OpenCode migrated its storage layer from JSONL flat-files to a SQLite database (
 - **Schema alignment** — `SessionRow`, `MessageRow`, `PartRow` interfaces updated to match the real Drizzle columns (`time_created`/`time_updated`; session has no JSON `data` blob; message/part carry a `data` JSON blob).
 - **Hybrid auto-detect** — `createProvider()` now reads both current SQLite sessions and legacy JSON sessions when both stores exist. SQLite-only and JSONL-only stores still work. `--experimental-sqlite` remains available to force SQLite-only mode.
 - **Startup performance** — TUI startup no longer scans sessions while the initial help screen is open. Session lists are metadata-only: they read session rows/files but do not parse messages, parts, or large diff payloads until chat, token, or search features need them.
+- **TUI rewrite preparation** — the OpenTUI app is being incrementally prepared for a fundamental rewrite behind regression tests. Current preparation includes typed home/workspace screen state, typed chat overlay state, and extracted token formatting helpers.
 - **Write operations** — `updateSessionTitle`, `moveSession`, `copySession` rewritten for the column-based schema; `copySession` correctly rewrites `sessionID`/`messageID`/`id` fields inside copied message and part JSON blobs.
 - **All 13 part types** — `PartType` union expanded to cover `reasoning`, `step-start`, `step-finish`, `snapshot`, `patch`, `agent`, `retry`, `compaction`, `file` in addition to the original `text`, `subtask`, `tool`.
 - **Windows compatibility** — `closeIfOwned()` runs `PRAGMA wal_checkpoint(TRUNCATE)` before closing to release WAL handles; test `afterEach` hooks use a retry loop for `EBUSY`/`EPERM`; `chmod`-dependent CLI tests are skipped on Windows; path assertions normalised for cross-platform separators.
@@ -45,6 +46,16 @@ OpenCode migrated its storage layer from JSONL flat-files to a SQLite database (
 - **JSONL-only** — pass `--root <path>` through CLI commands that explicitly use the legacy backend, or use a store without `opencode.db`.
 
 The session list is intentionally lightweight in all modes. Message JSON, part JSON, and large patch/diff payloads are loaded lazily for chat viewing, token summaries, and chat search.
+
+## TUI rewrite plan
+
+The current TUI still renders through `src/tui/app.tsx`, but the rewrite preparation is tracked in:
+
+- `CONTEXT/PLAN-tui-rewrite.md`
+- `CONTEXT/TUI-TARGET-MODEL.md`
+- `plan.md`
+
+The target architecture keeps OpenTUI, but moves from a monolithic root component toward explicit screens, first-class overlays, shared data resources, scoped input handling, and a fast home dashboard that does not trigger expensive metadata scans.
 
 ## Installation
 ```bash

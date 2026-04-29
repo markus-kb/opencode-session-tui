@@ -35,6 +35,8 @@ The codebase follows a dual-mode architecture with shared libraries:
 
 ### TUI Module (`src/tui/`)
 - `app.tsx` — Main TUI app with Projects, Sessions, Chat panels
+- `app-state.ts` — Typed TUI state helpers for home/workspace screens, chat overlays, startup loading state, and transition tests
+- `format.ts` — Token display formatting helpers shared by TUI components and tests
 - `index.tsx` — Exports `launchTUI(options)`, `bootstrap(args)`
 - `args.ts` — TUI-specific arg parsing (`--root`, `--db`, `--experimental-sqlite`, `--help`)
 
@@ -87,6 +89,10 @@ Key Features
   - Two-column, color-coded quick reference with “key chips”.
   - Clear grouping by Global, Projects, Sessions, Tips.
   - Initial help screen defers session/token loading so startup remains interactive on Windows even with large OpenCode histories.
+- TUI state model
+  - Home/workspace navigation now uses typed `TuiState.screen` instead of a standalone help boolean.
+  - Chat viewer/search visibility now derives from typed `TuiState.overlay` instead of standalone booleans.
+  - The initial home screen reports token loading as deferred until workspace entry.
 - Status & confirmation bars
   - Status bar tint reflects `info` vs `error` states so reload/deletion feedback is obvious.
   - Confirmation bar shows up to five pending records (project/session descriptors) and states “Y/Enter confirm, N/Esc cancel” while disabling panel shortcuts until resolved.
@@ -111,6 +117,9 @@ Work Completed
 - Added session copy feature (P): select target project, create new session with generated ID, preserve original.
 - Deferred global token and chat-search session loading until after the initial help screen is dismissed.
 - Added hybrid session loading so current SQLite sessions display alongside legacy JSON sessions.
+- Added TUI rewrite preparation docs: `CONTEXT/PLAN-tui-rewrite.md` and `CONTEXT/TUI-TARGET-MODEL.md`.
+- Added pure TUI state tests for home startup, screen transitions, and chat overlay transitions.
+- Extracted token formatting helpers into `src/tui/format.ts` with focused regression tests.
 
 ### CLI Implementation (Phase 1-4)
 - Created Commander-based CLI with global options and subcommand routing.
