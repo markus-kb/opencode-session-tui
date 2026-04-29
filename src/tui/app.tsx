@@ -55,6 +55,7 @@ import { ConfirmBar, type ConfirmState } from "./confirm-bar"
 import { StatusBar, type NotificationLevel } from "./status-bar"
 import { HomeScreen } from "./home-screen"
 import { toProjectPanelAction } from "./project-panel-commands"
+import { toSessionPanelAction } from "./session-panel-commands"
 
 type TabKey = TuiTab
 
@@ -786,12 +787,13 @@ const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(function Sessi
 
       const cmdKey = toCommandKey(key)
       const cmdId = resolveCommand(cmdSet.registry, cmdKey, { screen: "sessions", overlay: null, searchActive: false, confirmActive: false })
-      if (cmdId === "sessions:toggleSelect") {
+      const action = toSessionPanelAction(cmdId)
+      if (action === "toggleSelect") {
         key.preventDefault()
         toggleSelection(currentSession)
         return
       }
-      if (cmdId === "sessions:selectAll") {
+      if (action === "selectAll") {
         setSelectedIndexes((prev) => {
           if (visibleRecords.length === 0) {
             return prev
@@ -809,39 +811,39 @@ const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(function Sessi
         })
         return
       }
-      if (cmdId === "sessions:toggleSort") {
+      if (action === "toggleSort") {
         setSortMode((prev) => (prev === "updated" ? "created" : "updated"))
         return
       }
-      if (cmdId === "sessions:clearFilter") {
+      if (action === "clearFilter") {
         if (projectFilter) {
           onClearFilter()
         }
         return
       }
-      if (cmdId === "sessions:clearSelection") {
+      if (action === "clearSelection") {
         setSelectedIndexes(new Set())
         return
       }
-      if (cmdId === "sessions:deleteSelected") {
+      if (action === "deleteSelected") {
         requestDeletion()
         return
       }
-      if (cmdId === "sessions:copyId") {
+      if (action === "copyId") {
         if (currentSession) {
           copyToClipboardSync(currentSession.sessionId)
           onNotify(`Copied ID ${currentSession.sessionId} to clipboard`)
         }
         return
       }
-      if (cmdId === "sessions:renameSession") {
+      if (action === "renameSession") {
         if (currentSession) {
           setIsRenaming(true)
           setRenameValue(currentSession.title || '')
         }
         return
       }
-      if (cmdId === "sessions:moveSessions") {
+      if (action === "moveSessions") {
         if (selectedSessions.length === 0) {
           onNotify('No sessions selected for move', 'error')
           return
@@ -855,7 +857,7 @@ const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(function Sessi
         setIsSelectingProject(true)
         return
       }
-      if (cmdId === "sessions:copySessions") {
+      if (action === "copySessions") {
         if (selectedSessions.length === 0) {
           onNotify('No sessions selected for copy', 'error')
           return
@@ -866,13 +868,13 @@ const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(function Sessi
         setIsSelectingProject(true)
         return
       }
-      if (cmdId === "sessions:viewChat") {
+      if (action === "viewChat") {
         if (currentSession) {
           onOpenChatViewer(currentSession)
         }
         return
       }
-      if (cmdId === "sessions:sessionInfo") {
+      if (action === "sessionInfo") {
         if (currentSession) {
           const title = currentSession.title && currentSession.title.trim().length > 0 ? currentSession.title : currentSession.sessionId
           onNotify(`Session ${title} [${currentSession.sessionId}] → ${formatDisplayPath(currentSession.directory)}`)
