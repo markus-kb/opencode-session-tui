@@ -41,6 +41,10 @@ export function isChatIndexEnabled(policy: ResourcePolicy): boolean {
   return policy.chat === "index"
 }
 
+export function isChatSearchEnabled(policy: ResourcePolicy): boolean {
+  return policy.chat === "search"
+}
+
 export function toWorkspaceDataLoadState(policy: ResourcePolicy): WorkspaceDataLoadState {
   if (policy.projects === "deferred" && policy.sessions === "deferred") {
     return { enabled: false, reason: "home" }

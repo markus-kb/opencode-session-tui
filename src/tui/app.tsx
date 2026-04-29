@@ -38,6 +38,7 @@ import { getResourcePolicy, isProjectMetadataEnabled, isSessionMetadataEnabled, 
 import { loadGlobalTokensFromSessionIndex, loadSessionIndex } from "./session-resource"
 import { loadProjectIndex } from "./project-resource"
 import { getFailedHydrationMessage, hydrateChatSessionMessage, loadChatSessionMessages } from "./chat-session-resource"
+import { getChatSearchSessions, searchChatSessions } from "./chat-search-resource"
 import { buildTuiCommands, type TuiCommandSet } from "./command-definitions"
 import { toCommandKey, toCommandScope, resolveCommand, type KeyRouteContext } from "./key-router"
 import { getHomeDashboardModel } from "./home-dashboard"
@@ -352,13 +353,9 @@ export const App = ({
     setChatSearching(true)
 
     try {
-      // Filter to project if filter is active
-      const sessionsToSearch = sessionFilter
-        ? allSessions.filter(s => s.projectId === sessionFilter)
-        : allSessions
-
-      const results = await provider.searchSessionsChat(sessionsToSearch, chatSearchQuery, { maxResults: 100 })
-      setChatSearchResults(results)
+      const sessionsToSearch = getChatSearchSessions(allSessions, sessionFilter)
+      const result = await searchChatSessions(provider, resourcePolicy, sessionsToSearch, chatSearchQuery)
+      setChatSearchResults(result.results)
       setChatSearchCursor(0)
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)
@@ -367,7 +364,7 @@ export const App = ({
     } finally {
       setChatSearching(false)
     }
-  }, [chatSearchQuery, sessionFilter, allSessions, provider, notify])
+  }, [chatSearchQuery, sessionFilter, allSessions, provider, resourcePolicy, notify])
 
   const handleChatSearchResult = useCallback(async (result: ChatSearchResult) => {
     // Find the session and open chat viewer at the matching message

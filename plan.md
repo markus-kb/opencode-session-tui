@@ -26,6 +26,7 @@ Current progress:
 - [x] Phase 5 panel session derivation: SessionsPanel derives filtered sessions from root allSessions; ProjectsPanel receives root allSessions for token computation.
 - [x] Phase 5 token resource seam: panel token computations gated through token-resource.ts and resource policy.
 - [x] Phase 5 chat session resource seam: chat viewer message index and hydration gated through `src/tui/chat-session-resource.ts`.
+- [x] Phase 5 chat search resource seam: scoped chat search gated through `src/tui/chat-search-resource.ts`.
 - [x] Phase 6 starter command registry: typed Command/CommandScope model, scope-aware key lookup, home key reference generation.
 - [x] Phase 6 key router: toCommandKey, toCommandScope, resolveCommand with tests.
 - [x] Phase 6 overlay key routing: confirm, chat viewer, chat search keys routed through resolveCommand.
