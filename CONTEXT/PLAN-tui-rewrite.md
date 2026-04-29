@@ -19,13 +19,15 @@ Exit criteria: current behavior is protected by tests, especially around startup
 
 ## Phase 2: Define Target Product Model
 
+Detailed model: `CONTEXT/TUI-TARGET-MODEL.md`
+
 Decide what the TUI fundamentally is before rewriting its implementation.
 
-- [ ] Define the top-level app model: dashboard-first app, workspace manager, session explorer, chat search tool, or a combination behind explicit screens.
-- [ ] Define the screen list and ownership boundaries.
-- [ ] Define which actions are global, screen-local, panel-local, and overlay-local.
-- [ ] Define which screens are allowed to trigger expensive data loading.
-- [ ] Define what must remain read-only and what can mutate metadata.
+- [x] Define the top-level app model: dashboard-first app, workspace manager, session explorer, chat search tool, or a combination behind explicit screens.
+- [x] Define the screen list and ownership boundaries.
+- [x] Define which actions are global, screen-local, panel-local, and overlay-local.
+- [x] Define which screens are allowed to trigger expensive data loading.
+- [x] Define what must remain read-only and what can mutate metadata.
 
 Proposed target screens:
 
