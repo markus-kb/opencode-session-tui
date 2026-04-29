@@ -50,8 +50,8 @@ Introduce clean building blocks without changing visible behavior.
 
 - [ ] Extract `StatusBar` from `src/tui/app.tsx`.
 - [ ] Extract `ConfirmBar` from `src/tui/app.tsx`.
-- [ ] Extract `KeyChip`, `Section`, `Row`, `Bullet`, and related layout helpers.
-- [ ] Extract `SearchBar`.
+- [x] Extract `KeyChip`, `Section`, `Row`, `Bullet`, and related layout helpers.
+- [x] Extract `SearchBar`.
 - [ ] Extract common overlay frame and pane frame components.
 - [x] Move token formatting helpers out of `app.tsx` where appropriate.
 - [ ] Keep behavior unchanged while reducing the size of `app.tsx`.

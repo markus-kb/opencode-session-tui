@@ -13,6 +13,7 @@ Current progress:
 - [x] Phase 1 starter regression seam: home startup state, deferred data loading, home key behavior.
 - [x] Phase 2 target model: dashboard-first app, explicit screens, overlays, ownership boundaries, loading rules.
 - [x] Phase 3 starter extraction: token formatting helpers moved to `src/tui/format.ts` with tests.
+- [x] Phase 3 shared UI primitives: `Section`, `Row`, `Bullet`, `Columns`, `KeyChip`, and `SearchBar` extracted to `src/tui/components.tsx`.
 - [x] Phase 4 screen state: home/workspace modeled through typed `TuiState.screen`.
 - [x] Phase 4 overlay state: chat viewer/search modeled through typed `TuiState.overlay`.
 - [x] Phase 5 starter policy: screen/overlay-aware resource-loading policy added in `src/tui/resource-policy.ts`.

@@ -50,6 +50,7 @@ import { buildTuiCommands, type TuiCommandSet } from "./command-definitions"
 import { toCommandKey, toCommandScope, resolveCommand, type KeyRouteContext } from "./key-router"
 import { getHomeDashboardModel, type HomeDashboardModel } from "./home-dashboard"
 import { detectStorageSources } from "./backend-resolver"
+import { Bullet, Columns, KeyChip, PALETTE, SearchBar, Section } from "./components"
 
 type TabKey = TuiTab
 
@@ -100,17 +101,6 @@ type SessionsPanelProps = {
 
 const MAX_CONFIRM_PREVIEW = 5
 
-// Palette used for subtle color accents
-const PALETTE = {
-  primary: "#a5b4fc", // lavender
-  accent: "#93c5fd", // sky
-  success: "#86efac", // green
-  danger: "#fca5a5", // red
-  info: "#38bdf8", // cyan
-  key: "#fbbf24", // amber
-  muted: "#9ca3af", // gray
-} as const
-
 async function runBatchSessionOperation(
   provider: DataProvider,
   sessions: SessionRecord[],
@@ -140,56 +130,6 @@ async function runBatchSessionOperation(
 
 // Clipboard functionality moved to ../lib/clipboard.ts
 // Use copyToClipboardSyncSync for fire-and-forget clipboard operations
-
-type ChildrenProps = { children: React.ReactNode }
-
-const Section = ({ title, children }: { title: string } & ChildrenProps) => (
-  <box title={title} style={{ border: true, padding: 1, marginBottom: 1, flexDirection: "column" }}>
-    {children}
-  </box>
-)
-
-const SearchBar = ({
-  active,
-  context,
-  query,
-}: {
-  active: boolean
-  context: string
-  query: string
-}) => (
-  <box style={{ border: true, padding: 1, marginBottom: 1, flexDirection: "row", gap: 1 }}>
-    <text fg={PALETTE.accent}>Search</text>
-    <text>({context}):</text>
-    <text fg={active ? PALETTE.key : PALETTE.muted}>{active ? "/" + query : query || "(none)"}</text>
-    <text>—</text>
-    <text>Enter apply</text>
-    <text>•</text>
-    <text>Esc clear</text>
-  </box>
-)
-
-const Row = ({ children }: ChildrenProps) => {
-  const kids = React.Children.toArray(children).filter((c) => !(typeof c === "string" && c.trim() === ""))
-  return <box style={{ flexDirection: "row", alignItems: "baseline" }}>{kids as any}</box>
-}
-
-const Bullet = ({ children }: ChildrenProps) => {
-  const kids = React.Children.toArray(children).filter((c) => !(typeof c === "string" && c.trim() === ""))
-  return (
-    <Row>
-      <text fg={PALETTE.muted}>• </text>
-      <box style={{ flexDirection: "row", flexWrap: "wrap" }}>{kids as any}</box>
-    </Row>
-  )
-}
-
-const Columns = ({ children }: ChildrenProps) => {
-  const kids = React.Children.toArray(children).filter((c) => !(typeof c === "string" && c.trim() === ""))
-  return <box style={{ flexDirection: "row", gap: 2, marginTop: 1, flexGrow: 1 }}>{kids as any}</box>
-}
-
-const KeyChip = ({ k }: { k: string }) => <text fg={PALETTE.key}>[{k}]</text>
 
 type ProjectSelectorProps = {
   projects: ProjectRecord[]
