@@ -33,6 +33,26 @@ export function createInitialTuiState(): TuiState {
   return { screen: { name: "home" } }
 }
 
+export function openWorkspace(state: TuiState, activeTab: TuiTab = "projects"): TuiState {
+  return { ...state, screen: { name: "workspace", activeTab } }
+}
+
+export function openHome(state: TuiState): TuiState {
+  return { ...state, screen: { name: "home" } }
+}
+
+export function switchWorkspaceTab(state: TuiState, direction: "next" | "prev" | TuiTab): TuiState {
+  if (direction === "projects" || direction === "sessions") {
+    return openWorkspace(state, direction)
+  }
+
+  if (state.screen.name === "home") {
+    return openWorkspace(state, "projects")
+  }
+
+  return openWorkspace(state, state.screen.activeTab === "projects" ? "sessions" : "projects")
+}
+
 export function getWorkspaceDataLoadState(state: TuiState): WorkspaceDataLoadState {
   if (state.screen.name === "home") {
     return { enabled: false, reason: "home" }

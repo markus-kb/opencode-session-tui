@@ -4,6 +4,9 @@ import {
   getHomeKeyAction,
   getWorkspaceDataLoadState,
   getGlobalTokenDisplayState,
+  openHome,
+  openWorkspace,
+  switchWorkspaceTab,
 } from "../../src/tui/app-state"
 
 describe("TUI app state", () => {
@@ -20,6 +23,45 @@ describe("TUI app state", () => {
 
     expect(getWorkspaceDataLoadState(home)).toEqual({ enabled: false, reason: "home" })
     expect(getWorkspaceDataLoadState(workspace)).toEqual({ enabled: true })
+  })
+
+  test("opens workspace on the requested tab", () => {
+    expect(openWorkspace(createInitialTuiState()).screen).toEqual({
+      name: "workspace",
+      activeTab: "projects",
+    })
+
+    expect(openWorkspace(createInitialTuiState(), "sessions").screen).toEqual({
+      name: "workspace",
+      activeTab: "sessions",
+    })
+  })
+
+  test("returns to home without preserving workspace loading", () => {
+    const state = openHome(openWorkspace(createInitialTuiState(), "sessions"))
+
+    expect(state.screen).toEqual({ name: "home" })
+    expect(getWorkspaceDataLoadState(state)).toEqual({ enabled: false, reason: "home" })
+  })
+
+  test("switches workspace tabs explicitly", () => {
+    const projects = openWorkspace(createInitialTuiState(), "projects")
+
+    expect(switchWorkspaceTab(projects, "next").screen).toEqual({
+      name: "workspace",
+      activeTab: "sessions",
+    })
+    expect(switchWorkspaceTab(projects, "sessions").screen).toEqual({
+      name: "workspace",
+      activeTab: "sessions",
+    })
+  })
+
+  test("switching tabs from home opens the workspace", () => {
+    expect(switchWorkspaceTab(createInitialTuiState(), "sessions").screen).toEqual({
+      name: "workspace",
+      activeTab: "sessions",
+    })
   })
 
   test("maps home dismiss keys to workspace entry", () => {

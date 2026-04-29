@@ -28,10 +28,19 @@ import {
 import { DEFAULT_SQLITE_PATH } from "../lib/opencode-data-sqlite"
 import { createProvider, type DataProvider, type StorageBackend } from "../lib/opencode-data-provider"
 import { createSearcher, type SearchCandidate } from "../lib/search"
-import { getGlobalTokenDisplayState, getHomeKeyAction, getWorkspaceDataLoadState } from "./app-state"
+import {
+  createInitialTuiState,
+  getGlobalTokenDisplayState,
+  getHomeKeyAction,
+  getWorkspaceDataLoadState,
+  openHome,
+  openWorkspace,
+  switchWorkspaceTab,
+  type TuiTab,
+} from "./app-state"
 import { formatAggregateSummaryShort, formatTokenCount } from "./format"
 
-type TabKey = "projects" | "sessions"
+type TabKey = TuiTab
 
 type PanelHandle = {
   handleKey: (key: KeyEvent) => void
@@ -1522,7 +1531,9 @@ export const App = ({
   const projectsRef = useRef<PanelHandle>(null)
   const sessionsRef = useRef<PanelHandle>(null)
 
-  const [activeTab, setActiveTab] = useState<TabKey>("projects")
+  const [tuiState, setTuiState] = useState(createInitialTuiState)
+  const activeTab: TabKey = tuiState.screen.name === "workspace" ? tuiState.screen.activeTab : "projects"
+  const isHome = tuiState.screen.name === "home"
   const [sessionFilter, setSessionFilter] = useState<string | null>(null)
   const [searchActive, setSearchActive] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
@@ -1530,7 +1541,6 @@ export const App = ({
   const [statusLevel, setStatusLevel] = useState<NotificationLevel>("info")
   const [sqliteWarning, setSqliteWarning] = useState<string | null>(null)
   const [confirmState, setConfirmState] = useState<ConfirmState | null>(null)
-  const [showHelp, setShowHelp] = useState(true)
   const [confirmBusy, setConfirmBusy] = useState(false)
   // Global token state
   const [globalTokens, setGlobalTokens] = useState<AggregateTokenSummary | null>(null)
@@ -1579,11 +1589,7 @@ export const App = ({
     })
   }, [backend, root, resolvedDbPath, sqliteStrict, forceWrite, notify, setSqliteWarning])
 
-  const workspaceDataLoadState = useMemo(() => {
-    return getWorkspaceDataLoadState({
-      screen: showHelp ? { name: "home" } : { name: "workspace", activeTab },
-    })
-  }, [showHelp, activeTab])
+  const workspaceDataLoadState = useMemo(() => getWorkspaceDataLoadState(tuiState), [tuiState])
 
   const globalTokenDisplay = useMemo(
     () => getGlobalTokenDisplayState(globalTokens, workspaceDataLoadState),
@@ -1654,12 +1660,7 @@ export const App = ({
   }, [confirmState, confirmBusy, notify])
 
   const switchTab = useCallback((direction: "next" | "prev" | TabKey) => {
-    setActiveTab((prev) => {
-      if (direction === "next" || direction === "prev") {
-        return prev === "projects" ? "sessions" : "projects"
-      }
-      return direction
-    })
+    setTuiState((prev) => switchWorkspaceTab(prev, direction))
   }, [])
 
   // Chat viewer controls
@@ -1923,14 +1924,14 @@ export const App = ({
         return
       }
 
-      if (showHelp) {
+      if (isHome) {
         const action = getHomeKeyAction(key)
         if (action === "quit") {
           renderer.destroy()
           return
         }
         if (action === "openWorkspace") {
-          setShowHelp(false)
+          setTuiState((prev) => openWorkspace(prev))
           return
         }
         return
@@ -1944,7 +1945,7 @@ export const App = ({
       }
 
       if (letter === "?" || letter === "h") {
-        setShowHelp((v) => !v)
+        setTuiState((prev) => openHome(prev))
         return
       }
 
@@ -1994,7 +1995,7 @@ export const App = ({
       const handler = activeTab === "projects" ? projectsRef.current : sessionsRef.current
       handler?.handleKey(key)
     },
-    [activeTab, cancelConfirm, confirmState, executeConfirm, notify, renderer, searchActive, searchQuery, showHelp, switchTab, chatViewerOpen, chatMessages, chatCursor, closeChatViewer, copyChatMessage, chatSearchOpen, chatSearchResults, chatSearchCursor, closeChatSearch, executeChatSearch, handleChatSearchResult, openChatSearch],
+    [activeTab, cancelConfirm, confirmState, executeConfirm, notify, renderer, searchActive, searchQuery, isHome, switchTab, chatViewerOpen, chatMessages, chatCursor, closeChatViewer, copyChatMessage, chatSearchOpen, chatSearchResults, chatSearchCursor, closeChatSearch, executeChatSearch, handleChatSearchResult, openChatSearch],
   )
 
   useKeyboard(handleGlobalKey)
@@ -2002,7 +2003,7 @@ export const App = ({
   const handleNavigateToSessions = useCallback(
     (projectId: string) => {
       setSessionFilter(projectId)
-      setActiveTab("sessions")
+      setTuiState((prev) => openWorkspace(prev, "sessions"))
       notify(`Filtering sessions by ${projectId}`)
     },
     [notify],
@@ -2052,21 +2053,21 @@ export const App = ({
         ) : null}
       </box>
 
-      {showHelp
+      {isHome
         ? null
         : searchActive || searchQuery
         ? <SearchBar active={searchActive} context={activeTab} query={searchQuery} />
         : null}
 
-      {showHelp ? (
-        <HelpScreen onDismiss={() => setShowHelp(false)} />
+      {isHome ? (
+        <HelpScreen onDismiss={() => setTuiState((prev) => openWorkspace(prev))} />
       ) : (
         <box style={{ flexDirection: "row", gap: 1, flexGrow: 1 }}>
           <ProjectsPanel
             ref={projectsRef}
             provider={provider}
             active={activeTab === "projects"}
-            locked={Boolean(confirmState) || showHelp}
+            locked={Boolean(confirmState) || isHome}
             searchQuery={activeTab === "projects" ? searchQuery : ""}
             onNotify={notify}
             requestConfirm={requestConfirm}
@@ -2076,7 +2077,7 @@ export const App = ({
             ref={sessionsRef}
             provider={provider}
             active={activeTab === "sessions"}
-            locked={Boolean(confirmState) || showHelp || chatViewerOpen || chatSearchOpen}
+            locked={Boolean(confirmState) || isHome || chatViewerOpen || chatSearchOpen}
             projectFilter={sessionFilter}
             searchQuery={activeTab === "sessions" ? searchQuery : ""}
             globalTokenSummary={globalTokens}
