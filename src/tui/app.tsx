@@ -57,6 +57,7 @@ import { HomeScreen } from "./home-screen"
 import { toProjectPanelAction } from "./project-panel-commands"
 import { toSessionPanelAction } from "./session-panel-commands"
 import { clampCursor, clearSelection, getSelectedRecords, pruneSelectedIndexes, toggleAllVisibleIndexes, toggleSelectedIndex } from "./panel-selection"
+import { ProjectSelector } from "./project-selector"
 
 type TabKey = TuiTab
 
@@ -127,62 +128,6 @@ async function runBatchSessionOperation(
 
 // Clipboard functionality moved to ../lib/clipboard.ts
 // Use copyToClipboardSyncSync for fire-and-forget clipboard operations
-
-type ProjectSelectorProps = {
-  projects: ProjectRecord[]
-  cursor: number
-  onCursorChange: (index: number) => void
-  onSelect: (project: ProjectRecord) => void
-  onCancel: () => void
-  operationMode: 'move' | 'copy'
-  sessionCount: number
-}
-
-const ProjectSelector = ({
-  projects,
-  cursor,
-  onCursorChange,
-  onSelect,
-  onCancel,
-  operationMode,
-  sessionCount
-}: ProjectSelectorProps) => {
-  const options: SelectOption[] = projects.map((p, idx) => ({
-    name: `${formatDisplayPath(p.worktree)} (${p.projectId})`,
-    description: p.state,
-    value: idx
-  }))
-
-  return (
-    <box
-      title={`Select Target Project (${operationMode} ${sessionCount} session${sessionCount > 1 ? 's' : ''})`}
-      style={{
-        border: true,
-        borderColor: operationMode === 'move' ? PALETTE.key : PALETTE.accent,
-        padding: 1,
-        position: 'absolute',
-        top: 5,
-        left: 5,
-        right: 5,
-        bottom: 5,
-        zIndex: 100
-      }}
-    >
-      <select
-        options={options}
-        selectedIndex={cursor}
-        onChange={onCursorChange}
-        onSelect={(idx) => {
-          const project = projects[idx]
-          if (project) onSelect(project)
-        }}
-        focused={true}
-        showScrollIndicator
-      />
-      <text fg={PALETTE.muted}>Enter to select, Esc to cancel</text>
-    </box>
-  )
-}
 
 const ProjectsPanel = forwardRef<PanelHandle, ProjectsPanelProps>(function ProjectsPanel(
   { provider, active, locked, searchQuery, allSessions, resourcePolicy, cmdSet, onNotify, requestConfirm, onNavigateToSessions },
