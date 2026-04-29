@@ -47,3 +47,10 @@ export function pruneSelectedIndexes(selected: Set<number>, validIndexes: number
   }
   return changed ? next : selected
 }
+
+export function clampCursor(cursor: number, visibleCount: number): number {
+  if (visibleCount === 0) {
+    return 0
+  }
+  return Math.min(cursor, visibleCount - 1)
+}

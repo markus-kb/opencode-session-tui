@@ -56,7 +56,7 @@ import { StatusBar, type NotificationLevel } from "./status-bar"
 import { HomeScreen } from "./home-screen"
 import { toProjectPanelAction } from "./project-panel-commands"
 import { toSessionPanelAction } from "./session-panel-commands"
-import { clearSelection, pruneSelectedIndexes, toggleAllVisibleIndexes, toggleSelectedIndex } from "./panel-selection"
+import { clampCursor, clearSelection, pruneSelectedIndexes, toggleAllVisibleIndexes, toggleSelectedIndex } from "./panel-selection"
 
 type TabKey = TuiTab
 
@@ -243,12 +243,7 @@ const ProjectsPanel = forwardRef<PanelHandle, ProjectsPanelProps>(function Proje
   }, [records])
 
   useEffect(() => {
-    setCursor((prev) => {
-      if (visibleRecords.length === 0) {
-        return 0
-      }
-      return Math.min(prev, visibleRecords.length - 1)
-    })
+    setCursor((prev) => clampCursor(prev, visibleRecords.length))
   }, [visibleRecords.length])
 
   // Compute token summary for current project
@@ -526,12 +521,7 @@ const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(function Sessi
   }, [records])
 
   useEffect(() => {
-    setCursor((prev) => {
-      if (visibleRecords.length === 0) {
-        return 0
-      }
-      return Math.min(prev, visibleRecords.length - 1)
-    })
+    setCursor((prev) => clampCursor(prev, visibleRecords.length))
   }, [visibleRecords.length])
 
   // Compute token summary for current session

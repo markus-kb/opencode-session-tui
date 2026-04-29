@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { clearSelection, pruneSelectedIndexes, toggleAllVisibleIndexes, toggleSelectedIndex } from "../../src/tui/panel-selection"
+import { clampCursor, clearSelection, pruneSelectedIndexes, toggleAllVisibleIndexes, toggleSelectedIndex } from "../../src/tui/panel-selection"
 
 describe("panel selection helpers", () => {
   test("toggles one selected index", () => {
@@ -36,5 +36,17 @@ describe("panel selection helpers", () => {
   test("returns the same empty set when selection is empty", () => {
     const selected = new Set<number>()
     expect(pruneSelectedIndexes(selected, [1, 2, 3])).toBe(selected)
+  })
+
+  test("clamps cursor to zero when there are no visible rows", () => {
+    expect(clampCursor(3, 0)).toBe(0)
+  })
+
+  test("clamps cursor to last visible row", () => {
+    expect(clampCursor(5, 3)).toBe(2)
+  })
+
+  test("keeps cursor when already in bounds", () => {
+    expect(clampCursor(1, 3)).toBe(1)
   })
 })
