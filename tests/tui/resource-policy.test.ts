@@ -8,6 +8,7 @@ import {
 } from "../../src/tui/app-state"
 import {
   getResourcePolicy,
+  isProjectMetadataEnabled,
   isSessionMetadataEnabled,
   isTokenSummaryEnabled,
   toWorkspaceDataLoadState,
@@ -24,6 +25,7 @@ describe("TUI resource policy", () => {
       chat: "deferred",
     })
     expect(isSessionMetadataEnabled(policy)).toBe(false)
+    expect(isProjectMetadataEnabled(policy)).toBe(false)
     expect(isTokenSummaryEnabled(policy)).toBe(false)
     expect(toWorkspaceDataLoadState(policy)).toEqual({ enabled: false, reason: "home" })
   })
@@ -38,6 +40,7 @@ describe("TUI resource policy", () => {
       chat: "deferred",
     })
     expect(isSessionMetadataEnabled(policy)).toBe(true)
+    expect(isProjectMetadataEnabled(policy)).toBe(true)
     expect(isTokenSummaryEnabled(policy)).toBe(true)
     expect(toWorkspaceDataLoadState(policy)).toEqual({ enabled: true })
   })

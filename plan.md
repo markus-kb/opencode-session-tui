@@ -18,7 +18,8 @@ Current progress:
 - [x] Phase 5 starter policy: screen/overlay-aware resource-loading policy added in `src/tui/resource-policy.ts`.
 - [x] E2E hardening: binary TUI help paths covered by process-level tests.
 - [x] Phase 5 session resource seam: root session metadata load shared by global tokens and chat search.
-- [ ] Phase 5 next: move panel project/session provider reads into shared resource hooks.
+- [x] Phase 5 project resource seam: root project index shared by session move/copy selectors; `isProjectMetadataEnabled` policy helper.
+- [ ] Phase 5 next: move panel session loading onto shared session index; token summary resource hooks.
 
 Safety rules for this workstream:
 

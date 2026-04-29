@@ -39,6 +39,7 @@ The codebase follows a dual-mode architecture with shared libraries:
 - `format.ts` — Token display formatting helpers shared by TUI components and tests
 - `resource-policy.ts` — Screen/overlay-aware loading policy for deferring metadata, token, and chat work
 - `session-resource.ts` — Shared root session-index loader used by global tokens and chat search
+- `project-resource.ts` — Shared root project-index loader and session-by-project filter used by session move/copy selectors
 - `index.tsx` — Exports `launchTUI(options)`, `bootstrap(args)`
 - `args.ts` — TUI-specific arg parsing (`--root`, `--db`, `--experimental-sqlite`, `--help`)
 
@@ -96,6 +97,7 @@ Key Features
   - Chat viewer/search visibility now derives from typed `TuiState.overlay` instead of standalone booleans.
   - Resource loading is gated through `resource-policy.ts` so home defers all expensive work while workspace enables metadata/token summaries and chat overlays opt into chat work.
   - Root session metadata loads once through `session-resource.ts`; global tokens and chat search reuse that index instead of issuing duplicate root-level session scans.
+  - Root project metadata loads once through `project-resource.ts`; session move/copy selectors reuse that index instead of issuing duplicate root-level project scans.
   - The initial home screen reports token loading as deferred until workspace entry.
 - Status & confirmation bars
   - Status bar tint reflects `info` vs `error` states so reload/deletion feedback is obvious.
@@ -127,6 +129,7 @@ Work Completed
 - Added `src/tui/resource-policy.ts` to make data-loading decisions explicit before provider reads are moved into resource hooks.
 - Added process-level TUI entrypoint e2e tests for root help and `tui --help` so storage/default-mode help stays visible without launching the interactive renderer.
 - Added `src/tui/session-resource.ts` and regression tests so root-level global tokens and chat search share one session metadata index.
+- Added `src/tui/project-resource.ts` and regression tests so root-level project index is shared by session move/copy selectors; added `isProjectMetadataEnabled` policy helper.
 
 ### CLI Implementation (Phase 1-4)
 - Created Commander-based CLI with global options and subcommand routing.

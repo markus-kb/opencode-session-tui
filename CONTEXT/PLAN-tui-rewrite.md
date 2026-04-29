@@ -90,7 +90,7 @@ Exit criteria: screen and overlay state are explicit, typed, and easy to inspect
 Move provider calls and derived loading state into dedicated hooks/resources.
 
 - [x] Introduce explicit resource-loading policy for home, workspace, and chat overlays.
-- [ ] Create a shared project index resource.
+- [x] Create a shared project index resource.
 - [x] Create a root-level shared session index resource for global tokens and chat search.
 - [ ] Move panel session loading onto the shared session index resource.
 - [ ] Create token summary resources that can be enabled only after the workspace opens.

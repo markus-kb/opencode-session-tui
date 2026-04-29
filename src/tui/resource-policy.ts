@@ -29,6 +29,10 @@ export function isSessionMetadataEnabled(policy: ResourcePolicy): boolean {
   return policy.sessions === "metadata"
 }
 
+export function isProjectMetadataEnabled(policy: ResourcePolicy): boolean {
+  return policy.projects === "metadata"
+}
+
 export function isTokenSummaryEnabled(policy: ResourcePolicy): boolean {
   return policy.tokens === "summary"
 }

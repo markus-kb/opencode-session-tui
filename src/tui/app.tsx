@@ -41,8 +41,9 @@ import {
   type TuiTab,
 } from "./app-state"
 import { formatAggregateSummaryShort, formatTokenCount } from "./format"
-import { getResourcePolicy, isSessionMetadataEnabled, isTokenSummaryEnabled, toWorkspaceDataLoadState } from "./resource-policy"
+import { getResourcePolicy, isProjectMetadataEnabled, isSessionMetadataEnabled, isTokenSummaryEnabled, toWorkspaceDataLoadState } from "./resource-policy"
 import { loadGlobalTokensFromSessionIndex, loadSessionIndex } from "./session-resource"
+import { loadProjectIndex } from "./project-resource"
 
 type TabKey = TuiTab
 
@@ -77,6 +78,7 @@ type SessionsPanelProps = {
   projectFilter: string | null
   searchQuery: string
   globalTokenSummary: AggregateTokenSummary | null
+  allProjects: ProjectRecord[]
   onNotify: (message: string, level?: NotificationLevel) => void
   requestConfirm: (state: ConfirmState) => void
   onClearFilter: () => void
@@ -537,7 +539,7 @@ const ProjectsPanel = forwardRef<PanelHandle, ProjectsPanelProps>(function Proje
 })
 
 const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(function SessionsPanel(
-  { provider, active, locked, projectFilter, searchQuery, globalTokenSummary, onNotify, requestConfirm, onClearFilter, onOpenChatViewer },
+  { provider, active, locked, projectFilter, searchQuery, globalTokenSummary, allProjects, onNotify, requestConfirm, onClearFilter, onOpenChatViewer },
   ref,
 ) {
   const [records, setRecords] = useState<SessionRecord[]>([])
@@ -935,19 +937,13 @@ const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(function Sessi
           onNotify('No sessions selected for move', 'error')
           return
         }
-        // Load projects for selection
-        provider.loadProjectRecords().then(projects => {
-          // Filter out current project if filtering by project
-          const filtered = projectFilter
-            ? projects.filter(p => p.projectId !== projectFilter)
-            : projects
-          setAvailableProjects(filtered)
-          setProjectCursor(0)
-          setOperationMode('move')
-          setIsSelectingProject(true)
-        }).catch(err => {
-          onNotify(`Failed to load projects: ${err.message}`, 'error')
-        })
+        const filtered = projectFilter
+          ? allProjects.filter(p => p.projectId !== projectFilter)
+          : allProjects
+        setAvailableProjects(filtered)
+        setProjectCursor(0)
+        setOperationMode('move')
+        setIsSelectingProject(true)
         return
       }
       // Copy with P key
@@ -956,14 +952,10 @@ const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(function Sessi
           onNotify('No sessions selected for copy', 'error')
           return
         }
-        provider.loadProjectRecords().then(projects => {
-          setAvailableProjects(projects)
-          setProjectCursor(0)
-          setOperationMode('copy')
-          setIsSelectingProject(true)
-        }).catch(err => {
-          onNotify(`Failed to load projects: ${err.message}`, 'error')
-        })
+        setAvailableProjects(allProjects)
+        setProjectCursor(0)
+        setOperationMode('copy')
+        setIsSelectingProject(true)
         return
       }
       // View chat history with V key
@@ -981,7 +973,7 @@ const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(function Sessi
         return
       }
     },
-    [active, locked, currentSession, projectFilter, onClearFilter, onNotify, requestDeletion, toggleSelection, isRenaming, executeRename, isSelectingProject, availableProjects, projectCursor, operationMode, executeTransfer, selectedSessions, provider, onOpenChatViewer],
+    [active, locked, currentSession, projectFilter, onClearFilter, onNotify, requestDeletion, toggleSelection, isRenaming, executeRename, isSelectingProject, availableProjects, projectCursor, operationMode, executeTransfer, selectedSessions, allProjects, onOpenChatViewer],
   )
 
   useImperativeHandle(
@@ -1565,6 +1557,8 @@ export const App = ({
   const [chatSearchResults, setChatSearchResults] = useState<ChatSearchResult[]>([])
   const [chatSearchCursor, setChatSearchCursor] = useState(0)
   const [chatSearching, setChatSearching] = useState(false)
+  const [allProjects, setAllProjects] = useState<ProjectRecord[]>([])
+  const [projectIndexLoaded, setProjectIndexLoaded] = useState(false)
   const [allSessions, setAllSessions] = useState<SessionRecord[]>([])
   const [sessionIndexLoaded, setSessionIndexLoaded] = useState(false)
 
@@ -1607,6 +1601,24 @@ export const App = ({
       provider.dispose?.()
     }
   }, [provider])
+
+  // Load project index once for shared consumers (session move/copy selectors, etc.).
+  useEffect(() => {
+    if (!isProjectMetadataEnabled(resourcePolicy)) {
+      setAllProjects([])
+      setProjectIndexLoaded(false)
+      return
+    }
+    let cancelled = false
+    setProjectIndexLoaded(false)
+    loadProjectIndex(provider, resourcePolicy).then((result) => {
+      if (!cancelled) {
+        setAllProjects(result.records)
+        setProjectIndexLoaded(result.kind === "loaded")
+      }
+    })
+    return () => { cancelled = true }
+  }, [provider, resourcePolicy, tokenRefreshKey])
 
   // Load all sessions once for root-level token summaries and chat search.
   useEffect(() => {
@@ -2089,6 +2101,7 @@ export const App = ({
             projectFilter={sessionFilter}
             searchQuery={activeTab === "sessions" ? searchQuery : ""}
             globalTokenSummary={globalTokens}
+            allProjects={allProjects}
             onNotify={notify}
             requestConfirm={requestConfirm}
             onClearFilter={clearSessionFilter}
