@@ -456,7 +456,8 @@ Recommended sequence:
 - Completed: home/workspace navigation is represented by typed `TuiState.screen`.
 - Completed: chat viewer/search visibility is represented by typed `TuiState.overlay`.
 - Completed: explicit resource-loading policy lives in `src/tui/resource-policy.ts`.
-- Next: move provider reads out of render components and into shared resource hooks.
+- Completed: root-level global tokens and chat search share a session index through `src/tui/session-resource.ts`.
+- Next: move panel project/session provider reads out of render components and into shared resources.
 
 ## Open Decisions
 

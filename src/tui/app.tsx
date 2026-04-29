@@ -42,6 +42,7 @@ import {
 } from "./app-state"
 import { formatAggregateSummaryShort, formatTokenCount } from "./format"
 import { getResourcePolicy, isSessionMetadataEnabled, isTokenSummaryEnabled, toWorkspaceDataLoadState } from "./resource-policy"
+import { loadGlobalTokensFromSessionIndex, loadSessionIndex } from "./session-resource"
 
 type TabKey = TuiTab
 
@@ -1565,6 +1566,7 @@ export const App = ({
   const [chatSearchCursor, setChatSearchCursor] = useState(0)
   const [chatSearching, setChatSearching] = useState(false)
   const [allSessions, setAllSessions] = useState<SessionRecord[]>([])
+  const [sessionIndexLoaded, setSessionIndexLoaded] = useState(false)
 
   const resolvedDbPath = useMemo(() => {
     if (backend !== "sqlite") {
@@ -1606,36 +1608,38 @@ export const App = ({
     }
   }, [provider])
 
-  // Load global tokens
+  // Load all sessions once for root-level token summaries and chat search.
   useEffect(() => {
-    if (!isTokenSummaryEnabled(resourcePolicy)) {
+    if (!isSessionMetadataEnabled(resourcePolicy)) {
+      setAllSessions([])
+      setSessionIndexLoaded(false)
       return
     }
     let cancelled = false
-    provider.loadSessionRecords().then((sessions) => {
-      if (cancelled) return
-      return provider.computeGlobalTokenSummary(sessions)
-    }).then((summary) => {
-      if (!cancelled && summary) {
-        setGlobalTokens(summary)
+    setSessionIndexLoaded(false)
+    loadSessionIndex(provider, resourcePolicy).then((result) => {
+      if (!cancelled) {
+        setAllSessions(result.records)
+        setSessionIndexLoaded(result.kind === "loaded")
       }
     })
     return () => { cancelled = true }
   }, [provider, resourcePolicy, tokenRefreshKey])
 
-  // Load all sessions for chat search
+  // Compute global tokens from the shared session index instead of reloading metadata.
   useEffect(() => {
-    if (!isSessionMetadataEnabled(resourcePolicy)) {
+    if (!isTokenSummaryEnabled(resourcePolicy) || !sessionIndexLoaded) {
+      setGlobalTokens(null)
       return
     }
     let cancelled = false
-    provider.loadSessionRecords().then((sessions) => {
-      if (!cancelled) {
-        setAllSessions(sessions)
+    loadGlobalTokensFromSessionIndex(provider, resourcePolicy, allSessions).then((summary) => {
+      if (!cancelled && summary) {
+        setGlobalTokens(summary)
       }
     })
     return () => { cancelled = true }
-  }, [provider, resourcePolicy, tokenRefreshKey])
+  }, [allSessions, provider, resourcePolicy, sessionIndexLoaded])
 
   const requestConfirm = useCallback((state: ConfirmState) => {
     setConfirmState(state)

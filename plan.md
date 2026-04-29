@@ -17,7 +17,8 @@ Current progress:
 - [x] Phase 4 overlay state: chat viewer/search modeled through typed `TuiState.overlay`.
 - [x] Phase 5 starter policy: screen/overlay-aware resource-loading policy added in `src/tui/resource-policy.ts`.
 - [x] E2E hardening: binary TUI help paths covered by process-level tests.
-- [ ] Phase 5 next: move project/session provider reads into shared resource hooks.
+- [x] Phase 5 session resource seam: root session metadata load shared by global tokens and chat search.
+- [ ] Phase 5 next: move panel project/session provider reads into shared resource hooks.
 
 Safety rules for this workstream:
 
