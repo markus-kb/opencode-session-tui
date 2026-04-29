@@ -11,6 +11,22 @@ import { DEFAULT_ROOT } from "../lib/opencode-data"
 import { DEFAULT_SQLITE_PATH } from "../lib/opencode-data-sqlite"
 import type { StorageBackend } from "../lib/opencode-data-provider"
 
+export type StorageSourceAvailability = {
+  sqliteAvailable: boolean
+  legacyJsonAvailable: boolean
+}
+
+export function detectStorageSources(
+  paths: { defaultSqlitePath?: string; root?: string } = {},
+): StorageSourceAvailability {
+  const sqlitePath = paths.defaultSqlitePath ?? DEFAULT_SQLITE_PATH
+  const root = paths.root ?? DEFAULT_ROOT
+  return {
+    sqliteAvailable: existsSync(sqlitePath),
+    legacyJsonAvailable: existsSync(join(root, "storage", "session")),
+  }
+}
+
 /**
  * Resolve the storage backend when the caller has not explicitly set it.
  *
@@ -34,12 +50,9 @@ export function resolveBackend(
   if (dbPath) {
     return "sqlite"
   }
-  const sqlitePath = paths.defaultSqlitePath ?? DEFAULT_SQLITE_PATH
-  const root = paths.root ?? DEFAULT_ROOT
-  const hasSqlite = existsSync(sqlitePath)
-  const hasJsonSessions = existsSync(join(root, "storage", "session"))
-  if (hasSqlite && hasJsonSessions) {
+  const sources = detectStorageSources(paths)
+  if (sources.sqliteAvailable && sources.legacyJsonAvailable) {
     return "hybrid"
   }
-  return hasSqlite ? "sqlite" : "jsonl"
+  return sources.sqliteAvailable ? "sqlite" : "jsonl"
 }

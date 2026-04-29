@@ -31,13 +31,14 @@ import { createSearcher, type SearchCandidate } from "../lib/search"
 import {
   createInitialTuiState,
   getGlobalTokenDisplayState,
-  getHomeKeyAction,
+
   closeOverlay,
   openChatSearchOverlay,
   openChatViewerOverlay,
   openHome,
   openWorkspace,
   switchWorkspaceTab,
+  type TuiOverlay,
   type TuiTab,
 } from "./app-state"
 import { formatAggregateSummaryShort, formatTokenCount } from "./format"
@@ -45,6 +46,10 @@ import { getResourcePolicy, isProjectMetadataEnabled, isSessionMetadataEnabled, 
 import { loadGlobalTokensFromSessionIndex, loadSessionIndex } from "./session-resource"
 import { loadProjectIndex, filterSessionsByProject, reindexSessions } from "./project-resource"
 import { computeProjectTokens, computeSessionTokens, computeFilteredProjectTokens } from "./token-resource"
+import { buildTuiCommands, type TuiCommandSet } from "./command-definitions"
+import { toCommandKey, toCommandScope, resolveCommand, type KeyRouteContext } from "./key-router"
+import { getHomeDashboardModel, type HomeDashboardModel } from "./home-dashboard"
+import { detectStorageSources } from "./backend-resolver"
 
 type TabKey = TuiTab
 
@@ -69,6 +74,7 @@ type ProjectsPanelProps = {
   searchQuery: string
   allSessions: SessionRecord[]
   resourcePolicy: ResourcePolicy
+  cmdSet: TuiCommandSet
   onNotify: (message: string, level?: NotificationLevel) => void
   requestConfirm: (state: ConfirmState) => void
   onNavigateToSessions: (projectId: string) => void
@@ -84,6 +90,7 @@ type SessionsPanelProps = {
   allProjects: ProjectRecord[]
   allSessions: SessionRecord[]
   resourcePolicy: ResourcePolicy
+  cmdSet: TuiCommandSet
   onRefresh: () => void
   onNotify: (message: string, level?: NotificationLevel) => void
   requestConfirm: (state: ConfirmState) => void
@@ -241,7 +248,7 @@ const ProjectSelector = ({
 }
 
 const ProjectsPanel = forwardRef<PanelHandle, ProjectsPanelProps>(function ProjectsPanel(
-  { provider, active, locked, searchQuery, allSessions, resourcePolicy, onNotify, requestConfirm, onNavigateToSessions },
+  { provider, active, locked, searchQuery, allSessions, resourcePolicy, cmdSet, onNotify, requestConfirm, onNavigateToSessions },
   ref,
 ) {
   const [records, setRecords] = useState<ProjectRecord[]>([])
@@ -401,18 +408,19 @@ const ProjectsPanel = forwardRef<PanelHandle, ProjectsPanelProps>(function Proje
       if (!active || locked) {
         return
       }
-      const letter = key.sequence?.toLowerCase()
-      if (key.name === "space") {
+      const cmdKey = toCommandKey(key)
+      const cmdId = resolveCommand(cmdSet.registry, cmdKey, { screen: "projects", overlay: null, searchActive: false, confirmActive: false })
+      if (cmdId === "projects:toggleSelect") {
         key.preventDefault()
         toggleSelection(currentRecord)
         return
       }
-      if (letter === "m") {
+      if (cmdId === "projects:toggleMissing") {
         setMissingOnly((prev) => !prev)
         setCursor(0)
         return
       }
-      if (letter === "a") {
+      if (cmdId === "projects:selectAll") {
         setSelectedIndexes((prev) => {
           if (visibleRecords.length === 0) {
             return prev
@@ -430,22 +438,22 @@ const ProjectsPanel = forwardRef<PanelHandle, ProjectsPanelProps>(function Proje
         })
         return
       }
-      if (key.name === "escape") {
+      if (cmdId === "projects:clearSelection") {
         setSelectedIndexes(new Set())
         return
       }
-      if (letter === "d") {
+      if (cmdId === "projects:deleteSelected") {
         requestDeletion()
         return
       }
-      if (key.name === "return" || key.name === "enter") {
+      if (cmdId === "projects:navigateToSessions") {
         if (currentRecord) {
           onNavigateToSessions(currentRecord.projectId)
         }
         return
       }
     },
-    [active, locked, currentRecord, visibleRecords, onNavigateToSessions, requestDeletion, toggleSelection],
+    [active, locked, currentRecord, visibleRecords, onNavigateToSessions, requestDeletion, toggleSelection, cmdSet],
   )
 
   useImperativeHandle(
@@ -533,7 +541,7 @@ const ProjectsPanel = forwardRef<PanelHandle, ProjectsPanelProps>(function Proje
 })
 
 const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(function SessionsPanel(
-  { provider, active, locked, projectFilter, searchQuery, globalTokenSummary, allProjects, allSessions, resourcePolicy, onRefresh, onNotify, requestConfirm, onClearFilter, onOpenChatViewer },
+  { provider, active, locked, projectFilter, searchQuery, globalTokenSummary, allProjects, allSessions, resourcePolicy, cmdSet, onRefresh, onNotify, requestConfirm, onClearFilter, onOpenChatViewer },
   ref,
 ) {
   const [cursor, setCursor] = useState(0)
@@ -802,7 +810,6 @@ const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(function Sessi
         return
       }
 
-      // Handle project selection mode
       if (isSelectingProject) {
         if (key.name === 'escape') {
           setIsSelectingProject(false)
@@ -816,11 +823,9 @@ const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(function Sessi
           }
           return
         }
-        // Let select component handle up/down via onCursorChange
         return
       }
 
-      // Handle rename mode - takes precedence over other key handling
       if (isRenaming) {
         if (key.name === 'escape') {
           setIsRenaming(false)
@@ -843,13 +848,14 @@ const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(function Sessi
         return
       }
 
-      const letter = key.sequence?.toLowerCase()
-      if (key.name === "space") {
+      const cmdKey = toCommandKey(key)
+      const cmdId = resolveCommand(cmdSet.registry, cmdKey, { screen: "sessions", overlay: null, searchActive: false, confirmActive: false })
+      if (cmdId === "sessions:toggleSelect") {
         key.preventDefault()
         toggleSelection(currentSession)
         return
       }
-      if (letter === "a") {
+      if (cmdId === "sessions:selectAll") {
         setSelectedIndexes((prev) => {
           if (visibleRecords.length === 0) {
             return prev
@@ -867,39 +873,39 @@ const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(function Sessi
         })
         return
       }
-      if (letter === "s") {
+      if (cmdId === "sessions:toggleSort") {
         setSortMode((prev) => (prev === "updated" ? "created" : "updated"))
         return
       }
-      if (letter === "c" && projectFilter) {
-        onClearFilter()
+      if (cmdId === "sessions:clearFilter") {
+        if (projectFilter) {
+          onClearFilter()
+        }
         return
       }
-      if (key.name === "escape") {
+      if (cmdId === "sessions:clearSelection") {
         setSelectedIndexes(new Set())
         return
       }
-      if (letter === "d") {
+      if (cmdId === "sessions:deleteSelected") {
         requestDeletion()
         return
       }
-      if (letter === "y") {
+      if (cmdId === "sessions:copyId") {
         if (currentSession) {
           copyToClipboardSync(currentSession.sessionId)
           onNotify(`Copied ID ${currentSession.sessionId} to clipboard`)
         }
         return
       }
-      // Rename with Shift+R (uppercase R)
-      if (key.sequence === 'R') {
+      if (cmdId === "sessions:renameSession") {
         if (currentSession) {
           setIsRenaming(true)
           setRenameValue(currentSession.title || '')
         }
         return
       }
-      // Move with M key
-      if (letter === 'm') {
+      if (cmdId === "sessions:moveSessions") {
         if (selectedSessions.length === 0) {
           onNotify('No sessions selected for move', 'error')
           return
@@ -913,8 +919,7 @@ const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(function Sessi
         setIsSelectingProject(true)
         return
       }
-      // Copy with P key
-      if (letter === 'p') {
+      if (cmdId === "sessions:copySessions") {
         if (selectedSessions.length === 0) {
           onNotify('No sessions selected for copy', 'error')
           return
@@ -925,14 +930,13 @@ const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(function Sessi
         setIsSelectingProject(true)
         return
       }
-      // View chat history with V key
-      if (letter === 'v') {
+      if (cmdId === "sessions:viewChat") {
         if (currentSession) {
           onOpenChatViewer(currentSession)
         }
         return
       }
-      if (key.name === "return" || key.name === "enter") {
+      if (cmdId === "sessions:sessionInfo") {
         if (currentSession) {
           const title = currentSession.title && currentSession.title.trim().length > 0 ? currentSession.title : currentSession.sessionId
           onNotify(`Session ${title} [${currentSession.sessionId}] → ${formatDisplayPath(currentSession.directory)}`)
@@ -940,7 +944,7 @@ const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(function Sessi
         return
       }
     },
-    [active, locked, currentSession, projectFilter, onClearFilter, onNotify, requestDeletion, toggleSelection, isRenaming, executeRename, isSelectingProject, availableProjects, projectCursor, operationMode, executeTransfer, selectedSessions, allProjects, onOpenChatViewer],
+    [active, locked, currentSession, projectFilter, onClearFilter, onNotify, requestDeletion, toggleSelection, isRenaming, executeRename, isSelectingProject, availableProjects, projectCursor, operationMode, executeTransfer, selectedSessions, allProjects, onOpenChatViewer, cmdSet],
   )
 
   useImperativeHandle(
@@ -1097,169 +1101,44 @@ const ConfirmBar = ({ state, busy }: { state: ConfirmState; busy: boolean }) => 
   </box>
 )
 
-const HelpScreen = ({ onDismiss }: { onDismiss: () => void }) => {
+const SCOPE_SECTION_TITLES: Record<string, string> = {
+  home: "Home",
+  global: "Global",
+  projects: "Projects",
+  sessions: "Sessions",
+  chat: "Chat Viewer",
+  search: "Chat Search",
+  confirm: "Confirm",
+}
+
+const HelpScreen = ({ cmdSet, onDismiss }: { cmdSet: TuiCommandSet; onDismiss: () => void }) => {
+  const sections = cmdSet.getScopedKeyReference()
+  const leftSections = sections.filter(s => s.scope === "home" || s.scope === "global" || s.scope === "projects")
+  const rightSections = sections.filter(s => s.scope === "sessions" || s.scope === "chat" || s.scope === "search" || s.scope === "confirm")
+
+  const renderSection = (section: import("./command-definitions").ScopedKeySection) => (
+    <Section title={SCOPE_SECTION_TITLES[section.scope] ?? section.scope}>
+      {section.commands.map((cmd) => (
+        <Bullet key={cmd.id}>
+          {cmd.keys.map((k, i) => (
+            <React.Fragment key={k}>
+              {i > 0 && <text> / </text>}
+              <KeyChip k={k} />
+            </React.Fragment>
+          ))}
+          <text> — {cmd.label}</text>
+        </Bullet>
+      ))}
+    </Section>
+  )
+
   return (
     <box style={{ flexDirection: "column", flexGrow: 1, padding: 2, border: true }}>
       <text fg={PALETTE.primary}>OpenCode Metadata Manager (fork) — Help</text>
       <text fg={PALETTE.muted}>Quick reference for keys and actions</text>
       <Columns>
         <box style={{ flexDirection: "column", flexGrow: 1 }}>
-          <Section title="Global">
-            <Bullet>
-              <KeyChip k="Tab" /> <text> / </text> <KeyChip k="1" /> <text> / </text> <KeyChip k="2" />
-              <text> — Switch tabs</text>
-            </Bullet>
-            <Bullet>
-              <KeyChip k="R" /> <text> — Reload active view</text>
-            </Bullet>
-            <Bullet>
-              <text>Search current tab: </text>
-              <KeyChip k="/" /> <text> — start, </text> <KeyChip k="X" /> <text> — clear</text>
-            </Bullet>
-            <Bullet>
-              <KeyChip k="?" /> <text> / </text> <KeyChip k="H" /> <text> — Toggle help</text>
-            </Bullet>
-            <Bullet>
-              <text>Quit: </text>
-              <KeyChip k="Q" />
-            </Bullet>
-          </Section>
-
-          <Section title="Projects">
-            <Bullet>
-              <text>Move: </text>
-              <KeyChip k="Up" /> <text> / </text> <KeyChip k="Down" />
-            </Bullet>
-            <Bullet>
-              <text>Select: </text>
-              <KeyChip k="Space" /> <text> — Toggle highlighted</text>
-            </Bullet>
-            <Bullet>
-              <text>Select all: </text>
-              <KeyChip k="A" />
-            </Bullet>
-            <Bullet>
-              <text>Filter: </text>
-              <KeyChip k="M" /> <text> — Missing-only</text>
-            </Bullet>
-            <Bullet>
-              <text fg={PALETTE.danger}>Delete: </text>
-              <KeyChip k="D" />
-              <text> — With confirmation</text>
-            </Bullet>
-            <Bullet>
-              <text>Open sessions: </text>
-              <KeyChip k="Enter" />
-            </Bullet>
-            <Bullet>
-              <text>Clear selection: </text>
-              <KeyChip k="Esc" />
-            </Bullet>
-          </Section>
-        </box>
-
-        <box style={{ flexDirection: "column", flexGrow: 1 }}>
-          <Section title="Sessions">
-            <Bullet>
-              <text>Move: </text>
-              <KeyChip k="Up" /> <text> / </text> <KeyChip k="Down" />
-            </Bullet>
-            <Bullet>
-              <text>Select: </text>
-              <KeyChip k="Space" /> <text> — Toggle highlighted</text>
-            </Bullet>
-            <Bullet>
-              <text>Select all: </text>
-              <KeyChip k="A" />
-            </Bullet>
-            <Bullet>
-              <text>Toggle sort (updated/created): </text>
-              <KeyChip k="S" />
-            </Bullet>
-            <Bullet>
-              <text>Clear project filter: </text>
-              <KeyChip k="C" />
-            </Bullet>
-            <Bullet>
-              <text fg={PALETTE.danger}>Delete: </text>
-              <KeyChip k="D" />
-              <text> — With confirmation</text>
-            </Bullet>
-            <Bullet>
-              <text>Copy ID: </text>
-              <KeyChip k="Y" />
-            </Bullet>
-            <Bullet>
-              <text fg={PALETTE.primary}>View chat: </text>
-              <KeyChip k="V" />
-              <text> — Open chat history</text>
-            </Bullet>
-            <Bullet>
-              <text fg={PALETTE.info}>Search chats: </text>
-              <KeyChip k="F" />
-              <text> — Search all chat content</text>
-            </Bullet>
-            <Bullet>
-              <text>Rename: </text>
-              <KeyChip k="Shift+R" />
-            </Bullet>
-            <Bullet>
-              <text>Move to project: </text>
-              <KeyChip k="M" />
-            </Bullet>
-            <Bullet>
-              <text>Copy to project: </text>
-              <KeyChip k="P" />
-            </Bullet>
-            <Bullet>
-              <text>Show details: </text>
-              <KeyChip k="Enter" />
-            </Bullet>
-            <Bullet>
-              <text>Clear selection: </text>
-              <KeyChip k="Esc" />
-            </Bullet>
-          </Section>
-
-          <Section title="Chat Search">
-            <Bullet>
-              <text>Type query, </text>
-              <KeyChip k="Enter" /> <text> — search / open result</text>
-            </Bullet>
-            <Bullet>
-              <text>Navigate: </text>
-              <KeyChip k="Up" /> <text> / </text> <KeyChip k="Down" />
-            </Bullet>
-            <Bullet>
-              <text>Close: </text>
-              <KeyChip k="Esc" />
-            </Bullet>
-          </Section>
-
-          <Section title="Chat Viewer">
-            <Bullet>
-              <text>Navigate: </text>
-              <KeyChip k="Up" /> <text> / </text> <KeyChip k="Down" />
-            </Bullet>
-            <Bullet>
-              <text>Jump: </text>
-              <KeyChip k="PgUp" /> <text> / </text> <KeyChip k="PgDn" />
-              <text> (10 messages)</text>
-            </Bullet>
-            <Bullet>
-              <text>First/Last: </text>
-              <KeyChip k="Home" /> <text> / </text> <KeyChip k="End" />
-            </Bullet>
-            <Bullet>
-              <text>Copy message: </text>
-              <KeyChip k="Y" />
-            </Bullet>
-            <Bullet>
-              <text>Close: </text>
-              <KeyChip k="Esc" />
-            </Bullet>
-          </Section>
-
+          {leftSections.map(renderSection)}
           <Section title="Tips">
             <Bullet>
               <text>Use </text> <KeyChip k="M" /> <text> to quickly isolate missing projects.</text>
@@ -1272,11 +1151,59 @@ const HelpScreen = ({ onDismiss }: { onDismiss: () => void }) => {
             </Bullet>
           </Section>
         </box>
+        <box style={{ flexDirection: "column", flexGrow: 1 }}>
+          {rightSections.map(renderSection)}
+        </box>
       </Columns>
       <text fg={PALETTE.info}>Press Enter or Esc to dismiss this screen.</text>
     </box>
   )
 }
+
+const HomeScreen = ({ model }: { model: HomeDashboardModel }) => (
+  <box style={{ flexDirection: "column", flexGrow: 1, padding: 2, border: true }}>
+    <text fg={PALETTE.primary}>{model.title}</text>
+    <text fg={PALETTE.muted}>{model.subtitle}</text>
+    <Columns>
+      <box style={{ flexDirection: "column", flexGrow: 1 }}>
+        <Section title="Storage">
+          {model.storage.map((item) => (
+            <Bullet key={item.label}>
+              <text fg={PALETTE.accent}>{item.label}: </text>
+              <text>{item.value}</text>
+            </Bullet>
+          ))}
+        </Section>
+        <Section title="Library">
+          {model.library.map((item) => (
+            <Bullet key={item.label}>
+              <text fg={PALETTE.accent}>{item.label}: </text>
+              <text>{item.value}</text>
+            </Bullet>
+          ))}
+        </Section>
+      </box>
+      <box style={{ flexDirection: "column", flexGrow: 1 }}>
+        <Section title="Primary Actions">
+          {model.actions.map((action) => (
+            <Bullet key={action.key}>
+              <KeyChip k={action.key} />
+              <text> — {action.label}</text>
+            </Bullet>
+          ))}
+        </Section>
+        <Section title="Status">
+          <Bullet>
+            <text>Workspace reads are deferred on this screen.</text>
+          </Bullet>
+          <Bullet>
+            <text>Open the workspace to load project and session metadata.</text>
+          </Bullet>
+        </Section>
+      </box>
+    </Columns>
+  </box>
+)
 
 type ChatViewerProps = {
   session: SessionRecord
@@ -1555,10 +1482,30 @@ export const App = ({
 
   const resourcePolicy = useMemo(() => getResourcePolicy(tuiState), [tuiState])
   const workspaceDataLoadState = useMemo(() => toWorkspaceDataLoadState(resourcePolicy), [resourcePolicy])
+  const cmdSet = useMemo(() => buildTuiCommands(), [])
 
   const globalTokenDisplay = useMemo(
     () => getGlobalTokenDisplayState(globalTokens, workspaceDataLoadState),
     [globalTokens, workspaceDataLoadState],
+  )
+
+  const storageSources = useMemo(
+    () => detectStorageSources({ defaultSqlitePath: resolvedDbPath ?? DEFAULT_SQLITE_PATH, root }),
+    [resolvedDbPath, root],
+  )
+
+  const homeDashboard = useMemo(
+    () => getHomeDashboardModel({
+      backend,
+      root,
+      dbPath: resolvedDbPath,
+      tokenLabel: globalTokenDisplay.kind === "known"
+        ? formatTokenCount(globalTokenDisplay.summary.total.tokens.total)
+        : globalTokenDisplay.label,
+      sqliteAvailable: storageSources.sqliteAvailable,
+      legacyJsonAvailable: storageSources.legacyJsonAvailable,
+    }),
+    [backend, root, resolvedDbPath, globalTokenDisplay, storageSources],
   )
 
   useEffect(() => {
@@ -1814,93 +1761,90 @@ export const App = ({
         return
       }
       if (confirmState) {
-        const letter = key.sequence?.toLowerCase()
-        if (key.name === "escape" || letter === "n") {
+        const cmdKey = toCommandKey(key)
+        const cmdId = resolveCommand(cmdSet.registry, cmdKey, { screen: activeTab, overlay: null, searchActive, confirmActive: true })
+        if (cmdId === "confirm:cancel") {
           cancelConfirm()
           return
         }
-        if (key.name === "return" || key.name === "enter" || letter === "y") {
+        if (cmdId === "confirm:ok") {
           void executeConfirm()
           return
         }
         return
       }
 
-      // Chat viewer takes precedence when open
       if (chatViewerOpen) {
-        const letter = key.sequence?.toLowerCase()
-        if (key.name === "escape") {
+        const cmdKey = toCommandKey(key)
+        const cmdId = resolveCommand(cmdSet.registry, cmdKey, { screen: activeTab, overlay: tuiState.overlay, searchActive: false, confirmActive: false })
+        if (cmdId === "chat:close") {
           closeChatViewer()
           return
         }
-        if (key.name === "up") {
+        if (cmdId === "chat:prev") {
           setChatCursor(prev => Math.max(0, prev - 1))
           return
         }
-        if (key.name === "down") {
+        if (cmdId === "chat:next") {
           setChatCursor(prev => Math.min(chatMessages.length - 1, prev + 1))
           return
         }
-        if (key.name === "pageup" || (key.ctrl && letter === "u")) {
+        if (cmdId === "chat:pageUp") {
           setChatCursor(prev => Math.max(0, prev - 10))
           return
         }
-        if (key.name === "pagedown" || (key.ctrl && letter === "d")) {
+        if (cmdId === "chat:pageDown") {
           setChatCursor(prev => Math.min(chatMessages.length - 1, prev + 10))
           return
         }
-        if (key.name === "home") {
+        if (cmdId === "chat:home") {
           setChatCursor(0)
           return
         }
-        if (key.name === "end") {
+        if (cmdId === "chat:end") {
           setChatCursor(chatMessages.length - 1)
           return
         }
-        if (letter === "y") {
+        if (cmdId === "chat:copy") {
           const msg = chatMessages[chatCursor]
           if (msg) {
             copyChatMessage(msg)
           }
           return
         }
-        // Block other keys while viewer is open
         return
       }
 
-      // Chat search overlay takes precedence when open
       if (chatSearchOpen) {
-        const letter = key.sequence?.toLowerCase()
-        if (key.name === "escape") {
+        const cmdKey = toCommandKey(key)
+        const cmdId = resolveCommand(cmdSet.registry, cmdKey, { screen: activeTab, overlay: tuiState.overlay, searchActive: false, confirmActive: false })
+        if (cmdId === "search:close") {
           closeChatSearch()
           return
         }
-        if (key.name === "return" || key.name === "enter") {
+        if (cmdId === "search:action") {
           if (chatSearchResults.length > 0) {
-            // Select current result
             const result = chatSearchResults[chatSearchCursor]
             if (result) {
               void handleChatSearchResult(result)
             }
           } else {
-            // Execute search
             void executeChatSearch()
           }
+          return
+        }
+        if (cmdId === "search:prev") {
+          setChatSearchCursor(prev => Math.max(0, prev - 1))
+          return
+        }
+        if (cmdId === "search:next") {
+          setChatSearchCursor(prev => Math.min(chatSearchResults.length - 1, prev + 1))
           return
         }
         if (key.name === "backspace") {
           setChatSearchQuery(prev => prev.slice(0, -1))
           return
         }
-        if (key.name === "up") {
-          setChatSearchCursor(prev => Math.max(0, prev - 1))
-          return
-        }
-        if (key.name === "down") {
-          setChatSearchCursor(prev => Math.min(chatSearchResults.length - 1, prev + 1))
-          return
-        }
-        // Type characters
         const ch = key.sequence
         if (ch && ch.length === 1 && !key.ctrl && !key.meta) {
           setChatSearchQuery(prev => prev + ch)
@@ -1910,56 +1854,60 @@ export const App = ({
       }
 
       if (isHome) {
-        const action = getHomeKeyAction(key)
-        if (action === "quit") {
+        const cmdKey = toCommandKey(key)
+        const cmdId = resolveCommand(cmdSet.registry, cmdKey, { screen: "home", overlay: null, searchActive: false, confirmActive: false })
+        if (cmdId === "quit") {
           renderer.destroy()
           return
         }
-        if (action === "openWorkspace") {
+        if (cmdId === "homeDismiss") {
           setTuiState((prev) => openWorkspace(prev))
           return
         }
         return
       }
 
-      const letter = key.sequence?.toLowerCase()
+      const cmdKey = toCommandKey(key)
+      const scope = toCommandScope({ screen: activeTab, overlay: tuiState.overlay, searchActive, confirmActive: Boolean(confirmState) })
+      const cmdId = resolveCommand(cmdSet.registry, cmdKey, { screen: activeTab, overlay: tuiState.overlay, searchActive, confirmActive: Boolean(confirmState) })
 
-      if (letter === "q" || (key.ctrl && key.name === "c")) {
+      if (cmdId === "quit") {
         renderer.destroy()
         return
       }
 
-      if (letter === "?" || letter === "h") {
+      if (cmdId === "help") {
         setTuiState((prev) => openHome(prev))
         return
       }
 
-      if (letter === "/") {
+      if (cmdId === "search") {
         setSearchActive(true)
         setSearchQuery("")
         return
       }
-      if (letter === "x" && searchQuery) {
+
+      if (cmdId === "clearSearch" && searchQuery) {
         setSearchQuery("")
         return
       }
 
-      if (key.name === "tab") {
+      if (cmdId === "nextTab") {
         switchTab("next")
         return
       }
 
-      if (letter === "1") {
+      if (cmdId === "tab1") {
         switchTab("projects")
         return
       }
-      if (letter === "2") {
+
+      if (cmdId === "tab2") {
         switchTab("sessions")
         return
       }
 
-      if (letter === "r") {
-        // Clear token cache on reload
+      if (cmdId === "reload") {
         clearTokenCache()
         setTokenRefreshKey((k) => k + 1)
         if (activeTab === "projects") {
@@ -1971,8 +1919,7 @@ export const App = ({
         return
       }
 
-      // Open chat search with F key (Sessions tab only)
-      if (letter === "f" && activeTab === "sessions") {
+      if (cmdId === "chatSearch") {
         openChatSearch()
         return
       }
@@ -1980,7 +1927,7 @@ export const App = ({
       const handler = activeTab === "projects" ? projectsRef.current : sessionsRef.current
       handler?.handleKey(key)
     },
-    [activeTab, cancelConfirm, confirmState, executeConfirm, notify, renderer, searchActive, searchQuery, isHome, switchTab, chatViewerOpen, chatMessages, chatCursor, closeChatViewer, copyChatMessage, chatSearchOpen, chatSearchResults, chatSearchCursor, closeChatSearch, executeChatSearch, handleChatSearchResult, openChatSearch],
+    [activeTab, cancelConfirm, cmdSet, confirmState, executeConfirm, notify, renderer, searchActive, searchQuery, isHome, switchTab, chatViewerOpen, chatMessages, chatCursor, closeChatViewer, copyChatMessage, chatSearchOpen, chatSearchResults, chatSearchCursor, closeChatSearch, executeChatSearch, handleChatSearchResult, openChatSearch, tuiState.overlay],
   )
 
   useKeyboard(handleGlobalKey)
@@ -2045,7 +1992,7 @@ export const App = ({
         : null}
 
       {isHome ? (
-        <HelpScreen onDismiss={() => setTuiState((prev) => openWorkspace(prev))} />
+        <HomeScreen model={homeDashboard} />
       ) : (
         <box style={{ flexDirection: "row", gap: 1, flexGrow: 1 }}>
           <ProjectsPanel
@@ -2056,6 +2003,7 @@ export const App = ({
             searchQuery={activeTab === "projects" ? searchQuery : ""}
             allSessions={allSessions}
             resourcePolicy={resourcePolicy}
+            cmdSet={cmdSet}
             onNotify={notify}
             requestConfirm={requestConfirm}
             onNavigateToSessions={handleNavigateToSessions}
@@ -2071,6 +2019,7 @@ export const App = ({
             allProjects={allProjects}
             allSessions={allSessions}
             resourcePolicy={resourcePolicy}
+            cmdSet={cmdSet}
             onRefresh={() => setTokenRefreshKey((k) => k + 1)}
             onNotify={notify}
             requestConfirm={requestConfirm}

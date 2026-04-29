@@ -6,7 +6,7 @@ import { afterEach, describe, expect, test } from "bun:test"
 import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { resolveBackend } from "../../src/tui/backend-resolver"
+import { detectStorageSources, resolveBackend } from "../../src/tui/backend-resolver"
 
 describe("resolveBackend", () => {
   const tempRoots: string[] = []
@@ -59,5 +59,17 @@ describe("resolveBackend", () => {
   test("auto-detects 'jsonl' when SQLite does not exist", () => {
     const root = tempRoot()
     expect(resolveBackend(undefined, undefined, { defaultSqlitePath: join(root, "missing.db"), root })).toBe("jsonl")
+  })
+
+  test("detects SQLite and legacy JSON availability", () => {
+    const root = tempRoot()
+    const dbPath = join(root, "opencode.db")
+    writeFileSync(dbPath, "")
+    mkdirSync(join(root, "storage", "session"), { recursive: true })
+
+    expect(detectStorageSources({ defaultSqlitePath: dbPath, root })).toEqual({
+      sqliteAvailable: true,
+      legacyJsonAvailable: true,
+    })
   })
 })

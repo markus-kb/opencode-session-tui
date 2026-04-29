@@ -103,16 +103,14 @@ Move provider calls and derived loading state into dedicated hooks/resources.
 ## Phase 6: Rebuild Input Handling
 
 - [x] Introduce a command registry as the source of truth for keybindings.
-- [ ] Separate global commands from screen, panel, and overlay commands.
-
-Replace the single global keyboard router with scoped command handling.
-
-- [ ] Introduce a command registry as the source of truth for keybindings.
-- [ ] Separate global commands from screen, panel, and overlay commands.
-- [ ] Generate home/help key reference content from the command registry.
-- [ ] Generate CLI usage keybinding text from the same registry where practical.
-- [ ] Route keyboard events through the active screen or overlay handler.
-- [ ] Make input precedence explicit and testable.
+- [x] Define all TUI keybindings as typed Command objects with scope-prefixed IDs.
+- [x] Introduce key router (toCommandKey, toCommandScope, resolveCommand) with tests.
+- [x] Wire App.handleGlobalKey through resolveCommand for home and global workspace keys.
+- [x] Wire chat viewer, chat search, and confirm overlay keys through resolveCommand.
+- [x] Wire panel handleKey through resolveCommand.
+- [x] Generate home/help key reference content from the command registry.
+- [x] Generate CLI usage keybinding text from the same registry where practical.
+- [x] Make input precedence explicit and testable.
 
 Example command shape:
 
@@ -131,12 +129,12 @@ Exit criteria: changing a keybinding requires editing one command definition, no
 
 Turn the initial screen into a fast dashboard rather than a static help page.
 
-- [ ] Show storage mode and detected data sources.
-- [ ] Show whether SQLite and legacy JSON stores are available.
-- [ ] Show that project/session/token loading is deferred until workspace entry.
-- [ ] Show primary actions: open workspace, projects, sessions, help, quit.
-- [ ] Hide global token `loading...` while loading is intentionally deferred.
-- [ ] Keep home render cheap: no full session scan, token aggregation, or chat indexing.
+- [x] Show storage mode and configured data source paths.
+- [x] Show whether SQLite and legacy JSON stores are available.
+- [x] Show that project/session/token loading is deferred until workspace entry.
+- [x] Show primary actions: open workspace, projects, sessions, help, quit.
+- [x] Hide global token `loading...` while loading is intentionally deferred.
+- [x] Keep home render cheap: no full session scan, token aggregation, or chat indexing.
 
 Example home content:
 

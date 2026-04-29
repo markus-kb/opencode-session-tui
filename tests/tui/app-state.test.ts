@@ -92,9 +92,6 @@ describe("TUI app state", () => {
     expect(getHomeKeyAction({ name: "return" })).toBe("openWorkspace")
     expect(getHomeKeyAction({ name: "enter" })).toBe("openWorkspace")
     expect(getHomeKeyAction({ name: "escape" })).toBe("openWorkspace")
-    expect(getHomeKeyAction({ sequence: "?" })).toBe("openWorkspace")
-    expect(getHomeKeyAction({ sequence: "h" })).toBe("openWorkspace")
-    expect(getHomeKeyAction({ sequence: "H" })).toBe("openWorkspace")
   })
 
   test("maps quit keys on home without requiring workspace data", () => {
@@ -104,6 +101,8 @@ describe("TUI app state", () => {
 
   test("ignores unrelated home keys", () => {
     expect(getHomeKeyAction({ sequence: "x" })).toBe("none")
+    expect(getHomeKeyAction({ sequence: "?" })).toBe("none")
+    expect(getHomeKeyAction({ sequence: "h" })).toBe("none")
     expect(getHomeKeyAction({ name: "up" })).toBe("none")
   })
 

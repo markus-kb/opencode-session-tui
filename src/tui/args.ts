@@ -9,6 +9,7 @@ import { resolve } from "node:path"
 import { DEFAULT_ROOT } from "../lib/opencode-data"
 import { DEFAULT_SQLITE_PATH } from "../lib/opencode-data-sqlite"
 import type { StorageBackend } from "../lib/opencode-data-provider"
+import { buildTuiCommands, type TuiCommandSet } from "./command-definitions"
 
 export interface TUIOptions {
   root: string
@@ -16,6 +17,27 @@ export interface TUIOptions {
   dbPath?: string
   sqliteStrict: boolean
   forceWrite: boolean
+}
+
+const USAGE_SCOPE_TITLES: Record<string, string> = {
+  home: "Home",
+  global: "Global",
+  projects: "Projects",
+  sessions: "Sessions",
+  chat: "Chat Viewer",
+  search: "Chat Search",
+  confirm: "Confirm",
+}
+
+export function getTuiKeyBindingUsage(cmdSet: TuiCommandSet = buildTuiCommands()): string {
+  const lines = ["Key bindings:"]
+  for (const section of cmdSet.getScopedKeyReference()) {
+    lines.push(`\n${USAGE_SCOPE_TITLES[section.scope] ?? section.scope}:`)
+    for (const cmd of section.commands) {
+      lines.push(`  ${cmd.keys.join(" / ").padEnd(16)} ${cmd.label}`)
+    }
+  }
+  return lines.join("\n")
 }
 
 /**
@@ -33,49 +55,7 @@ Storage options:
   --sqlite-strict           Fail on SQLite warnings or malformed data
   --force-write             Wait for SQLite write locks before failing
 
-Key bindings:
-  Tab / 1 / 2     Switch between projects and sessions
-  /               Start search (active tab)
-  X               Clear search
-  ? / H           Toggle help
-  R               Reload (and refresh token cache)
-  Q               Quit the application
-
-Projects view:
-  Space           Toggle selection
-  A               Select all (visible)
-  M               Toggle missing-only filter
-  D               Delete selected (with confirmation)
-  Enter           Jump to Sessions for project
-  Esc             Clear selection
-
-Sessions view:
-  Space           Toggle selection
-  A               Select all (visible)
-  S               Toggle sort (updated/created)
-  V               View chat history for selected session
-  F               Search across all chat content in sessions
-  Shift+R         Rename session
-  M               Move selected sessions to project
-  P               Copy selected sessions to project
-  Y               Copy session ID to clipboard
-  C               Clear project filter
-  D               Delete selected (with confirmation)
-  Enter           Show details
-  Esc             Clear selection
-
-Chat search (when open):
-  Type            Enter search query
-  Enter           Search / open selected result
-  Up/Down         Navigate results
-  Esc             Close search
-
-Chat viewer (when open):
-  Esc             Close viewer
-  Up/Down         Navigate messages
-  PgUp/PgDn       Jump 10 messages
-  Home/End        Jump to first/last message
-  Y               Copy message content to clipboard
+${getTuiKeyBindingUsage()}
 `)
 }
 

@@ -1,8 +1,14 @@
 import { createCommandRegistry, type Command, type CommandRegistry } from "./command-registry"
 
+export type ScopedKeySection = {
+  scope: CommandScope
+  commands: Command[]
+}
+
 export type TuiCommandSet = {
   registry: CommandRegistry
   getHomeKeyReference: () => string[]
+  getScopedKeyReference: () => ScopedKeySection[]
 }
 
 function cmd(id: string, label: string, scope: CommandScope, keys: string[]): Command {
@@ -25,7 +31,7 @@ export function buildTuiCommands(): TuiCommandSet {
     cmd("reload", "Reload", "global", ["r"]),
     cmd("chatSearch", "Chat search", "global", ["f"]),
 
-    cmd("homeDismiss", "Open workspace", "home", ["enter", "escape", "?", "h"]),
+    cmd("homeDismiss", "Open workspace", "home", ["enter", "escape"]),
 
     cmd("projects:toggleSelect", "Toggle selection", "projects", ["space"]),
     cmd("projects:toggleMissing", "Missing only", "projects", ["m"]),
@@ -58,6 +64,8 @@ export function buildTuiCommands(): TuiCommandSet {
 
     cmd("search:close", "Close", "search", ["escape"]),
     cmd("search:action", "Search/View", "search", ["enter"]),
+    cmd("search:prev", "Previous result", "search", ["up"]),
+    cmd("search:next", "Next result", "search", ["down"]),
 
     cmd("confirm:cancel", "Cancel", "confirm", ["escape", "n"]),
     cmd("confirm:ok", "Confirm", "confirm", ["enter", "y"]),
@@ -80,6 +88,13 @@ export function buildTuiCommands(): TuiCommandSet {
         lines.push(`[${c.keys.join("/")}] ${c.label}`)
       }
       return lines
+    },
+    getScopedKeyReference() {
+      const scopes: CommandScope[] = ["home", "global", "projects", "sessions", "chat", "search", "confirm"]
+      return scopes.map((scope) => ({
+        scope,
+        commands: registry.listByScopeOnly(scope),
+      }))
     },
   }
 }

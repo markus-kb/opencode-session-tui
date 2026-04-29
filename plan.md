@@ -22,7 +22,13 @@ Current progress:
 - [x] Phase 5 panel session derivation: SessionsPanel derives filtered sessions from root allSessions; ProjectsPanel receives root allSessions for token computation.
 - [x] Phase 5 token resource seam: panel token computations gated through token-resource.ts and resource policy.
 - [x] Phase 6 starter command registry: typed Command/CommandScope model, scope-aware key lookup, home key reference generation.
-- [ ] Phase 6 next: wire App key routing through command registry; generate help from registry.
+- [x] Phase 6 key router: toCommandKey, toCommandScope, resolveCommand with tests.
+- [x] Phase 6 overlay key routing: confirm, chat viewer, chat search keys routed through resolveCommand.
+- [x] Phase 6 panel key routing: ProjectsPanel and SessionsPanel handleKey routed through resolveCommand.
+- [x] Phase 6 help from registry: HelpScreen generates content from getScopedKeyReference().
+- [x] Phase 6 CLI usage: TUI usage keybinding text generated from the command registry.
+- [x] Phase 6 complete: input precedence covered by key-router tests.
+- [x] Phase 7 home dashboard: static help screen replaced with tested storage/library/actions model and cheap source availability detection.
 
 Safety rules for this workstream:
 

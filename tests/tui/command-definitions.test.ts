@@ -57,6 +57,13 @@ describe("TUI command definitions", () => {
     expect(cmdSet.registry.findByKey("escape", scope)?.id).toBe("chat:close")
     expect(cmdSet.registry.findByKey("up", scope)?.id).toBe("chat:prev")
     expect(cmdSet.registry.findByKey("down", scope)?.id).toBe("chat:next")
+    expect(cmdSet.registry.findByKey("pageup", scope)?.id).toBe("chat:pageUp")
+    expect(cmdSet.registry.findByKey("pagedown", scope)?.id).toBe("chat:pageDown")
+    expect(cmdSet.registry.findByKey("home", scope)?.id).toBe("chat:home")
+    expect(cmdSet.registry.findByKey("end", scope)?.id).toBe("chat:end")
+    expect(cmdSet.registry.findByKey("y", scope)?.id).toBe("chat:copy")
+    expect(cmdSet.registry.findByKey("C-u", scope)?.id).toBe("chat:pageUp")
+    expect(cmdSet.registry.findByKey("C-d", scope)?.id).toBe("chat:pageDown")
   })
 
   test("registers chat search commands", () => {
@@ -65,6 +72,18 @@ describe("TUI command definitions", () => {
     const scope = "search"
     expect(cmdSet.registry.findByKey("escape", scope)?.id).toBe("search:close")
     expect(cmdSet.registry.findByKey("enter", scope)?.id).toBe("search:action")
+    expect(cmdSet.registry.findByKey("up", scope)?.id).toBe("search:prev")
+    expect(cmdSet.registry.findByKey("down", scope)?.id).toBe("search:next")
+  })
+
+  test("registers confirm dialog commands", () => {
+    const cmdSet = buildTuiCommands()
+
+    const scope = "confirm"
+    expect(cmdSet.registry.findByKey("escape", scope)?.id).toBe("confirm:cancel")
+    expect(cmdSet.registry.findByKey("n", scope)?.id).toBe("confirm:cancel")
+    expect(cmdSet.registry.findByKey("enter", scope)?.id).toBe("confirm:ok")
+    expect(cmdSet.registry.findByKey("y", scope)?.id).toBe("confirm:ok")
   })
 
   test("global commands are accessible from panel scopes", () => {
@@ -82,5 +101,28 @@ describe("TUI command definitions", () => {
     expect(lines.length).toBeGreaterThan(0)
     expect(lines.some((l) => l.includes("Quit"))).toBe(true)
     expect(lines.some((l) => l.includes("Help"))).toBe(true)
+  })
+
+  test("getScopedKeyReference returns sections for each scope", () => {
+    const cmdSet = buildTuiCommands()
+
+    const sections = cmdSet.getScopedKeyReference()
+
+    const scopeNames = sections.map(s => s.scope)
+    expect(scopeNames).toContain("global")
+    expect(scopeNames).toContain("home")
+    expect(scopeNames).toContain("projects")
+    expect(scopeNames).toContain("sessions")
+    expect(scopeNames).toContain("chat")
+    expect(scopeNames).toContain("search")
+    expect(scopeNames).toContain("confirm")
+
+    const globalSection = sections.find(s => s.scope === "global")!
+    expect(globalSection.commands.length).toBeGreaterThan(0)
+    expect(globalSection.commands.every(c => c.id && c.label && c.keys.length > 0)).toBe(true)
+
+    const sessionSection = sections.find(s => s.scope === "sessions")!
+    expect(sessionSection.commands.some(c => c.id === "quit")).toBe(false)
+    expect(sessionSection.commands.some(c => c.id === "sessions:viewChat")).toBe(true)
   })
 })

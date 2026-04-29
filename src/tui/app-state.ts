@@ -88,13 +88,7 @@ export function getHomeKeyAction(key: KeyLike): HomeKeyAction {
     return "quit"
   }
 
-  if (
-    key.name === "escape" ||
-    key.name === "return" ||
-    key.name === "enter" ||
-    letter === "?" ||
-    letter === "h"
-  ) {
+  if (key.name === "escape" || key.name === "return" || key.name === "enter") {
     return "openWorkspace"
   }
 
