@@ -19,7 +19,6 @@ import {
   formatDisplayPath,
   BatchOperationResult,
   TokenSummary,
-  TokenBreakdown,
   AggregateTokenSummary,
   clearTokenCache,
   ChatMessage,
@@ -30,6 +29,7 @@ import { DEFAULT_SQLITE_PATH } from "../lib/opencode-data-sqlite"
 import { createProvider, type DataProvider, type StorageBackend } from "../lib/opencode-data-provider"
 import { createSearcher, type SearchCandidate } from "../lib/search"
 import { getGlobalTokenDisplayState, getHomeKeyAction, getWorkspaceDataLoadState } from "./app-state"
+import { formatAggregateSummaryShort, formatTokenCount } from "./format"
 
 type TabKey = "projects" | "sessions"
 
@@ -82,46 +82,6 @@ const PALETTE = {
   key: "#fbbf24", // amber
   muted: "#9ca3af", // gray
 } as const
-
-// Token formatting helpers
-function formatTokenCount(n: number): string {
-  if (n >= 1_000_000) {
-    return `${(n / 1_000_000).toFixed(1).replace(/\.0$/, "")}M`
-  }
-  if (n >= 1_000) {
-    return `${(n / 1_000).toFixed(1).replace(/\.0$/, "")}k`
-  }
-  return String(n)
-}
-
-function formatTokenBreakdown(tokens: TokenBreakdown): string[] {
-  return [
-    `Input: ${formatTokenCount(tokens.input)}`,
-    `Output: ${formatTokenCount(tokens.output)}`,
-    `Reasoning: ${formatTokenCount(tokens.reasoning)}`,
-    `Cache Read: ${formatTokenCount(tokens.cacheRead)}`,
-    `Cache Write: ${formatTokenCount(tokens.cacheWrite)}`,
-    `Total: ${formatTokenCount(tokens.total)}`,
-  ]
-}
-
-function formatTokenSummaryShort(summary: TokenSummary): string {
-  if (summary.kind === 'unknown') {
-    return '?'
-  }
-  return formatTokenCount(summary.tokens.total)
-}
-
-function formatAggregateSummaryShort(summary: AggregateTokenSummary): string {
-  if (summary.total.kind === 'unknown') {
-    return '?'
-  }
-  const base = formatTokenCount(summary.total.tokens.total)
-  if (summary.unknownSessions && summary.unknownSessions > 0) {
-    return `${base} (+${summary.unknownSessions} unknown)`
-  }
-  return base
-}
 
 async function runBatchSessionOperation(
   provider: DataProvider,
