@@ -13,9 +13,8 @@ import { type TuiCommandSet } from "./command-definitions"
 import { PALETTE } from "./components"
 import type { ConfirmState } from "./confirm-bar"
 import { formatTokenCount } from "./format"
-import { toCommandKey, resolveCommand } from "./key-router"
 import { clampCursor, clearSelection, getSelectedRecords, pruneSelectedIndexes, toggleAllVisibleIndexes, toggleSelectedIndex } from "./panel-selection"
-import { toProjectPanelAction } from "./project-panel-commands"
+import { resolveProjectPanelInputAction } from "./projects-panel-input"
 import type { ResourcePolicy } from "./resource-policy"
 import { computeProjectTokens } from "./token-resource"
 import type { NotificationLevel } from "./status-bar"
@@ -141,12 +140,7 @@ export const ProjectsPanel = forwardRef<PanelHandle, ProjectsPanelProps>(functio
 
   const handleKey = useCallback(
     (key: KeyEvent) => {
-      if (!active || locked) {
-        return
-      }
-      const cmdKey = toCommandKey(key)
-      const cmdId = resolveCommand(cmdSet.registry, cmdKey, { screen: "projects", overlay: null, searchActive: false, confirmActive: false })
-      const action = toProjectPanelAction(cmdId)
+      const action = resolveProjectPanelInputAction({ key, active, locked, cmdSet })
       if (action === "toggleSelect") {
         key.preventDefault()
         toggleSelection(currentRecord)

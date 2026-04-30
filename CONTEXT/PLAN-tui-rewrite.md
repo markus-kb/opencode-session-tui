@@ -170,7 +170,7 @@ Rebuild the main workspace from independent panels.
 - [x] Give each panel local selection, cursor, filtering, and refresh behavior.
 - [x] Feed both panels from shared project/session resources.
 - [x] Keep project-to-session navigation explicit through workspace actions.
-- [ ] Ensure each panel can be tested independently.
+- [x] Ensure each panel can be tested independently.
 
 Exit criteria: the workspace is composed from isolated panels rather than embedded in the root app.
 

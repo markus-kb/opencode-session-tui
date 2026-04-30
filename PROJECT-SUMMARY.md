@@ -47,6 +47,7 @@ The codebase follows a dual-mode architecture with shared libraries:
 - `workspace-navigation.ts` — Explicit project-to-session navigation descriptor for tab/filter/status updates
 - `input-precedence.ts` — Explicit input-layer precedence for search input, confirmations, overlays, home, and workspace panels
 - `projects-panel.tsx` — Projects panel component fed by the root project index, with local filtering, selection, deletion, and project token display
+- `projects-panel-input.ts` — Pure project panel input-routing seam from key events to panel actions
 - `sessions-panel.tsx` — Sessions panel component with local sort/search/selection, rename, move/copy, chat entry, and token display
 - `sessions-panel-derive.ts` — Pure sessions sort/search derivation helper used by SessionsPanel and covered with focused tests
 - `command-registry.ts` — Typed command registry with scope-aware key lookup
