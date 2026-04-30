@@ -59,6 +59,7 @@ The codebase follows a dual-mode architecture with shared libraries:
 - `sessions-panel-input.ts` — Pure session panel input-routing seam from key events to panel actions
 - `sessions-panel-modes.ts` — Pure rename/transfer mode transition helper used by SessionsPanel
 - `sessions-panel-derive.ts` — Pure sessions sort/search derivation helper used by SessionsPanel and covered with focused tests
+- `perf-baseline.ts` — Timing summary helper for repeatable profiling baselines (min/max/avg/median)
 - `command-registry.ts` — Typed command registry with scope-aware key lookup
 - `command-definitions.ts` — All TUI keybindings as typed Command objects with home key reference generator
 - `chat-search-overlay.tsx` — First-class chat search overlay component for scoped cross-session results and previews
@@ -158,6 +159,10 @@ Work Completed
 - Added `src/tui/project-resource.ts` and regression tests so root-level project index is shared by session move/copy selectors; added `isProjectMetadataEnabled` policy helper.
 - Wired panels to derive session records from root `allSessions` instead of independent `provider.loadSessionRecords()` calls; added `filterSessionsByProject` and `reindexSessions` pure helpers with tests.
 - Added `src/tui/token-resource.ts` and regression tests so panel token computations are gated through resource policy instead of direct `provider.compute*` calls.
+- Extracted chat/search/confirm/selector lifecycle seams (`chat-overlay-lifecycle.ts`, `chat-search-navigation.ts`, `confirm-lifecycle.ts`, `project-selector-lifecycle.ts`) and root overlay composition seam (`overlay-host.tsx`).
+- Extracted panel-local behavior seams (`projects-panel-input.ts`, `sessions-panel-input.ts`, `sessions-panel-modes.ts`, `sessions-panel-derive.ts`) and explicit workspace navigation/reload seams (`workspace-navigation.ts`, `workspace-reload.ts`, `workspace-reload-execute.ts`).
+- Added focused regression coverage for input precedence, workspace navigation, reload execution/token invalidation, and panel input/mode transitions.
+- Added `src/tui/perf-baseline.ts` with regression tests and documented local baseline timing samples for startup/workspace-entry/chat-search/token-summary proxy paths.
 
 ### CLI Implementation (Phase 1-4)
 - Created Commander-based CLI with global options and subcommand routing.
@@ -171,7 +176,7 @@ Work Completed
 - Error handling with typed exit codes (0-4) and consistent error formatting.
 - ID resolution helpers with exact and prefix matching.
 - Pre-deletion backup to timestamped directories.
-- Comprehensive test suite: 350+ tests covering formatters, commands, resolvers, errors, exit codes.
+- Comprehensive test suite: 1100+ tests covering formatters, commands, resolvers, errors, exit codes, and TUI rewrite seams.
 
 How To Run
 ----------

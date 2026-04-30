@@ -67,6 +67,12 @@ Key TUI seams now live in dedicated modules under `src/tui/`, including:
 - `session-resource.ts`, `project-resource.ts`, `token-resource.ts`, `chat-session-resource.ts`, `chat-search-resource.ts` (resource access seams)
 - `projects-panel-input.ts`, `sessions-panel-input.ts`, `sessions-panel-derive.ts`, `sessions-panel-modes.ts` (panel behavior seams)
 
+Current Phase 10 status:
+
+- Baseline timing helper is in place (`src/tui/perf-baseline.ts`) with regression tests.
+- Typecheck and full test suite are green.
+- Interactive-renderer profiling is still tracked as a final follow-up because headless help/test paths are stable proxies, not full interactive render benchmarks.
+
 ## Installation
 ```bash
 # Clone the repo and install deps

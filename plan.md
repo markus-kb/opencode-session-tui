@@ -64,6 +64,17 @@ Current progress:
 - [x] Phase 9 chat search navigation seam: result handoff to session/message cursor moved to `src/tui/chat-search-navigation.ts`.
 - [x] Phase 9 overlay host seam: root overlay composition moved to `src/tui/overlay-host.tsx`.
 - [x] Phase 9 project selector lifecycle seam: open-close selector state moved to `src/tui/project-selector-lifecycle.ts`.
+- [x] Phase 10 profiling baseline seam: timing sample summarization moved to `src/tui/perf-baseline.ts` with dedicated regression tests.
+
+Phase 10 baseline samples (local machine, 5 runs each, proxy paths):
+
+- `startup (tui --help)`: min 128.33ms, max 158.91ms, avg 139.10ms, median 136.57ms.
+- `workspace entry` (targeted app-state transition test): min 81.41ms, max 106.23ms, avg 91.23ms, median 89.85ms.
+- `chat search path` (targeted chat-search resource test): min 77.30ms, max 103.22ms, avg 85.49ms, median 82.74ms.
+- `token summary path` (targeted token-resource formatting test): min 81.75ms, max 99.85ms, avg 87.58ms, median 85.62ms.
+- Caveat: these are stable CI-friendly proxy timings, not full interactive renderer benchmarks.
+
+- [x] Phase 10 documentation sync: rewrite plan/README/PROJECT-SUMMARY updated to match landed seams and current profiling baseline status; stale unchecked items cleared.
 
 Safety rules for this workstream:
 

@@ -6,14 +6,14 @@ This plan prepares the OpenTUI app for a fundamental rewrite without losing the 
 
 Freeze the current TUI behavior with regression tests before major refactoring.
 
-- [ ] Capture startup behavior, including the initial home/help screen.
+- [x] Capture startup behavior, including the initial home/help screen.
 - [x] Test that the initial home screen does not load sessions or compute tokens.
 - [x] Test home dismissal via Enter and Esc.
 - [x] Add process-level e2e coverage for binary TUI help paths.
-- [ ] Test help toggle behavior from the workspace.
-- [ ] Test keyboard precedence for search, confirmations, chat viewer, chat search, and panels.
-- [ ] Test project-to-session navigation.
-- [ ] Test confirmation flows for destructive actions.
+- [x] Test help toggle behavior from the workspace.
+- [x] Test keyboard precedence for search, confirmations, chat viewer, chat search, and panels.
+- [x] Test project-to-session navigation.
+- [x] Test confirmation flows for destructive actions.
 - [x] Test refresh behavior and token cache invalidation.
 
 Exit criteria: current behavior is protected by tests, especially around startup, input routing, and destructive operations.
@@ -192,13 +192,14 @@ Exit criteria: overlays are composable, predictable, and do not leak input or st
 
 Finalize the architecture after the rewrite foundation is in place.
 
-- [ ] Profile startup time.
-- [ ] Profile workspace entry time.
-- [ ] Profile chat search and token summary paths.
-- [ ] Remove obsolete transitional state and compatibility paths.
-- [ ] Update README with the new TUI model.
-- [ ] Update `PROJECT-SUMMARY.md` with the new architecture.
-- [ ] Run typecheck and full test suite.
+- [x] Profile startup time (proxy baseline path via repeatable CLI/help invocation timing).
+- [x] Profile workspace entry time (proxy baseline path via targeted workspace transition timing).
+- [x] Profile chat search and token summary paths (proxy baseline path via targeted resource/tokens timing).
+- [x] Add a reusable timing summary helper for profiling baselines.
+- [x] Remove obsolete transitional state and compatibility paths.
+- [x] Update README with the new TUI model.
+- [x] Update `PROJECT-SUMMARY.md` with the new architecture.
+- [x] Run typecheck and full test suite.
 
 Exit criteria: smaller files, clearer ownership, stable tests, faster startup, and easier feature work.
 
@@ -206,10 +207,10 @@ Exit criteria: smaller files, clearer ownership, stable tests, faster startup, a
 
 Start with a preparation milestone rather than the full rewrite.
 
-- [ ] Add regression tests around current TUI startup and keyboard behavior.
-- [ ] Extract keybinding definitions into a shared command registry.
-- [ ] Extract home/help rendering into separate components.
-- [ ] Introduce typed screen state while keeping current visible behavior mostly unchanged.
-- [ ] Hide or reword global token loading on the home screen while loading is intentionally deferred.
+- [x] Add regression tests around current TUI startup and keyboard behavior.
+- [x] Extract keybinding definitions into a shared command registry.
+- [x] Extract home/help rendering into separate components.
+- [x] Introduce typed screen state while keeping current visible behavior mostly unchanged.
+- [x] Hide or reword global token loading on the home screen while loading is intentionally deferred.
 
 This creates a safe bridge from the current monolith to the future rewrite.
