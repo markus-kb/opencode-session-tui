@@ -45,18 +45,3 @@ This applies to ALL changes — pure functions, resource seams, panel wiring, in
 3. One pre-existing flaky clipboard test in `tests/cli/commands/chat.test.ts` (~line 900) sometimes fails in full-suite runs but passes when isolated; not caused by TUI rewrite work.
 4. When wiring panels to shared resources, write the integration regression test FIRST (Red), then wire the panel (Green). Do not wire first and add tests after.
 
-## Protected Files
-
-The following files are protected by the Ralph write-guardrail plugin and should not be directly modified by AI:
-
-- `prd.json` - PRD plan file (update via Ralph workflow)
-- `progress.txt` - Progress tracking (append via Ralph workflow)
-- `.ralph-prompt.md` - Prompt template
-- `AGENTS.md` - This file
-
-## References
-
-<!-- Link to relevant documentation, wikis, or external resources -->
-
-- Project Documentation: <!-- link -->
-- API Documentation: <!-- link -->

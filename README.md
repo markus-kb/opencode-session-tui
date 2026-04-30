@@ -47,13 +47,11 @@ OpenCode migrated its storage layer from JSONL flat-files to a SQLite database (
 
 The session list is intentionally lightweight in all modes. Message JSON, part JSON, and large patch/diff payloads are loaded lazily for chat viewing, token summaries, and chat search.
 
-## TUI rewrite plan
+## Architecture and change docs
 
-The current TUI still renders through `src/tui/app.tsx`, but the rewrite preparation is tracked in:
+The current TUI still renders through `src/tui/app.tsx`. Consolidated architecture and change documentation now lives in:
 
-- `CONTEXT/PLAN-tui-rewrite.md`
-- `CONTEXT/TUI-TARGET-MODEL.md`
-- `plan.md`
+- `docs/CHANGES.md`
 
 The target architecture keeps OpenTUI, but moves from a monolithic root component toward explicit screens, first-class overlays, shared data resources, scoped input handling, and a fast home dashboard that does not trigger expensive metadata scans.
 
@@ -72,6 +70,52 @@ Current Phase 10 status:
 - Baseline timing helper is in place (`src/tui/perf-baseline.ts`) with regression tests.
 - Typecheck and full test suite are green.
 - Interactive-renderer profiling is still tracked as a final follow-up because headless help/test paths are stable proxies, not full interactive render benchmarks.
+
+## Project Summary
+
+### Overview
+
+- Purpose: inspect, filter, and manage OpenCode metadata.
+- Interfaces: interactive TUI (`@opentui/react`) and scriptable CLI (Commander).
+- Storage backends: JSONL, SQLite, and hybrid provider mode.
+
+### Entry points
+
+- `src/bin/opencode-manager.ts`: routes to CLI or TUI.
+- CLI mode: `projects`, `sessions`, `chat`, `tokens` commands.
+- TUI mode: default launch or explicit `tui` subcommand.
+
+### Architecture snapshot
+
+- CLI (`src/cli/`): global option parsing, command handlers, output formatters, error/resolver/backup utilities.
+- TUI (`src/tui/`): typed app state and navigation, command routing, shared data resources, panel seams, overlay/lifecycle seams.
+- Shared libs (`src/lib/`): JSONL storage, SQLite storage, provider abstraction, search and clipboard helpers.
+
+### Storage behavior
+
+- Default root: `~/.local/share/opencode`.
+- Default SQLite path: `~/.local/share/opencode/opencode.db`.
+- Hybrid mode merges SQLite + JSON sessions and prefers SQLite on duplicate IDs.
+- Session listing is metadata-first; message/part payloads load lazily for chat/search/tokens.
+
+### Key capabilities
+
+- Projects: list/filter/search/select/delete.
+- Sessions: list/filter/search/sort/select/rename/move/copy/delete.
+- Chat: list/show/search with hydration and optional clipboard copy.
+- Tokens: session/project/global summaries.
+
+### Runtime notes
+
+- Global options include `--root`, `--format`, `--limit`, `--sort`, `--yes`, `--dry-run`, `--quiet`, `--clipboard`, `--backup-dir`.
+- Storage/backend options include `--experimental-sqlite`, `--db`, `--sqlite-strict`, `--force-write`.
+- Exit codes: `0` success, `1` internal error, `2` usage/validation, `3` not found, `4` file operation error.
+
+### Testing posture
+
+- Comprehensive CLI/data/TUI seam coverage.
+- SQLite fixtures under `tests/fixtures/`.
+- Full-suite and typecheck expected green on every change.
 
 ## Installation
 ```bash
