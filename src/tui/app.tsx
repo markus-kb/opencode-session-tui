@@ -26,7 +26,6 @@ import {
 
   applyNavigationEvent,
   switchWorkspaceTab,
-  type TuiOverlay,
   type TuiTab,
 } from "./app-state"
 import { formatTokenCount } from "./format"
