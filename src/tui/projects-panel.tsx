@@ -12,6 +12,7 @@ import type { DataProvider } from "../lib/opencode-data-provider"
 import { type TuiCommandSet } from "./command-definitions"
 import { PALETTE } from "./components"
 import type { ConfirmState } from "./confirm-bar"
+import { buildDeletionConfirmDetails, buildDeletionConfirmTitle } from "./confirm-payload"
 import { formatTokenCount } from "./format"
 import { clampCursor, clearSelection, getSelectedRecords, pruneSelectedIndexes, toggleAllVisibleIndexes, toggleSelectedIndex } from "./panel-selection"
 import { resolveProjectPanelInputAction } from "./projects-panel-input"
@@ -122,10 +123,11 @@ export const ProjectsPanel = forwardRef<PanelHandle, ProjectsPanelProps>(functio
       return
     }
     requestConfirm({
-      title: `Delete ${selectedRecords.length} project metadata entr${selectedRecords.length === 1 ? "y" : "ies"}?`,
-      details: selectedRecords
-        .slice(0, MAX_CONFIRM_PREVIEW)
-        .map((record) => describeProject(record, { fullPath: true })),
+      title: buildDeletionConfirmTitle(selectedRecords.length, "project metadata entry"),
+      details: buildDeletionConfirmDetails(selectedRecords, {
+        maxPreview: MAX_CONFIRM_PREVIEW,
+        describe: (record) => describeProject(record, { fullPath: true }),
+      }),
       onConfirm: async () => {
         const { removed, failed } = await provider.deleteProjectMetadata(selectedRecords)
         setSelectedIndexes(clearSelection())

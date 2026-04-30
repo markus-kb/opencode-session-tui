@@ -15,6 +15,7 @@ import type { DataProvider } from "../lib/opencode-data-provider"
 import type { TuiCommandSet } from "./command-definitions"
 import { PALETTE } from "./components"
 import type { ConfirmState } from "./confirm-bar"
+import { buildDeletionConfirmDetails, buildDeletionConfirmTitle } from "./confirm-payload"
 import { formatAggregateSummaryShort, formatTokenCount } from "./format"
 import { clampCursor, clearSelection, getSelectedRecords, pruneSelectedIndexes, toggleAllVisibleIndexes, toggleSelectedIndex } from "./panel-selection"
 import { ProjectSelector } from "./project-selector"
@@ -152,8 +153,11 @@ export const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(functio
       return
     }
     requestConfirm({
-      title: `Delete ${selectedSessions.length} session entr${selectedSessions.length === 1 ? "y" : "ies"}?`,
-      details: selectedSessions.slice(0, MAX_CONFIRM_PREVIEW).map((session) => describeSession(session, { fullPath: true })),
+      title: buildDeletionConfirmTitle(selectedSessions.length, "session entry"),
+      details: buildDeletionConfirmDetails(selectedSessions, {
+        maxPreview: MAX_CONFIRM_PREVIEW,
+        describe: (session) => describeSession(session, { fullPath: true }),
+      }),
       onConfirm: async () => {
         const { removed, failed } = await provider.deleteSessionMetadata(selectedSessions)
         setSelectedIndexes(clearSelection())

@@ -26,5 +26,8 @@ describe("TUI entrypoint e2e", () => {
     expect(output).toContain("enter            Open sessions")
     expect(output).toContain("Sessions:")
     expect(output).toContain("c                Clear filter")
+    expect(output).toContain("Confirm:")
+    expect(output).toContain("enter / y        Confirm")
+    expect(output).toContain("escape / n       Cancel")
   })
 })
