@@ -48,6 +48,7 @@ The codebase follows a dual-mode architecture with shared libraries:
 - `input-precedence.ts` — Explicit input-layer precedence for search input, confirmations, overlays, home, and workspace panels
 - `projects-panel.tsx` — Projects panel component fed by the root project index, with local filtering, selection, deletion, and project token display
 - `sessions-panel.tsx` — Sessions panel component with local sort/search/selection, rename, move/copy, chat entry, and token display
+- `sessions-panel-derive.ts` — Pure sessions sort/search derivation helper used by SessionsPanel and covered with focused tests
 - `command-registry.ts` — Typed command registry with scope-aware key lookup
 - `command-definitions.ts` — All TUI keybindings as typed Command objects with home key reference generator
 - `chat-search-overlay.tsx` — First-class chat search overlay component for scoped cross-session results and previews

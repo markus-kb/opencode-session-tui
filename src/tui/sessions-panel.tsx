@@ -12,7 +12,6 @@ import {
   type TokenSummary,
 } from "../lib/opencode-data"
 import type { DataProvider } from "../lib/opencode-data-provider"
-import { createSearcher, type SearchCandidate } from "../lib/search"
 import type { TuiCommandSet } from "./command-definitions"
 import { PALETTE } from "./components"
 import type { ConfirmState } from "./confirm-bar"
@@ -26,6 +25,7 @@ import { toSessionPanelAction } from "./session-panel-commands"
 import type { NotificationLevel } from "./status-bar"
 import { computeFilteredProjectTokens, computeSessionTokens } from "./token-resource"
 import type { PanelHandle } from "./projects-panel"
+import { deriveVisibleSessions, type SessionSortMode } from "./sessions-panel-derive"
 
 export type SessionsPanelProps = {
   provider: DataProvider
@@ -80,7 +80,7 @@ export const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(functio
 ) {
   const [cursor, setCursor] = useState(0)
   const [selectedIndexes, setSelectedIndexes] = useState<Set<number>>(new Set())
-  const [sortMode, setSortMode] = useState<"updated" | "created">("updated")
+  const [sortMode, setSortMode] = useState<SessionSortMode>("updated")
   const [isRenaming, setIsRenaming] = useState(false)
   const [renameValue, setRenameValue] = useState('')
   const [isSelectingProject, setIsSelectingProject] = useState(false)
@@ -92,45 +92,7 @@ export const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(functio
 
   const records = useMemo(() => reindexSessions(filterSessionsByProject(allSessions, projectFilter || undefined)), [allSessions, projectFilter])
 
-  const searchCandidates = useMemo((): SearchCandidate<SessionRecord>[] => {
-    return records.map((session) => ({
-      item: session,
-      searchText: [session.title || "", session.sessionId, session.directory || "", session.projectId].join(" ").replace(/\s+/g, " ").trim(),
-    }))
-  }, [records])
-
-  const searcher = useMemo(() => createSearcher(searchCandidates), [searchCandidates])
-
-  const visibleRecords = useMemo(() => {
-    const sorted = [...records].sort((a, b) => {
-      const aDate = sortMode === "created" ? (a.createdAt ?? a.updatedAt) : (a.updatedAt ?? a.createdAt)
-      const bDate = sortMode === "created" ? (b.createdAt ?? b.updatedAt) : (b.updatedAt ?? b.createdAt)
-      const aTime = aDate?.getTime() ?? 0
-      const bTime = bDate?.getTime() ?? 0
-      if (bTime !== aTime) return bTime - aTime
-      return a.sessionId.localeCompare(b.sessionId)
-    })
-    const q = searchQuery.trim()
-    if (!q) return sorted
-
-    const results = searcher.search(q, { returnMatchData: true })
-    const matched = results
-      .map((match) => {
-        const session = match.item.item
-        const createdMs = session.createdAt?.getTime() ?? 0
-        const updatedMs = (session.updatedAt ?? session.createdAt)?.getTime() ?? 0
-        return { session, score: match.score, timeMs: sortMode === "created" ? createdMs : updatedMs }
-      })
-      .sort((a, b) => {
-        if (b.score !== a.score) return b.score - a.score
-        if (b.timeMs !== a.timeMs) return b.timeMs - a.timeMs
-        return a.session.sessionId.localeCompare(b.session.sessionId)
-      })
-      .map((m) => m.session)
-
-    const MAX_RESULTS = 200
-    return matched.length > MAX_RESULTS ? matched.slice(0, MAX_RESULTS) : matched
-  }, [records, sortMode, searchQuery, searcher])
+  const visibleRecords = useMemo(() => deriveVisibleSessions(records, searchQuery, sortMode), [records, searchQuery, sortMode])
   const currentSession = visibleRecords[cursor]
 
   useEffect(() => {

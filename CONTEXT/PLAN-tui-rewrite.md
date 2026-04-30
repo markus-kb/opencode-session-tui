@@ -167,7 +167,7 @@ Rebuild the main workspace from independent panels.
 
 - [x] Extract `ProjectsPanel` into its own module.
 - [x] Extract `SessionsPanel` into its own module.
-- [ ] Give each panel local selection, cursor, filtering, and refresh behavior.
+- [x] Give each panel local selection, cursor, filtering, and refresh behavior.
 - [x] Feed both panels from shared project/session resources.
 - [x] Keep project-to-session navigation explicit through workspace actions.
 - [ ] Ensure each panel can be tested independently.
