@@ -42,6 +42,7 @@ import { detectStorageSources } from "./backend-resolver"
 import { PALETTE, SearchBar } from "./components"
 import { nextWorkspaceRefreshKey } from "./workspace-refresh"
 import { getProjectSessionsNavigation } from "./workspace-navigation"
+import { closeChatSearchState, closeChatViewerState, openChatSearchState, openChatViewerState } from "./chat-overlay-lifecycle"
 import { ConfirmBar, type ConfirmState } from "./confirm-bar"
 import { cancelConfirmation, finishConfirmation, requestConfirmation, startConfirmation } from "./confirm-lifecycle"
 import { StatusBar, type NotificationLevel } from "./status-bar"
@@ -261,11 +262,12 @@ export const App = ({
   const openChatViewer = useCallback(async (session: SessionRecord) => {
     setTuiState((prev) => applyNavigationEvent(prev, { type: "openChat", sessionId: session.sessionId }))
     setChatSession(session)
-    setChatMessages([])
-    setChatCursor(0)
-    setChatLoading(true)
-    setChatError(null)
-    setChatPartsCache(new Map())
+    const initial = openChatViewerState()
+    setChatMessages(initial.chatMessages)
+    setChatCursor(initial.chatCursor)
+    setChatLoading(initial.chatLoading)
+    setChatError(initial.chatError)
+    setChatPartsCache(initial.chatPartsCache)
 
     try {
       const result = await loadChatSessionMessages(provider, resourcePolicy, session.sessionId)
@@ -283,12 +285,13 @@ export const App = ({
 
   const closeChatViewer = useCallback(() => {
     setTuiState((prev) => applyNavigationEvent(prev, { type: "closeOverlay" }))
-    setChatSession(null)
-    setChatMessages([])
-    setChatCursor(0)
-    setChatLoading(false)
-    setChatError(null)
-    setChatPartsCache(new Map())
+    const cleared = closeChatViewerState()
+    setChatSession(cleared.chatSession)
+    setChatMessages(cleared.chatMessages)
+    setChatCursor(cleared.chatCursor)
+    setChatLoading(cleared.chatLoading)
+    setChatError(cleared.chatError)
+    setChatPartsCache(cleared.chatPartsCache)
   }, [])
 
   const hydrateMessage = useCallback(async (message: ChatMessage) => {
@@ -331,18 +334,20 @@ export const App = ({
   // Chat search controls
   const openChatSearch = useCallback(() => {
     setTuiState((prev) => applyNavigationEvent(prev, { type: "openChatSearch" }))
-    setChatSearchQuery("")
-    setChatSearchResults([])
-    setChatSearchCursor(0)
-    setChatSearching(false)
+    const initial = openChatSearchState()
+    setChatSearchQuery(initial.chatSearchQuery)
+    setChatSearchResults(initial.chatSearchResults)
+    setChatSearchCursor(initial.chatSearchCursor)
+    setChatSearching(initial.chatSearching)
   }, [])
 
   const closeChatSearch = useCallback(() => {
     setTuiState((prev) => applyNavigationEvent(prev, { type: "closeOverlay" }))
-    setChatSearchQuery("")
-    setChatSearchResults([])
-    setChatSearchCursor(0)
-    setChatSearching(false)
+    const cleared = closeChatSearchState()
+    setChatSearchQuery(cleared.chatSearchQuery)
+    setChatSearchResults(cleared.chatSearchResults)
+    setChatSearchCursor(cleared.chatSearchCursor)
+    setChatSearching(cleared.chatSearching)
   }, [])
 
   const executeChatSearch = useCallback(async () => {
