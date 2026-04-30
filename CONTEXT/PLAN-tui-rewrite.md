@@ -14,7 +14,7 @@ Freeze the current TUI behavior with regression tests before major refactoring.
 - [ ] Test keyboard precedence for search, confirmations, chat viewer, chat search, and panels.
 - [ ] Test project-to-session navigation.
 - [ ] Test confirmation flows for destructive actions.
-- [ ] Test refresh behavior and token cache invalidation.
+- [x] Test refresh behavior and token cache invalidation.
 
 Exit criteria: current behavior is protected by tests, especially around startup, input routing, and destructive operations.
 

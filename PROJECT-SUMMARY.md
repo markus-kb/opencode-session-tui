@@ -49,6 +49,8 @@ The codebase follows a dual-mode architecture with shared libraries:
 - `token-resource.ts` — Policy-gated token computation helpers used by project and session panels
 - `workspace-refresh.ts` — Shared workspace refresh-key helper used by root reload and panel refresh callbacks
 - `workspace-navigation.ts` — Explicit project-to-session navigation descriptor for tab/filter/status updates
+- `workspace-reload.ts` — Shared reload planning helper for active-tab refresh target + status messaging
+- `workspace-reload-execute.ts` — Shared reload execution helper for token-cache invalidation + panel refresh workflow
 - `input-precedence.ts` — Explicit input-layer precedence for search input, confirmations, overlays, home, and workspace panels
 - `confirm-payload.ts` — Shared deletion confirmation title/detail builders used by project and session panel destructive flows
 - `projects-panel.tsx` — Projects panel component fed by the root project index, with local filtering, selection, deletion, and project token display
