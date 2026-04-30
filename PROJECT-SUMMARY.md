@@ -43,6 +43,7 @@ The codebase follows a dual-mode architecture with shared libraries:
 - `chat-session-resource.ts` — Policy-gated chat viewer message-index and lazy hydration resource
 - `chat-search-resource.ts` — Policy-gated scoped chat search resource for cross-session search overlays
 - `chat-overlay-lifecycle.ts` — Shared chat viewer/search open-close state reset helpers used by root overlay controls
+- `chat-search-navigation.ts` — Shared chat search result handoff helpers for locating target sessions and message cursors
 - `token-resource.ts` — Policy-gated token computation helpers used by project and session panels
 - `workspace-refresh.ts` — Shared workspace refresh-key helper used by root reload and panel refresh callbacks
 - `workspace-navigation.ts` — Explicit project-to-session navigation descriptor for tab/filter/status updates

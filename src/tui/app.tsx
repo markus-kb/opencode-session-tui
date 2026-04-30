@@ -34,6 +34,7 @@ import { loadGlobalTokensFromSessionIndex, loadSessionIndex } from "./session-re
 import { loadProjectIndex } from "./project-resource"
 import { getFailedHydrationMessage, hydrateChatSessionMessage, loadChatSessionMessages } from "./chat-session-resource"
 import { getChatSearchSessions, searchChatSessions } from "./chat-search-resource"
+import { findMessageCursorById, findSessionForChatSearchResult } from "./chat-search-navigation"
 import { buildTuiCommands, type TuiCommandSet } from "./command-definitions"
 import { toCommandKey, toCommandScope, resolveCommand, type KeyRouteContext } from "./key-router"
 import { getInputLayer } from "./input-precedence"
@@ -373,8 +374,7 @@ export const App = ({
   }, [chatSearchQuery, sessionFilter, allSessions, provider, resourcePolicy, notify])
 
   const handleChatSearchResult = useCallback(async (result: ChatSearchResult) => {
-    // Find the session and open chat viewer at the matching message
-    const session = allSessions.find(s => s.sessionId === result.sessionId)
+    const session = findSessionForChatSearchResult(allSessions, result)
     if (!session) {
       notify("Session not found", "error")
       return
@@ -387,9 +387,9 @@ export const App = ({
     // Wait a bit for the chat viewer to load
     setTimeout(() => {
       setChatMessages(prev => {
-        const idx = prev.findIndex(m => m.messageId === result.messageId)
-        if (idx !== -1) {
-          setChatCursor(idx)
+        const cursor = findMessageCursorById(prev, result.messageId)
+        if (cursor !== null) {
+          setChatCursor(cursor)
         }
         return prev
       })
