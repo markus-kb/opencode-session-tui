@@ -50,6 +50,7 @@ The codebase follows a dual-mode architecture with shared libraries:
 - `projects-panel-input.ts` — Pure project panel input-routing seam from key events to panel actions
 - `sessions-panel.tsx` — Sessions panel component with local sort/search/selection, rename, move/copy, chat entry, and token display
 - `sessions-panel-input.ts` — Pure session panel input-routing seam from key events to panel actions
+- `sessions-panel-modes.ts` — Pure rename/transfer mode transition helper used by SessionsPanel
 - `sessions-panel-derive.ts` — Pure sessions sort/search derivation helper used by SessionsPanel and covered with focused tests
 - `command-registry.ts` — Typed command registry with scope-aware key lookup
 - `command-definitions.ts` — All TUI keybindings as typed Command objects with home key reference generator

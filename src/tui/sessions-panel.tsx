@@ -25,6 +25,7 @@ import type { NotificationLevel } from "./status-bar"
 import { computeFilteredProjectTokens, computeSessionTokens } from "./token-resource"
 import type { PanelHandle } from "./projects-panel"
 import { deriveVisibleSessions, type SessionSortMode } from "./sessions-panel-derive"
+import { cancelRenameMode, cancelTransferMode, getMoveTargetProjects, startRenameMode, startTransferMode } from "./sessions-panel-modes"
 
 export type SessionsPanelProps = {
   provider: DataProvider
@@ -211,8 +212,9 @@ export const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(functio
 
       if (isSelectingProject) {
         if (key.name === 'escape') {
-          setIsSelectingProject(false)
-          setOperationMode(null)
+          const next = cancelTransferMode()
+          setIsSelectingProject(next.isSelectingProject)
+          setOperationMode(next.operationMode)
           return
         }
         if (key.name === 'return' || key.name === 'enter') {
@@ -225,8 +227,9 @@ export const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(functio
 
       if (isRenaming) {
         if (key.name === 'escape') {
-          setIsRenaming(false)
-          setRenameValue('')
+          const next = cancelRenameMode()
+          setIsRenaming(next.isRenaming)
+          setRenameValue(next.renameValue)
           return
         }
         if (key.name === 'return' || key.name === 'enter') {
@@ -277,8 +280,9 @@ export const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(functio
       }
       if (action === "renameSession") {
         if (currentSession) {
-          setIsRenaming(true)
-          setRenameValue(currentSession.title || '')
+          const next = startRenameMode(currentSession.title || '')
+          setIsRenaming(next.isRenaming)
+          setRenameValue(next.renameValue)
         }
         return
       }
@@ -287,11 +291,12 @@ export const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(functio
           onNotify('No sessions selected for move', 'error')
           return
         }
-        const filtered = projectFilter ? allProjects.filter(p => p.projectId !== projectFilter) : allProjects
+        const filtered = getMoveTargetProjects(allProjects, projectFilter)
         setAvailableProjects(filtered)
-        setProjectCursor(0)
-        setOperationMode('move')
-        setIsSelectingProject(true)
+        const next = startTransferMode('move')
+        setProjectCursor(next.projectCursor)
+        setOperationMode(next.operationMode)
+        setIsSelectingProject(next.isSelectingProject)
         return
       }
       if (action === "copySessions") {
@@ -300,9 +305,10 @@ export const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(functio
           return
         }
         setAvailableProjects(allProjects)
-        setProjectCursor(0)
-        setOperationMode('copy')
-        setIsSelectingProject(true)
+        const next = startTransferMode('copy')
+        setProjectCursor(next.projectCursor)
+        setOperationMode(next.operationMode)
+        setIsSelectingProject(next.isSelectingProject)
         return
       }
       if (action === "viewChat") {
@@ -343,8 +349,9 @@ export const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(functio
           onCursorChange={setProjectCursor}
           onSelect={(project) => executeTransfer(project, operationMode)}
           onCancel={() => {
-            setIsSelectingProject(false)
-            setOperationMode(null)
+            const next = cancelTransferMode()
+            setIsSelectingProject(next.isSelectingProject)
+            setOperationMode(next.operationMode)
           }}
           operationMode={operationMode}
           sessionCount={selectedSessions.length}
