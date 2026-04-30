@@ -61,6 +61,7 @@ Current progress:
 - [x] Phase 9 confirmation lifecycle seam: confirmation request/cancel/start/finish helpers moved to `src/tui/confirm-lifecycle.ts`.
 - [x] Phase 9 chat overlay lifecycle seam: chat viewer/search open-close reset state moved to `src/tui/chat-overlay-lifecycle.ts`.
 - [x] Phase 9 chat search navigation seam: result handoff to session/message cursor moved to `src/tui/chat-search-navigation.ts`.
+- [x] Phase 9 overlay host seam: root overlay composition moved to `src/tui/overlay-host.tsx`.
 
 Safety rules for this workstream:
 

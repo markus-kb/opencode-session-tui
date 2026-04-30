@@ -51,8 +51,7 @@ import { StatusBar, type NotificationLevel } from "./status-bar"
 import { HomeScreen } from "./home-screen"
 import { ProjectsPanel, type PanelHandle } from "./projects-panel"
 import { SessionsPanel } from "./sessions-panel"
-import { ChatViewer } from "./chat-viewer"
-import { ChatSearchOverlay } from "./chat-search-overlay"
+import { OverlayHost } from "./overlay-host"
 
 type TabKey = TuiTab
 
@@ -696,33 +695,26 @@ export const App = ({
         </box>
       )}
 
-      {/* Chat Viewer Overlay */}
-      {chatViewerOpen && chatSession ? (
-        <ChatViewer
-          session={chatSession}
-          messages={chatMessages}
-          cursor={chatCursor}
-          onCursorChange={setChatCursor}
-          loading={chatLoading}
-          error={chatError}
-          onClose={closeChatViewer}
-          onHydrateMessage={hydrateMessage}
-          onCopyMessage={copyChatMessage}
-        />
-      ) : null}
-
-      {/* Chat Search Overlay */}
-      {chatSearchOpen ? (
-        <ChatSearchOverlay
-          sessionFilter={sessionFilter}
-          allSessions={allSessions}
-          query={chatSearchQuery}
-          searching={chatSearching}
-          results={chatSearchResults}
-          cursor={chatSearchCursor}
-          onCursorChange={setChatSearchCursor}
-        />
-      ) : null}
+      <OverlayHost
+        chatViewerOpen={chatViewerOpen}
+        chatSession={chatSession}
+        chatMessages={chatMessages}
+        chatCursor={chatCursor}
+        onChatCursorChange={setChatCursor}
+        chatLoading={chatLoading}
+        chatError={chatError}
+        onCloseChatViewer={closeChatViewer}
+        onHydrateMessage={hydrateMessage}
+        onCopyMessage={copyChatMessage}
+        chatSearchOpen={chatSearchOpen}
+        sessionFilter={sessionFilter}
+        allSessions={allSessions}
+        chatSearchQuery={chatSearchQuery}
+        chatSearching={chatSearching}
+        chatSearchResults={chatSearchResults}
+        chatSearchCursor={chatSearchCursor}
+        onChatSearchCursorChange={setChatSearchCursor}
+      />
 
       <StatusBar status={status} level={statusLevel} />
       {confirmState ? <ConfirmBar state={confirmState} busy={confirmBusy} /> : null}
