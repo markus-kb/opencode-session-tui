@@ -51,6 +51,7 @@ Current progress:
 - [x] Phase 8 project-to-session navigation seam: project row navigation now goes through `src/tui/workspace-navigation.ts`.
 - [x] Phase 8 sessions derive seam: sessions sort/search derivation moved to `src/tui/sessions-panel-derive.ts`.
 - [x] Phase 8 projects input seam: project panel key-to-action routing moved to `src/tui/projects-panel-input.ts` with focused tests.
+- [x] Phase 8 sessions input seam: session panel key-to-action routing moved to `src/tui/sessions-panel-input.ts` with focused tests.
 - [x] Phase 9 project selector extraction: move/copy project selector moved to `src/tui/project-selector.tsx`.
 - [x] Phase 9 help screen extraction: registry-backed help screen moved to `src/tui/help-screen.tsx`.
 - [x] Phase 9 chat viewer extraction: chat viewer overlay moved to `src/tui/chat-viewer.tsx`.

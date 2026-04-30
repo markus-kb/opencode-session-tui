@@ -16,12 +16,11 @@ import type { TuiCommandSet } from "./command-definitions"
 import { PALETTE } from "./components"
 import type { ConfirmState } from "./confirm-bar"
 import { formatAggregateSummaryShort, formatTokenCount } from "./format"
-import { toCommandKey, resolveCommand } from "./key-router"
 import { clampCursor, clearSelection, getSelectedRecords, pruneSelectedIndexes, toggleAllVisibleIndexes, toggleSelectedIndex } from "./panel-selection"
 import { ProjectSelector } from "./project-selector"
 import { filterSessionsByProject, reindexSessions } from "./project-resource"
 import type { ResourcePolicy } from "./resource-policy"
-import { toSessionPanelAction } from "./session-panel-commands"
+import { resolveSessionsPanelInputAction } from "./sessions-panel-input"
 import type { NotificationLevel } from "./status-bar"
 import { computeFilteredProjectTokens, computeSessionTokens } from "./token-resource"
 import type { PanelHandle } from "./projects-panel"
@@ -243,9 +242,7 @@ export const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(functio
         return
       }
 
-      const cmdKey = toCommandKey(key)
-      const cmdId = resolveCommand(cmdSet.registry, cmdKey, { screen: "sessions", overlay: null, searchActive: false, confirmActive: false })
-      const action = toSessionPanelAction(cmdId)
+      const action = resolveSessionsPanelInputAction({ key, active, locked, cmdSet })
       if (action === "toggleSelect") {
         key.preventDefault()
         toggleSelection(currentSession)
