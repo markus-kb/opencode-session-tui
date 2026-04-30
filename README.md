@@ -33,7 +33,7 @@ OpenCode migrated its storage layer from JSONL flat-files to a SQLite database (
 - **Schema alignment** — `SessionRow`, `MessageRow`, `PartRow` interfaces updated to match the real Drizzle columns (`time_created`/`time_updated`; session has no JSON `data` blob; message/part carry a `data` JSON blob).
 - **Hybrid auto-detect** — `createProvider()` now reads both current SQLite sessions and legacy JSON sessions when both stores exist. SQLite-only and JSONL-only stores still work. `--experimental-sqlite` remains available to force SQLite-only mode.
 - **Startup performance** — TUI startup no longer scans sessions while the initial help screen is open. Session lists are metadata-only: they read session rows/files but do not parse messages, parts, or large diff payloads until chat, token, or search features need them.
-- **TUI rewrite preparation** — the OpenTUI app is being incrementally prepared for a fundamental rewrite behind regression tests. Current preparation includes typed home/workspace screen state, typed chat overlay state, and extracted token formatting helpers.
+- **TUI rewrite preparation** — the OpenTUI app is being incrementally prepared for a fundamental rewrite behind regression tests. Current preparation includes typed navigation events, explicit input precedence, first-class overlay host/lifecycle seams, shared resource seams (session/project/token/chat), and independent panel input/derive seams.
 - **Write operations** — `updateSessionTitle`, `moveSession`, `copySession` rewritten for the column-based schema; `copySession` correctly rewrites `sessionID`/`messageID`/`id` fields inside copied message and part JSON blobs.
 - **All 13 part types** — `PartType` union expanded to cover `reasoning`, `step-start`, `step-finish`, `snapshot`, `patch`, `agent`, `retry`, `compaction`, `file` in addition to the original `text`, `subtask`, `tool`.
 - **Windows compatibility** — `closeIfOwned()` runs `PRAGMA wal_checkpoint(TRUNCATE)` before closing to release WAL handles; test `afterEach` hooks use a retry loop for `EBUSY`/`EPERM`; `chmod`-dependent CLI tests are skipped on Windows; path assertions normalised for cross-platform separators.
@@ -58,6 +58,14 @@ The current TUI still renders through `src/tui/app.tsx`, but the rewrite prepara
 The target architecture keeps OpenTUI, but moves from a monolithic root component toward explicit screens, first-class overlays, shared data resources, scoped input handling, and a fast home dashboard that does not trigger expensive metadata scans.
 
 Regression coverage includes pure TUI state/resource-policy/session-resource tests and process-level e2e checks for `opencode-manager --help` and `opencode-manager tui --help` so users can discover TUI storage modes without launching the interactive renderer.
+
+Key TUI seams now live in dedicated modules under `src/tui/`, including:
+
+- `app-state.ts` (typed state + navigation events)
+- `input-precedence.ts` (input layer priority)
+- `overlay-host.tsx` and `chat-overlay-lifecycle.ts` (overlay composition/lifecycle)
+- `session-resource.ts`, `project-resource.ts`, `token-resource.ts`, `chat-session-resource.ts`, `chat-search-resource.ts` (resource access seams)
+- `projects-panel-input.ts`, `sessions-panel-input.ts`, `sessions-panel-derive.ts`, `sessions-panel-modes.ts` (panel behavior seams)
 
 ## Installation
 ```bash
