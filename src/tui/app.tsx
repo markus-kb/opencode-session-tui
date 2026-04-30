@@ -42,6 +42,7 @@ import { getHomeDashboardModel } from "./home-dashboard"
 import { detectStorageSources } from "./backend-resolver"
 import { PALETTE, SearchBar } from "./components"
 import { nextWorkspaceRefreshKey } from "./workspace-refresh"
+import { getWorkspaceReloadPlan } from "./workspace-reload"
 import { getProjectSessionsNavigation } from "./workspace-navigation"
 import { closeChatSearchState, closeChatViewerState, openChatSearchState, openChatViewerState } from "./chat-overlay-lifecycle"
 import { ConfirmBar, type ConfirmState } from "./confirm-bar"
@@ -571,12 +572,13 @@ export const App = ({
       if (cmdId === "reload") {
         clearTokenCache()
         refreshWorkspaceResources()
-        if (activeTab === "projects") {
+        const reloadPlan = getWorkspaceReloadPlan(activeTab)
+        if (reloadPlan.refreshTarget === "projects") {
           projectsRef.current?.refresh()
         } else {
           sessionsRef.current?.refresh()
         }
-        notify("Reload requested...")
+        notify(reloadPlan.status)
         return
       }
 
