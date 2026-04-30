@@ -62,6 +62,7 @@ Current progress:
 - [x] Phase 9 chat overlay lifecycle seam: chat viewer/search open-close reset state moved to `src/tui/chat-overlay-lifecycle.ts`.
 - [x] Phase 9 chat search navigation seam: result handoff to session/message cursor moved to `src/tui/chat-search-navigation.ts`.
 - [x] Phase 9 overlay host seam: root overlay composition moved to `src/tui/overlay-host.tsx`.
+- [x] Phase 9 project selector lifecycle seam: open-close selector state moved to `src/tui/project-selector-lifecycle.ts`.
 
 Safety rules for this workstream:
 

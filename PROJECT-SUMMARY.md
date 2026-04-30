@@ -45,6 +45,7 @@ The codebase follows a dual-mode architecture with shared libraries:
 - `chat-overlay-lifecycle.ts` — Shared chat viewer/search open-close state reset helpers used by root overlay controls
 - `chat-search-navigation.ts` — Shared chat search result handoff helpers for locating target sessions and message cursors
 - `overlay-host.tsx` — Overlay composition host for chat viewer/search overlays in the root app
+- `project-selector-lifecycle.ts` — Shared open-close state helpers for session move/copy project selector overlays
 - `token-resource.ts` — Policy-gated token computation helpers used by project and session panels
 - `workspace-refresh.ts` — Shared workspace refresh-key helper used by root reload and panel refresh callbacks
 - `workspace-navigation.ts` — Explicit project-to-session navigation descriptor for tab/filter/status updates

@@ -183,7 +183,7 @@ Move overlays into dedicated components with scoped state and input.
 - [x] Extract chat viewer overlay.
 - [x] Extract chat search overlay.
 - [x] Extract project selector overlay.
-- [ ] Give each overlay a clear open/close lifecycle.
+- [x] Give each overlay a clear open/close lifecycle.
 - [x] Remove ad hoc absolute-positioned overlay JSX from the root app.
 
 Exit criteria: overlays are composable, predictable, and do not leak input or state into unrelated screens.

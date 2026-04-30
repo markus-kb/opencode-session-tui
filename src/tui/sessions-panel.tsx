@@ -19,6 +19,7 @@ import { buildDeletionConfirmDetails, buildDeletionConfirmTitle } from "./confir
 import { formatAggregateSummaryShort, formatTokenCount } from "./format"
 import { clampCursor, clearSelection, getSelectedRecords, pruneSelectedIndexes, toggleAllVisibleIndexes, toggleSelectedIndex } from "./panel-selection"
 import { ProjectSelector } from "./project-selector"
+import { closeProjectSelectorState, openProjectSelectorState } from "./project-selector-lifecycle"
 import { filterSessionsByProject, reindexSessions } from "./project-resource"
 import type { ResourcePolicy } from "./resource-policy"
 import { resolveSessionsPanelInputAction } from "./sessions-panel-input"
@@ -26,7 +27,7 @@ import type { NotificationLevel } from "./status-bar"
 import { computeFilteredProjectTokens, computeSessionTokens } from "./token-resource"
 import type { PanelHandle } from "./projects-panel"
 import { deriveVisibleSessions, type SessionSortMode } from "./sessions-panel-derive"
-import { cancelRenameMode, cancelTransferMode, getMoveTargetProjects, startRenameMode, startTransferMode } from "./sessions-panel-modes"
+import { cancelRenameMode, getMoveTargetProjects, startRenameMode } from "./sessions-panel-modes"
 
 export type SessionsPanelProps = {
   provider: DataProvider
@@ -191,8 +192,9 @@ export const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(functio
   }, [currentSession, renameValue, onNotify, onRefresh, provider])
 
   const executeTransfer = useCallback(async (targetProject: ProjectRecord, mode: 'move' | 'copy') => {
-    setIsSelectingProject(false)
-    setOperationMode(null)
+    const closed = closeProjectSelectorState()
+    setIsSelectingProject(closed.isSelectingProject)
+    setOperationMode(closed.operationMode)
 
     const result = await runBatchSessionOperation(provider, selectedSessions, targetProject.projectId, mode)
     setSelectedIndexes(clearSelection())
@@ -216,9 +218,9 @@ export const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(functio
 
       if (isSelectingProject) {
         if (key.name === 'escape') {
-          const next = cancelTransferMode()
-          setIsSelectingProject(next.isSelectingProject)
-          setOperationMode(next.operationMode)
+          const closed = closeProjectSelectorState()
+          setIsSelectingProject(closed.isSelectingProject)
+          setOperationMode(closed.operationMode)
           return
         }
         if (key.name === 'return' || key.name === 'enter') {
@@ -296,8 +298,8 @@ export const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(functio
           return
         }
         const filtered = getMoveTargetProjects(allProjects, projectFilter)
-        setAvailableProjects(filtered)
-        const next = startTransferMode('move')
+        const next = openProjectSelectorState(filtered, "move")
+        setAvailableProjects(next.availableProjects)
         setProjectCursor(next.projectCursor)
         setOperationMode(next.operationMode)
         setIsSelectingProject(next.isSelectingProject)
@@ -308,8 +310,8 @@ export const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(functio
           onNotify('No sessions selected for copy', 'error')
           return
         }
-        setAvailableProjects(allProjects)
-        const next = startTransferMode('copy')
+        const next = openProjectSelectorState(allProjects, "copy")
+        setAvailableProjects(next.availableProjects)
         setProjectCursor(next.projectCursor)
         setOperationMode(next.operationMode)
         setIsSelectingProject(next.isSelectingProject)
@@ -353,9 +355,9 @@ export const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(functio
           onCursorChange={setProjectCursor}
           onSelect={(project) => executeTransfer(project, operationMode)}
           onCancel={() => {
-            const next = cancelTransferMode()
-            setIsSelectingProject(next.isSelectingProject)
-            setOperationMode(next.operationMode)
+            const closed = closeProjectSelectorState()
+            setIsSelectingProject(closed.isSelectingProject)
+            setOperationMode(closed.operationMode)
           }}
           operationMode={operationMode}
           sessionCount={selectedSessions.length}
