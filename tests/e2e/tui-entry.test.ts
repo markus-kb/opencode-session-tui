@@ -49,4 +49,13 @@ describe("TUI entrypoint e2e", () => {
     expect(output).toContain("(no command)")
     expect(output).toContain("TUI STORAGE OPTIONS")
   })
+
+  test("windows batch launcher opens manager entrypoint", async () => {
+    const result = await $`cmd /c opencode-manager.bat --help`.quiet()
+    const output = result.stdout.toString()
+
+    expect(result.exitCode).toBe(0)
+    expect(output).toContain("(no command)")
+    expect(output).toContain("TUI STORAGE OPTIONS")
+  })
 })
