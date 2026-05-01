@@ -15,6 +15,7 @@ import { App } from "./app"
 import { DEFAULT_ROOT } from "../lib/opencode-data"
 import { DEFAULT_SQLITE_PATH } from "../lib/opencode-data-sqlite"
 import { parseArgs, printUsage, type TUIOptions } from "./args"
+import { writeTerminalCleanup } from "./terminal-shutdown"
 
 // Re-export args module for external consumers
 export { parseArgs, printUsage, type TUIOptions }
@@ -30,7 +31,23 @@ export async function launchTUI(options?: Partial<TUIOptions>): Promise<void> {
   const forceWrite = options?.forceWrite ?? false
   const dbPath = backend === "sqlite" || backend === "hybrid" ? (options?.dbPath ?? DEFAULT_SQLITE_PATH) : undefined
 
-  const renderer = await createCliRenderer()
+  let terminalCleanupDone = false
+  const cleanupTerminal = () => {
+    if (terminalCleanupDone) {
+      return
+    }
+    terminalCleanupDone = true
+    writeTerminalCleanup(process.stdout)
+  }
+
+  const renderer = await createCliRenderer({
+    onDestroy: cleanupTerminal,
+  })
+
+  const onQuit = () => {
+    renderer.destroy()
+  }
+
   createRoot(renderer).render(
     <App
       root={root}
@@ -38,6 +55,7 @@ export async function launchTUI(options?: Partial<TUIOptions>): Promise<void> {
       dbPath={dbPath}
       sqliteStrict={sqliteStrict}
       forceWrite={forceWrite}
+      onQuit={onQuit}
     />
   )
 }

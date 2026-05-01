@@ -1,5 +1,5 @@
 import type { KeyEvent } from "@opentui/core"
-import { useKeyboard, useRenderer } from "@opentui/react"
+import { useKeyboard } from "@opentui/react"
 import React, {
   useCallback,
   useEffect,
@@ -68,14 +68,15 @@ export const App = ({
   dbPath,
   sqliteStrict,
   forceWrite,
+  onQuit,
 }: {
   root: string
   backend: StorageBackend
   dbPath?: string
   sqliteStrict: boolean
   forceWrite: boolean
+  onQuit: () => void
 }) => {
-  const renderer = useRenderer()
   const projectsRef = useRef<PanelHandle>(null)
   const sessionsRef = useRef<PanelHandle>(null)
 
@@ -576,7 +577,7 @@ export const App = ({
         const cmdKey = toCommandKey(key)
         const cmdId = resolveCommand(cmdSet.registry, cmdKey, { screen: "home", overlay: null, searchActive: false, confirmActive: false })
         if (cmdId === "quit") {
-          renderer.destroy()
+          onQuit()
           return
         }
         if (cmdId === "homeDismiss") {
@@ -591,7 +592,7 @@ export const App = ({
       const cmdId = resolveCommand(cmdSet.registry, cmdKey, { screen: activeTab, overlay: tuiState.overlay, searchActive, confirmActive: Boolean(confirmState) })
 
       if (cmdId === "quit") {
-        renderer.destroy()
+        onQuit()
         return
       }
 
@@ -648,7 +649,7 @@ export const App = ({
       const handler = activeTab === "projects" ? projectsRef.current : sessionsRef.current
       handler?.handleKey(key)
     },
-    [activeTab, cancelConfirm, cmdSet, confirmState, executeConfirm, notify, renderer, searchActive, searchQuery, isHome, switchTab, chatViewerOpen, chatMessages, visibleChatMessages, chatCursor, chatSortOrder, closeChatViewer, copyChatMessage, chatSearchOpen, chatSearchResults, chatSearchCursor, closeChatSearch, executeChatSearch, handleChatSearchResult, openChatSearch, tuiState.overlay, refreshWorkspaceResources],
+    [activeTab, cancelConfirm, cmdSet, confirmState, executeConfirm, notify, searchActive, searchQuery, isHome, switchTab, chatViewerOpen, chatMessages, visibleChatMessages, chatCursor, chatSortOrder, closeChatViewer, copyChatMessage, chatSearchOpen, chatSearchResults, chatSearchCursor, closeChatSearch, executeChatSearch, handleChatSearchResult, openChatSearch, tuiState.overlay, refreshWorkspaceResources],
   )
 
   useKeyboard(handleGlobalKey)
