@@ -4,6 +4,7 @@ import {
   ChatViewer,
   buildChatMessageOption,
   buildVisibleMessageRows,
+  getVisibleParts,
   leftPaneStyle,
   sortChatMessages,
 } from "../../src/tui/chat-viewer"
@@ -82,5 +83,20 @@ describe("ChatViewer", () => {
 
     expect(asc.map((m) => m.messageId)).toEqual(["old", "new"])
     expect(desc.map((m) => m.messageId)).toEqual(["new", "old"])
+  })
+
+  test("limits rendered parts for very large messages", () => {
+    const message = createMessage({
+      parts: Array.from({ length: 60 }, (_, idx) => ({
+        partId: `p-${idx}`,
+        messageId: "m1",
+        type: "text",
+        text: `part ${idx}`,
+      })),
+    })
+
+    const visible = getVisibleParts(message)
+    expect(visible.parts).toHaveLength(40)
+    expect(visible.hiddenCount).toBe(20)
   })
 })

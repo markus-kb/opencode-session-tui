@@ -1,6 +1,6 @@
 import type { SelectOption } from "@opentui/core"
 import { useEffect, useMemo } from "react"
-import { formatDate, type ChatMessage, type SessionRecord } from "../lib/opencode-data"
+import { formatDate, type ChatMessage, type ChatPart, type SessionRecord } from "../lib/opencode-data"
 import { formatTokenCount } from "./format"
 import { OverlayFrame, PALETTE, ShortcutHints } from "./components"
 
@@ -86,6 +86,17 @@ export function buildVisibleMessageRows(
   })
 }
 
+const MAX_RENDERED_PARTS = 40
+
+export function getVisibleParts(message: ChatMessage): { parts: ChatPart[]; hiddenCount: number } {
+  if (!message.parts) {
+    return { parts: [], hiddenCount: 0 }
+  }
+  const parts = message.parts.slice(0, MAX_RENDERED_PARTS)
+  const hiddenCount = Math.max(0, message.parts.length - parts.length)
+  return { parts, hiddenCount }
+}
+
 export type ChatViewerProps = {
   session: SessionRecord
   messages: ChatMessage[]
@@ -135,9 +146,11 @@ export const ChatViewer = ({
       return <text fg={PALETTE.muted}>[no content]</text>
     }
 
+    const visible = getVisibleParts(currentMessage)
+
     return (
       <box style={{ flexDirection: "column", gap: 1 }}>
-        {currentMessage.parts.map((part) => (
+        {visible.parts.map((part) => (
           <box key={part.partId} style={{ flexDirection: "column" }}>
             {part.type === "tool" ? (
               <text fg={PALETTE.accent}>
@@ -149,6 +162,11 @@ export const ChatViewer = ({
             <text>{part.text.slice(0, 2000)}{part.text.length > 2000 ? "\n[... truncated]" : ""}</text>
           </box>
         ))}
+        {visible.hiddenCount > 0 ? (
+          <text fg={PALETTE.muted}>
+            Showing first {visible.parts.length} of {visible.parts.length + visible.hiddenCount} parts
+          </text>
+        ) : null}
         {currentMessage.totalChars !== null && currentMessage.totalChars > 2000 ? (
           <text fg={PALETTE.muted}>
             Showing first 2000 chars of {currentMessage.totalChars} total
