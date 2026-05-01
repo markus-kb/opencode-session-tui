@@ -21,7 +21,22 @@ If you only want to try it locally from the source checkout, use `bunx` or `bun 
 
 ```bash
 bunx opencode-manager --help
-bun run src/bin/opencode-manager.ts --help
+bun run manager -- --help
+```
+
+### Windows-friendly local launch
+
+For local development on Windows, use the package scripts instead of calling source files directly:
+
+```bash
+bun run start
+```
+
+Additional options:
+
+```bash
+bun run start -- --db "C:\\Users\\<you>\\.local\\share\\opencode\\opencode.db"
+bun run manager -- projects list --format table
 ```
 
 ## What this repository changes
@@ -53,7 +68,7 @@ The current TUI still renders through `src/tui/app.tsx`. Consolidated architectu
 
 The target architecture keeps OpenTUI, but moves from a monolithic root component toward explicit screens, first-class overlays, shared data resources, scoped input handling, and a fast home dashboard that does not trigger expensive metadata scans.
 
-Regression coverage includes pure TUI state/resource-policy/session-resource tests and process-level e2e checks for `opencode-manager --help` and `opencode-manager tui --help` so users can discover TUI storage modes without launching the interactive renderer.
+Regression coverage includes pure TUI state/resource-policy/session-resource tests and process-level e2e checks for `opencode-manager --help`, `opencode-manager --db <path> --help`, and `opencode-manager tui --help` so users can discover TUI storage modes without launching the interactive renderer.
 
 Key TUI seams now live in dedicated modules under `src/tui/`, including:
 

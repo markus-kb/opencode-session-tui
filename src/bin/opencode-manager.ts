@@ -3,7 +3,7 @@
  * Main CLI entrypoint for opencode-manager.
  *
  * Routes between TUI and CLI modes based on provided subcommands:
- * - No subcommand → shows help
+ * - No subcommand → launches TUI
  * - "tui" subcommand → launches TUI
  * - CLI subcommands (projects, sessions, chat, tokens) → launches CLI
  *
@@ -37,6 +37,7 @@ USAGE:
   opencode-manager [command] [options]
 
 MODES:
+  (no command)              Launch interactive TUI (default)
   tui                       Launch interactive TUI (terminal user interface)
   <command>                 Run CLI command (see below)
 
@@ -63,6 +64,9 @@ OPTIONS:
   --version, -v             Show version
 
 TUI STORAGE OPTIONS:
+  opencode-manager --root <path>                 Launch TUI with legacy JSONL root
+  opencode-manager --experimental-sqlite         Launch TUI in SQLite-only mode
+  opencode-manager --db <path>                   Launch TUI with a specific SQLite database path
   opencode-manager tui --root <path>             Use a specific legacy JSONL storage root
   opencode-manager tui --experimental-sqlite     Force SQLite-only mode
   opencode-manager tui --db <path>               Use a specific SQLite database path
@@ -71,6 +75,7 @@ STORAGE DEFAULT:
   Hybrid mode is used by default when both opencode.db and legacy JSON sessions exist.
 
 EXAMPLES:
+  opencode-manager                              # Launch TUI (default)
   opencode-manager tui                          # Launch TUI
   opencode-manager tui --db ~/.local/share/opencode/opencode.db
   opencode-manager projects list --format json  # List projects as JSON
@@ -91,15 +96,29 @@ async function main(): Promise<void> {
   const args = process.argv.slice(2)
   const firstArg = args[0]
 
-  // Handle no args, --help, or -h → show help
-  if (!firstArg || firstArg === "--help" || firstArg === "-h") {
+  // Handle --help or -h
+  if (firstArg === "--help" || firstArg === "-h") {
     printHelp()
+    return
+  }
+
+  // No subcommand defaults to TUI.
+  if (!firstArg) {
+    const { bootstrap } = await import("../tui/index")
+    await bootstrap([])
     return
   }
 
   // Handle --version or -v
   if (firstArg === "--version" || firstArg === "-v") {
     printVersion()
+    return
+  }
+
+  // Root-level options (e.g. --db, --root, --experimental-sqlite) target TUI by default.
+  if (firstArg.startsWith("-")) {
+    const { bootstrap } = await import("../tui/index")
+    await bootstrap(args)
     return
   }
 

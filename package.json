@@ -20,6 +20,8 @@
     "LICENSE"
   ],
   "scripts": {
+    "start": "bun src/bin/opencode-manager.ts",
+    "manager": "bun src/bin/opencode-manager.ts",
     "tui": "bun src/tui/index.tsx",
     "dev": "bun --watch src/tui/index.tsx",
     "test": "bun test",

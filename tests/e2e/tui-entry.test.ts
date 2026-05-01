@@ -7,6 +7,7 @@ describe("TUI entrypoint e2e", () => {
     const output = result.stdout.toString()
 
     expect(result.exitCode).toBe(0)
+    expect(output).toContain("(no command)")
     expect(output).toContain("opencode-manager tui")
     expect(output).toContain("--experimental-sqlite")
     expect(output).toContain("--db <path>")
@@ -29,5 +30,23 @@ describe("TUI entrypoint e2e", () => {
     expect(output).toContain("Confirm:")
     expect(output).toContain("enter / y        Confirm")
     expect(output).toContain("escape / n       Cancel")
+  })
+
+  test("root TUI storage flags work without explicit tui subcommand", async () => {
+    const result = await $`bun src/bin/opencode-manager.ts --db C:/temp/opencode.db --help`.quiet()
+    const output = result.stdout.toString()
+
+    expect(result.exitCode).toBe(0)
+    expect(output).toContain("OpenCode Metadata TUI")
+    expect(output).toContain("Storage options")
+  })
+
+  test("package start script launches TUI entrypoint", async () => {
+    const result = await $`bun run start -- --help`.quiet()
+    const output = result.stdout.toString()
+
+    expect(result.exitCode).toBe(0)
+    expect(output).toContain("(no command)")
+    expect(output).toContain("TUI STORAGE OPTIONS")
   })
 })
