@@ -1,6 +1,4 @@
-> **Attribution notice:** This repository originated from [shuv1337/oc-manager](https://github.com/shuv1337/oc-manager). It has diverged substantially, but credit for the original design, TUI, and CLI foundations remains with the upstream author.
-
-# OpenCode Metadata Manager
+# OpenCode Session Metadata Manager
 
 Terminal UI for inspecting, filtering, and pruning OpenCode metadata stored on disk. The app is written in TypeScript, runs on Bun, and renders with [`@opentui/react`](https://github.com/sst/opentui).
 
