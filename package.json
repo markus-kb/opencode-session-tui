@@ -15,7 +15,7 @@
     "src",
     "bun.lock",
     "tsconfig.json",
-    "PROJECT-SUMMARY.md",
+    "docs/CHANGES.md",
     "manage_opencode_projects.py",
     "LICENSE"
   ],
@@ -28,10 +28,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/markus-kb/oc-manager-fork.git"
+    "url": "git+https://github.com/markus-kb/opencode-session-tui.git"
   },
   "bugs": {
-    "url": "https://github.com/markus-kb/oc-manager-fork/issues"
+    "url": "https://github.com/markus-kb/opencode-session-tui/issues"
   },
   "keywords": [
     "tui",

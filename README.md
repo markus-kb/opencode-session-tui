@@ -7,7 +7,7 @@ Terminal UI for inspecting, filtering, and pruning OpenCode metadata stored on d
 Install this fork globally from the git repository to get the `opencode-manager` command on your PATH:
 
 ```bash
-bun add -g git+https://github.com/markus-kb/oc-manager-fork.git
+bun add -g git+https://github.com/markus-kb/opencode-session-tui.git
 ```
 
 Then run it from any directory:
@@ -118,10 +118,9 @@ Current Phase 10 status:
 ## Installation
 ```bash
 # Clone the repo and install deps
-git clone https://github.com/markus-kb/oc-manager-fork.git
-cd oc-manager-fork
+git clone https://github.com/markus-kb/opencode-session-tui.git
+cd opencode-session-tui
 bun install
-
 ```
 
 ## Credits
