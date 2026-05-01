@@ -7,6 +7,7 @@ export type OverlayHostProps = {
   chatSession: SessionRecord | null
   chatMessages: ChatMessage[]
   chatCursor: number
+  chatSortOrder: "asc" | "desc"
   onChatCursorChange: (index: number) => void
   chatLoading: boolean
   chatError: string | null
@@ -28,6 +29,7 @@ export const OverlayHost = ({
   chatSession,
   chatMessages,
   chatCursor,
+  chatSortOrder,
   onChatCursorChange,
   chatLoading,
   chatError,
@@ -50,6 +52,7 @@ export const OverlayHost = ({
           session={chatSession}
           messages={chatMessages}
           cursor={chatCursor}
+          sortOrder={chatSortOrder}
           onCursorChange={onChatCursorChange}
           loading={chatLoading}
           error={chatError}

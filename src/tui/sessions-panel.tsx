@@ -13,7 +13,7 @@ import {
 } from "../lib/opencode-data"
 import type { DataProvider } from "../lib/opencode-data-provider"
 import type { TuiCommandSet } from "./command-definitions"
-import { PALETTE } from "./components"
+import { PALETTE, ShortcutHints } from "./components"
 import type { ConfirmState } from "./confirm-bar"
 import { buildDeletionConfirmDetails, buildDeletionConfirmTitle } from "./confirm-payload"
 import { formatAggregateSummaryShort, formatTokenCount } from "./format"
@@ -337,14 +337,36 @@ export const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(functio
     <box title="Sessions" style={{ border: true, borderColor: active ? "#22c55e" : "#374151", flexDirection: "column", flexGrow: active ? 6 : 4, padding: 1 }}>
       <box flexDirection="column" marginBottom={1}>
         <text>Filter: {projectFilter ? `project ${projectFilter}` : "none"} | Sort: {sortMode} | Search: {searchQuery ? `${searchQuery} (fuzzy)` : "(none)"} | Selected: {selectedIndexes.size}</text>
-        <text>Keys: Space select, A select all, S sort, D delete, Y copy ID, V view chat, F search chats, Shift+R rename, M move, P copy, C clear filter, Esc clear</text>
+        <ShortcutHints
+          prefix="Keys:"
+          items={[
+            { key: "Space", label: "select" },
+            { key: "A", label: "select all" },
+            { key: "S", label: "sort" },
+            { key: "D", label: "delete" },
+            { key: "Y", label: "copy ID" },
+            { key: "V", label: "view chat" },
+            { key: "F", label: "search chats" },
+            { key: "Shift+R", label: "rename" },
+            { key: "M", label: "move" },
+            { key: "P", label: "copy" },
+            { key: "C", label: "clear filter" },
+            { key: "Esc", label: "clear" },
+          ]}
+        />
       </box>
 
       {isRenaming ? (
         <box style={{ border: true, borderColor: PALETTE.key, padding: 1, marginBottom: 1 }}>
-          <text>Rename: </text>
-          <text fg={PALETTE.key}>{renameValue}</text>
-          <text fg={PALETTE.muted}> (Enter confirm, Esc cancel)</text>
+          <box style={{ flexDirection: "row" }}>
+            <text>Rename: </text>
+            <text fg={PALETTE.key}>{renameValue}</text>
+            <text fg={PALETTE.muted}> (</text>
+            <text fg={PALETTE.key}>[Enter]</text>
+            <text fg={PALETTE.muted}> confirm, </text>
+            <text fg={PALETTE.key}>[Esc]</text>
+            <text fg={PALETTE.muted}> cancel)</text>
+          </box>
         </box>
       ) : null}
 
@@ -422,7 +444,11 @@ export const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(functio
                   <text>{formatAggregateSummaryShort(globalTokenSummary)}</text>
                 </box>
               ) : null}
-              <text fg={PALETTE.muted} style={{ marginTop: 1 }}>Press Y to copy ID</text>
+              <box style={{ marginTop: 1, flexDirection: "row" }}>
+                <text fg={PALETTE.muted}>Press </text>
+                <text fg={PALETTE.key}>[Y]</text>
+                <text fg={PALETTE.muted}> to copy ID</text>
+              </box>
             </box>
           ) : null}
         </box>

@@ -60,6 +60,25 @@ export const Columns = ({ children }: ChildrenProps) => {
 
 export const KeyChip = ({ k }: { k: string }) => <text fg={PALETTE.key}>[{k}]</text>
 
+export const ShortcutHints = ({
+  prefix,
+  items,
+}: {
+  prefix?: string
+  items: Array<{ key: string; label: string }>
+}) => (
+  <box style={{ flexDirection: "row", flexWrap: "wrap", gap: 1 }}>
+    {prefix ? <text>{prefix}</text> : null}
+    {items.map((item, idx) => (
+      <box key={`${item.key}-${item.label}-${idx}`} style={{ flexDirection: "row", gap: 1 }}>
+        <KeyChip k={item.key} />
+        <text>{item.label}</text>
+        {idx < items.length - 1 ? <text fg={PALETTE.muted}>|</text> : null}
+      </box>
+    ))}
+  </box>
+)
+
 export const OverlayFrame = ({
   title,
   borderColor,

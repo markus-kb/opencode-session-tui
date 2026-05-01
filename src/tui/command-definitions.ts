@@ -60,6 +60,7 @@ export function buildTuiCommands(): TuiCommandSet {
     cmd("chat:pageDown", "Page down", "chat", ["pagedown", "C-d"]),
     cmd("chat:home", "First message", "chat", ["home"]),
     cmd("chat:end", "Last message", "chat", ["end"]),
+    cmd("chat:toggleSortOrder", "Toggle chat sort order", "chat", ["s"]),
     cmd("chat:copy", "Copy message", "chat", ["y"]),
 
     cmd("search:close", "Close", "search", ["escape"]),

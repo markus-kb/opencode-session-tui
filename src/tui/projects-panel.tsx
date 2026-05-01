@@ -10,7 +10,7 @@ import {
 } from "../lib/opencode-data"
 import type { DataProvider } from "../lib/opencode-data-provider"
 import { type TuiCommandSet } from "./command-definitions"
-import { PALETTE } from "./components"
+import { PALETTE, ShortcutHints } from "./components"
 import type { ConfirmState } from "./confirm-bar"
 import { buildDeletionConfirmDetails, buildDeletionConfirmTitle } from "./confirm-payload"
 import { formatTokenCount } from "./format"
@@ -202,9 +202,17 @@ export const ProjectsPanel = forwardRef<PanelHandle, ProjectsPanelProps>(functio
         <text>
           Total: {records.length} | Missing: {missingCount} | Selected: {selectedIndexes.size}
         </text>
-        <text>
-          Keys: Space select, A select all, M toggle missing, D delete, Enter view sessions, Esc clear
-        </text>
+        <ShortcutHints
+          prefix="Keys:"
+          items={[
+            { key: "Space", label: "select" },
+            { key: "A", label: "select all" },
+            { key: "M", label: "toggle missing" },
+            { key: "D", label: "delete" },
+            { key: "Enter", label: "view sessions" },
+            { key: "Esc", label: "clear" },
+          ]}
+        />
       </box>
 
       {!projectIndexLoaded ? (

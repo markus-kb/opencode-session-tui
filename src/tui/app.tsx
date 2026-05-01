@@ -38,9 +38,10 @@ import { findMessageCursorById, findSessionForChatSearchResult } from "./chat-se
 import { buildTuiCommands, type TuiCommandSet } from "./command-definitions"
 import { toCommandKey, toCommandScope, resolveCommand, type KeyRouteContext } from "./key-router"
 import { getInputLayer } from "./input-precedence"
+import { policyForOpenChatViewer } from "./chat-open-policy"
 import { getHomeDashboardModel } from "./home-dashboard"
 import { detectStorageSources } from "./backend-resolver"
-import { PALETTE, SearchBar } from "./components"
+import { PALETTE, SearchBar, ShortcutHints } from "./components"
 import { nextWorkspaceRefreshKey } from "./workspace-refresh"
 import { getWorkspaceReloadPlan } from "./workspace-reload"
 import { executeWorkspaceReload } from "./workspace-reload-execute"
@@ -53,6 +54,7 @@ import { HomeScreen } from "./home-screen"
 import { ProjectsPanel, type PanelHandle } from "./projects-panel"
 import { SessionsPanel } from "./sessions-panel"
 import { OverlayHost } from "./overlay-host"
+import { sortChatMessages } from "./chat-viewer"
 
 type TabKey = TuiTab
 
@@ -96,6 +98,7 @@ export const App = ({
   const [chatSession, setChatSession] = useState<SessionRecord | null>(null)
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
   const [chatCursor, setChatCursor] = useState(0)
+  const [chatSortOrder, setChatSortOrder] = useState<"asc" | "desc">("asc")
   const [chatLoading, setChatLoading] = useState(false)
   const [chatError, setChatError] = useState<string | null>(null)
   const [chatPartsCache, setChatPartsCache] = useState<Map<string, ChatMessage>>(new Map())
@@ -110,6 +113,11 @@ export const App = ({
   const [projectIndexLoaded, setProjectIndexLoaded] = useState(false)
   const [allSessions, setAllSessions] = useState<SessionRecord[]>([])
   const [sessionIndexLoaded, setSessionIndexLoaded] = useState(false)
+
+  const visibleChatMessages = useMemo(
+    () => sortChatMessages(chatMessages, chatSortOrder),
+    [chatMessages, chatSortOrder],
+  )
 
   const resolvedDbPath = useMemo(() => {
     if (backend !== "sqlite") {
@@ -262,17 +270,19 @@ export const App = ({
 
   // Chat viewer controls
   const openChatViewer = useCallback(async (session: SessionRecord) => {
+    const nextPolicy = policyForOpenChatViewer(tuiState, session.sessionId)
     setTuiState((prev) => applyNavigationEvent(prev, { type: "openChat", sessionId: session.sessionId }))
     setChatSession(session)
     const initial = openChatViewerState()
     setChatMessages(initial.chatMessages)
     setChatCursor(initial.chatCursor)
+    setChatSortOrder("asc")
     setChatLoading(initial.chatLoading)
     setChatError(initial.chatError)
     setChatPartsCache(initial.chatPartsCache)
 
     try {
-      const result = await loadChatSessionMessages(provider, resourcePolicy, session.sessionId)
+      const result = await loadChatSessionMessages(provider, nextPolicy, session.sessionId)
       setChatMessages(result.messages)
       if (result.messages.length > 0) {
         setChatCursor(0)
@@ -283,7 +293,7 @@ export const App = ({
     } finally {
       setChatLoading(false)
     }
-  }, [provider, resourcePolicy])
+  }, [provider, tuiState])
 
   const closeChatViewer = useCallback(() => {
     setTuiState((prev) => applyNavigationEvent(prev, { type: "closeOverlay" }))
@@ -291,6 +301,7 @@ export const App = ({
     setChatSession(cleared.chatSession)
     setChatMessages(cleared.chatMessages)
     setChatCursor(cleared.chatCursor)
+    setChatSortOrder("asc")
     setChatLoading(cleared.chatLoading)
     setChatError(cleared.chatError)
     setChatPartsCache(cleared.chatPartsCache)
@@ -448,7 +459,7 @@ export const App = ({
           return
         }
         if (cmdId === "chat:next") {
-          setChatCursor(prev => Math.min(chatMessages.length - 1, prev + 1))
+          setChatCursor(prev => Math.min(visibleChatMessages.length - 1, prev + 1))
           return
         }
         if (cmdId === "chat:pageUp") {
@@ -456,7 +467,7 @@ export const App = ({
           return
         }
         if (cmdId === "chat:pageDown") {
-          setChatCursor(prev => Math.min(chatMessages.length - 1, prev + 10))
+          setChatCursor(prev => Math.min(visibleChatMessages.length - 1, prev + 10))
           return
         }
         if (cmdId === "chat:home") {
@@ -464,11 +475,24 @@ export const App = ({
           return
         }
         if (cmdId === "chat:end") {
-          setChatCursor(chatMessages.length - 1)
+          setChatCursor(visibleChatMessages.length - 1)
+          return
+        }
+        if (cmdId === "chat:toggleSortOrder") {
+          const selected = visibleChatMessages[chatCursor]
+          const nextSortOrder = chatSortOrder === "asc" ? "desc" : "asc"
+          const nextMessages = sortChatMessages(chatMessages, nextSortOrder)
+          setChatSortOrder(nextSortOrder)
+          if (selected) {
+            const nextCursor = nextMessages.findIndex((m) => m.messageId === selected.messageId)
+            setChatCursor(nextCursor >= 0 ? nextCursor : 0)
+          } else {
+            setChatCursor(0)
+          }
           return
         }
         if (cmdId === "chat:copy") {
-          const msg = chatMessages[chatCursor]
+          const msg = visibleChatMessages[chatCursor]
           if (msg) {
             copyChatMessage(msg)
           }
@@ -591,7 +615,7 @@ export const App = ({
       const handler = activeTab === "projects" ? projectsRef.current : sessionsRef.current
       handler?.handleKey(key)
     },
-    [activeTab, cancelConfirm, cmdSet, confirmState, executeConfirm, notify, renderer, searchActive, searchQuery, isHome, switchTab, chatViewerOpen, chatMessages, chatCursor, closeChatViewer, copyChatMessage, chatSearchOpen, chatSearchResults, chatSearchCursor, closeChatSearch, executeChatSearch, handleChatSearchResult, openChatSearch, tuiState.overlay, refreshWorkspaceResources],
+    [activeTab, cancelConfirm, cmdSet, confirmState, executeConfirm, notify, renderer, searchActive, searchQuery, isHome, switchTab, chatViewerOpen, chatMessages, visibleChatMessages, chatCursor, chatSortOrder, closeChatViewer, copyChatMessage, chatSearchOpen, chatSearchResults, chatSearchCursor, closeChatSearch, executeChatSearch, handleChatSearchResult, openChatSearch, tuiState.overlay, refreshWorkspaceResources],
   )
 
   useKeyboard(handleGlobalKey)
@@ -641,9 +665,27 @@ export const App = ({
               : `Root: ${formatDisplayPath(root)}`}
           </text>
         </box>
-        <text>
-          Tabs: [1] Projects [2] Sessions | Active: {activeTab} | Global: Tab switch, / search, X clear, R reload, Q quit, ? help
-        </text>
+        <box style={{ flexDirection: "row", gap: 1, flexWrap: "wrap" }}>
+          <text>Tabs:</text>
+          <text fg={PALETTE.key}>[1]</text>
+          <text>Projects</text>
+          <text fg={PALETTE.key}>[2]</text>
+          <text>Sessions</text>
+          <text fg={PALETTE.muted}>|</text>
+          <text>Active: {activeTab}</text>
+          <text fg={PALETTE.muted}>|</text>
+          <ShortcutHints
+            prefix="Global:"
+            items={[
+              { key: "Tab", label: "switch" },
+              { key: "/", label: "search" },
+              { key: "X", label: "clear" },
+              { key: "R", label: "reload" },
+              { key: "Q", label: "quit" },
+              { key: "?", label: "help" },
+            ]}
+          />
+        </box>
         {sessionFilter ? <text fg="#a3e635">Session filter: {sessionFilter}</text> : null}
         {(backend === "sqlite" || backend === "hybrid") && sqliteWarning ? (
           <text fg={PALETTE.danger}>SQLite warning: {sqliteWarning}</text>
@@ -699,10 +741,11 @@ export const App = ({
 
       <OverlayHost
         chatViewerOpen={chatViewerOpen}
-        chatSession={chatSession}
-        chatMessages={chatMessages}
-        chatCursor={chatCursor}
-        onChatCursorChange={setChatCursor}
+            chatSession={chatSession}
+            chatMessages={visibleChatMessages}
+            chatCursor={chatCursor}
+            chatSortOrder={chatSortOrder}
+            onChatCursorChange={setChatCursor}
         chatLoading={chatLoading}
         chatError={chatError}
         onCloseChatViewer={closeChatViewer}

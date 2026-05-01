@@ -2,12 +2,95 @@ import type { SelectOption } from "@opentui/core"
 import { useEffect, useMemo } from "react"
 import { formatDate, type ChatMessage, type SessionRecord } from "../lib/opencode-data"
 import { formatTokenCount } from "./format"
-import { OverlayFrame, PALETTE } from "./components"
+import { OverlayFrame, PALETTE, ShortcutHints } from "./components"
+
+export const leftPaneStyle = {
+  border: true,
+  borderColor: PALETTE.muted,
+  width: 42,
+  flexShrink: 0,
+  minWidth: 32,
+  flexDirection: "column" as const,
+  padding: 1,
+  overflow: "hidden" as const,
+}
+
+function sanitizePreview(text: string): string {
+  const compact = text.replace(/\s+/g, " ").trim()
+  return compact.length > 0 ? compact : "[no preview]"
+}
+
+function clampSnippet(text: string, maxChars = 56): string {
+  if (text.length <= maxChars) return text
+  return text.slice(0, Math.max(1, maxChars - 3)).trimEnd() + "..."
+}
+
+export function sortChatMessages(messages: ChatMessage[], sortOrder: "asc" | "desc"): ChatMessage[] {
+  const sorted = [...messages].sort((a, b) => {
+    const aTime = a.createdAt?.getTime() ?? 0
+    const bTime = b.createdAt?.getTime() ?? 0
+    if (aTime !== bTime) return aTime - bTime
+    return a.messageId.localeCompare(b.messageId)
+  })
+  return sortOrder === "asc" ? sorted : sorted.reverse()
+}
+
+export function buildChatMessageOption(msg: ChatMessage, idx: number): SelectOption {
+  const roleLabel = msg.role === "user" ? "[user]" : msg.role === "assistant" ? "[asst]" : "[???]"
+  const timestamp = msg.createdAt
+    ? msg.createdAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    : "??:??"
+  const safePreview = sanitizePreview(msg.previewText)
+  const preview = clampSnippet(safePreview)
+
+  return {
+    name: `${roleLabel} ${timestamp} - ${preview}`,
+    description: "",
+    value: idx,
+  }
+}
+
+function formatListRowLabel(msg: ChatMessage, idx: number, selected: boolean): string {
+  const marker = selected ? ">" : " "
+  const role = msg.role === "user" ? "U" : msg.role === "assistant" ? "A" : "?"
+  const number = String(idx + 1).padStart(4, " ")
+  const timestamp = msg.createdAt
+    ? msg.createdAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    : "??:??"
+  const safePreview = clampSnippet(sanitizePreview(msg.previewText))
+  return `${marker} ${number} ${role} ${timestamp} ${safePreview}`
+}
+
+export function buildVisibleMessageRows(
+  messages: ChatMessage[],
+  cursor: number,
+  maxRows: number,
+): { name: string; selected: boolean; key: string }[] {
+  if (messages.length === 0) return []
+
+  const safeCursor = Math.max(0, Math.min(messages.length - 1, cursor))
+  const windowSize = Math.max(1, maxRows)
+  const half = Math.floor(windowSize / 2)
+  let start = Math.max(0, safeCursor - half)
+  let end = Math.min(messages.length, start + windowSize)
+  start = Math.max(0, end - windowSize)
+
+  return messages.slice(start, end).map((msg, offset) => {
+    const idx = start + offset
+    const selected = idx === safeCursor
+    return {
+      key: msg.messageId,
+      selected,
+      name: formatListRowLabel(msg, idx, selected),
+    }
+  })
+}
 
 export type ChatViewerProps = {
   session: SessionRecord
   messages: ChatMessage[]
   cursor: number
+  sortOrder: "asc" | "desc"
   onCursorChange: (index: number) => void
   loading: boolean
   error: string | null
@@ -20,6 +103,7 @@ export const ChatViewer = ({
   session,
   messages,
   cursor,
+  sortOrder,
   onCursorChange,
   loading,
   error,
@@ -33,20 +117,10 @@ export const ChatViewer = ({
     }
   }, [currentMessage, onHydrateMessage])
 
-  const messageOptions: SelectOption[] = useMemo(() => {
-    return messages.map((msg, idx) => {
-      const roleLabel = msg.role === "user" ? "[user]" : msg.role === "assistant" ? "[asst]" : "[???]"
-      const timestamp = msg.createdAt
-        ? msg.createdAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-        : "??:??"
-      const preview = msg.previewText.slice(0, 60) + (msg.previewText.length > 60 ? "..." : "")
-      return {
-        name: `${roleLabel} ${timestamp} - ${preview}`,
-        description: "",
-        value: idx,
-      }
-    })
-  }, [messages])
+  const messageRows = useMemo(
+    () => buildVisibleMessageRows(messages, cursor, 14),
+    [messages, cursor],
+  )
 
   const renderMessageContent = () => {
     if (!currentMessage) {
@@ -107,33 +181,26 @@ export const ChatViewer = ({
       ) : (
         <box style={{ flexDirection: "row", gap: 1, flexGrow: 1 }}>
           <box
-            style={{
-              border: true,
-              borderColor: PALETTE.muted,
-              flexGrow: 4,
-              flexDirection: "column",
-              padding: 1,
-            }}
+            style={leftPaneStyle}
             title="Messages"
           >
-            <select
-              options={messageOptions}
-              selectedIndex={cursor}
-              onChange={onCursorChange}
-              focused={true}
-              showScrollIndicator
-              wrapSelection={false}
-            />
+            <box style={{ flexDirection: "column", gap: 0, overflow: "hidden", flexGrow: 1 }}>
+              {messageRows.map((row) => (
+                <text key={row.key} fg={row.selected ? PALETTE.key : PALETTE.muted}>
+                  {row.name}
+                </text>
+              ))}
+            </box>
           </box>
 
           <box
-            style={{
-              border: true,
-              borderColor: currentMessage?.role === "user" ? PALETTE.accent : PALETTE.primary,
-              flexGrow: 6,
-              flexDirection: "column",
-              padding: 1,
-              overflow: "hidden",
+              style={{
+                border: true,
+                borderColor: currentMessage?.role === "user" ? PALETTE.accent : PALETTE.primary,
+                flexGrow: 1,
+                flexDirection: "column",
+                padding: 1,
+                overflow: "hidden",
             }}
             title={currentMessage ? `${currentMessage.role} message` : "Details"}
           >
@@ -170,9 +237,16 @@ export const ChatViewer = ({
       )}
 
       <box style={{ marginTop: 1 }}>
-        <text fg={PALETTE.muted}>
-          Esc close | Up/Down navigate | PgUp/PgDn jump | Y copy message
-        </text>
+        <ShortcutHints
+          prefix=""
+          items={[
+            { key: "Esc", label: "close" },
+            { key: "Up/Down", label: "navigate" },
+            { key: "PgUp/PgDn", label: "jump" },
+            { key: "S", label: `sort ${sortOrder}` },
+            { key: "Y", label: "copy message" },
+          ]}
+        />
       </box>
     </OverlayFrame>
   )

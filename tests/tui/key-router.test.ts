@@ -114,6 +114,7 @@ describe("TUI key router", () => {
       expect(resolveCommand(cmdSet.registry, "pagedown", workspaceContext("sessions", { overlay }))).toBe("chat:pageDown")
       expect(resolveCommand(cmdSet.registry, "home", workspaceContext("sessions", { overlay }))).toBe("chat:home")
       expect(resolveCommand(cmdSet.registry, "end", workspaceContext("sessions", { overlay }))).toBe("chat:end")
+      expect(resolveCommand(cmdSet.registry, "s", workspaceContext("sessions", { overlay }))).toBe("chat:toggleSortOrder")
       expect(resolveCommand(cmdSet.registry, "y", workspaceContext("sessions", { overlay }))).toBe("chat:copy")
       expect(resolveCommand(cmdSet.registry, "C-u", workspaceContext("sessions", { overlay }))).toBe("chat:pageUp")
       expect(resolveCommand(cmdSet.registry, "C-d", workspaceContext("sessions", { overlay }))).toBe("chat:pageDown")
