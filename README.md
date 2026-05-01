@@ -1,4 +1,4 @@
-> **Fork notice:** This repository is a fork of [shuv1337/oc-manager](https://github.com/shuv1337/oc-manager). The primary goal of this fork is to maintain compatibility with the current OpenCode SQLite schema (post-Feb 2025 migration) and to ensure the test suite runs on Windows. All credit for the original design, TUI, and CLI goes to the upstream author.
+> **Attribution notice:** This repository originated from [shuv1337/oc-manager](https://github.com/shuv1337/oc-manager). It has diverged substantially, but credit for the original design, TUI, and CLI foundations remains with the upstream author.
 
 # OpenCode Metadata Manager
 
@@ -26,9 +26,9 @@ bunx opencode-manager --help
 bun run src/bin/opencode-manager.ts --help
 ```
 
-## What this fork changes
+## What this repository changes
 
-OpenCode migrated its storage layer from JSONL flat-files to a SQLite database (Drizzle ORM schema) in early 2025. The upstream repo predates that migration. This fork updates the SQLite backend to read the current schema and uses hybrid mode by default when both `opencode.db` and legacy JSON sessions are present:
+OpenCode migrated its storage layer from JSONL flat-files to a SQLite database (Drizzle ORM schema) in early 2025. The upstream repo predates that migration. This repository updates the SQLite backend to read the current schema and uses hybrid mode by default when both `opencode.db` and legacy JSON sessions are present:
 
 - **Schema alignment** — `SessionRow`, `MessageRow`, `PartRow` interfaces updated to match the real Drizzle columns (`time_created`/`time_updated`; session has no JSON `data` blob; message/part carry a `data` JSON blob).
 - **Hybrid auto-detect** — `createProvider()` now reads both current SQLite sessions and legacy JSON sessions when both stores exist. SQLite-only and JSONL-only stores still work. `--experimental-sqlite` remains available to force SQLite-only mode.
@@ -127,7 +127,9 @@ bun install
 ```
 
 ## Credits
-Original project by [shuv1337](https://github.com/shuv1337) — [shuv1337/oc-manager](https://github.com/shuv1337/oc-manager). This fork adapts the tool for the current OpenCode SQLite schema and adds Windows compatibility.
+Original project by [shuv1337](https://github.com/shuv1337) — [shuv1337/oc-manager](https://github.com/shuv1337/oc-manager).
+
+This repository has diverged from the original fork lineage while preserving explicit attribution. The current maintainers adapted the tool for the modern OpenCode SQLite schema, hybrid storage support, Windows compatibility, and TUI architecture hardening.
 
 ## License
 MIT © OpenCode contributors. See [`LICENSE`](./LICENSE).

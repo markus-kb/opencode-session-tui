@@ -44,7 +44,12 @@ This file is the consolidated high-level history of major architecture and produ
 ## Documentation Consolidation
 
 - Historical planning and progress docs were consolidated into this single high-level change log.
-- Architecture and usage details now live in `docs/PROJECT-SUMMARY.md`.
+- Architecture and usage details now live in `README.md`.
+
+## Attribution
+
+- This codebase originated from `shuv1337/oc-manager` and has evolved significantly in this repository.
+- Credit for the original product concept, TUI, and CLI foundations remains with the upstream author.
 
 ## Current Status
 
