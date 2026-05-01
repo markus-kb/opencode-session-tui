@@ -55,6 +55,7 @@ import { ProjectsPanel, type PanelHandle } from "./projects-panel"
 import { SessionsPanel } from "./sessions-panel"
 import { OverlayHost } from "./overlay-host"
 import { sortChatMessages } from "./chat-viewer"
+import { isActiveRequest, upsertHydratedMessage } from "./chat-memory-policy"
 
 type TabKey = TuiTab
 
@@ -102,6 +103,8 @@ export const App = ({
   const [chatLoading, setChatLoading] = useState(false)
   const [chatError, setChatError] = useState<string | null>(null)
   const [chatPartsCache, setChatPartsCache] = useState<Map<string, ChatMessage>>(new Map())
+  const chatRequestVersionRef = useRef(0)
+  const chatSearchOpenTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Chat search overlay state
   const chatSearchOpen = tuiState.overlay?.name === "chatSearch"
@@ -178,6 +181,10 @@ export const App = ({
 
   useEffect(() => {
     return () => {
+      if (chatSearchOpenTimerRef.current) {
+        clearTimeout(chatSearchOpenTimerRef.current)
+        chatSearchOpenTimerRef.current = null
+      }
       provider.dispose?.()
     }
   }, [provider])
@@ -270,6 +277,8 @@ export const App = ({
 
   // Chat viewer controls
   const openChatViewer = useCallback(async (session: SessionRecord) => {
+    chatRequestVersionRef.current += 1
+    const requestVersion = chatRequestVersionRef.current
     const nextPolicy = policyForOpenChatViewer(tuiState, session.sessionId)
     setTuiState((prev) => applyNavigationEvent(prev, { type: "openChat", sessionId: session.sessionId }))
     setChatSession(session)
@@ -283,6 +292,9 @@ export const App = ({
 
     try {
       const result = await loadChatSessionMessages(provider, nextPolicy, session.sessionId)
+      if (!isActiveRequest(requestVersion, chatRequestVersionRef.current)) {
+        return
+      }
       setChatMessages(result.messages)
       if (result.messages.length > 0) {
         setChatCursor(0)
@@ -291,11 +303,19 @@ export const App = ({
       const msg = err instanceof Error ? err.message : String(err)
       setChatError(msg)
     } finally {
+      if (!isActiveRequest(requestVersion, chatRequestVersionRef.current)) {
+        return
+      }
       setChatLoading(false)
     }
   }, [provider, tuiState])
 
   const closeChatViewer = useCallback(() => {
+    chatRequestVersionRef.current += 1
+    if (chatSearchOpenTimerRef.current) {
+      clearTimeout(chatSearchOpenTimerRef.current)
+      chatSearchOpenTimerRef.current = null
+    }
     setTuiState((prev) => applyNavigationEvent(prev, { type: "closeOverlay" }))
     const cleared = closeChatViewerState()
     setChatSession(cleared.chatSession)
@@ -308,6 +328,7 @@ export const App = ({
   }, [])
 
   const hydrateMessage = useCallback(async (message: ChatMessage) => {
+    const requestVersion = chatRequestVersionRef.current
     // Check cache first
     const cached = chatPartsCache.get(message.messageId)
     if (cached) {
@@ -322,7 +343,10 @@ export const App = ({
       if (!hydrated) {
         return
       }
-      setChatPartsCache(prev => new Map(prev).set(message.messageId, hydrated))
+      if (!isActiveRequest(requestVersion, chatRequestVersionRef.current)) {
+        return
+      }
+      setChatPartsCache(prev => upsertHydratedMessage(prev, message.messageId, hydrated))
       setChatMessages(prev => prev.map(m =>
         m.messageId === message.messageId ? hydrated : m
       ))
@@ -355,6 +379,10 @@ export const App = ({
   }, [])
 
   const closeChatSearch = useCallback(() => {
+    if (chatSearchOpenTimerRef.current) {
+      clearTimeout(chatSearchOpenTimerRef.current)
+      chatSearchOpenTimerRef.current = null
+    }
     setTuiState((prev) => applyNavigationEvent(prev, { type: "closeOverlay" }))
     const cleared = closeChatSearchState()
     setChatSearchQuery(cleared.chatSearchQuery)
@@ -397,7 +425,11 @@ export const App = ({
 
     // Find the message index in the chat viewer
     // Wait a bit for the chat viewer to load
-    setTimeout(() => {
+    if (chatSearchOpenTimerRef.current) {
+      clearTimeout(chatSearchOpenTimerRef.current)
+      chatSearchOpenTimerRef.current = null
+    }
+    chatSearchOpenTimerRef.current = setTimeout(() => {
       setChatMessages(prev => {
         const cursor = findMessageCursorById(prev, result.messageId)
         if (cursor !== null) {
@@ -405,6 +437,7 @@ export const App = ({
         }
         return prev
       })
+      chatSearchOpenTimerRef.current = null
     }, 100)
   }, [allSessions, closeChatSearch, openChatViewer, notify])
 

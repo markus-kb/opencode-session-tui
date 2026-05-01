@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import type { ChatMessage } from "../../src/lib/opencode-data"
-import { upsertHydratedMessage } from "../../src/tui/chat-memory-policy"
+import { isActiveRequest, upsertHydratedMessage } from "../../src/tui/chat-memory-policy"
 
 function hydrated(id: string): ChatMessage {
   return {
@@ -39,5 +39,10 @@ describe("chat memory policy", () => {
 
     expect(original.size).toBe(0)
     expect(next.size).toBe(1)
+  })
+
+  test("guards stale async work by request version", () => {
+    expect(isActiveRequest(3, 3)).toBeTrue()
+    expect(isActiveRequest(2, 3)).toBeFalse()
   })
 })

@@ -25,3 +25,7 @@ export function upsertHydratedMessage(
 
   return next
 }
+
+export function isActiveRequest(requestVersion: number, currentVersion: number): boolean {
+  return requestVersion === currentVersion
+}
