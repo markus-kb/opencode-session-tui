@@ -3216,4 +3216,89 @@ describe("opencode-data-sqlite", () => {
       }
     })
   })
+
+  // ========================
+  // Schema caching
+  // ========================
+
+  describe("schema caching (perf)", () => {
+    function createChatDb(): Database {
+      const db = new Database(":memory:")
+      db.run(`
+        CREATE TABLE session (
+          id TEXT PRIMARY KEY,
+          project_id TEXT NOT NULL,
+          time_created INTEGER,
+          time_updated INTEGER,
+          directory TEXT,
+          title TEXT,
+          version TEXT
+        )
+      `)
+      db.run(`
+        CREATE TABLE message (
+          id TEXT PRIMARY KEY,
+          session_id TEXT NOT NULL,
+          time_created INTEGER,
+          data TEXT
+        )
+      `)
+      db.run(`
+        CREATE TABLE part (
+          id TEXT PRIMARY KEY,
+          message_id TEXT NOT NULL,
+          session_id TEXT NOT NULL,
+          data TEXT
+        )
+      `)
+      return db
+    }
+
+    test("loadSessionChatIndexSqlite issues PRAGMA table_info(message) only once per DB connection across repeated calls", async () => {
+      const db = createChatDb()
+
+      let pragmaCount = 0
+      const originalQuery = db.query.bind(db)
+      // @ts-ignore — monkey-patch to count PRAGMA calls
+      db.query = (sql: string, ...rest: unknown[]) => {
+        if (typeof sql === "string" && /PRAGMA\s+table_info\s*\(\s*message\s*\)/i.test(sql)) {
+          pragmaCount++
+        }
+        return (originalQuery as any)(sql, ...rest)
+      }
+
+      // Call 5 times with the same DB instance
+      for (let i = 0; i < 5; i++) {
+        await loadSessionChatIndexSqlite({ db, sessionId: `sess_${i}` })
+      }
+
+      // Without caching: PRAGMA table_info(message) would be called 5+ times.
+      // With caching: it should be called at most once per DB connection.
+      expect(pragmaCount).toBeLessThanOrEqual(1)
+
+      db.close()
+    })
+
+    test("loadMessagePartsSqlite issues PRAGMA table_info(part) only once per DB connection across repeated calls", async () => {
+      const db = createChatDb()
+
+      let pragmaCount = 0
+      const originalQuery = db.query.bind(db)
+      // @ts-ignore
+      db.query = (sql: string, ...rest: unknown[]) => {
+        if (typeof sql === "string" && /PRAGMA\s+table_info\s*\(\s*part\s*\)/i.test(sql)) {
+          pragmaCount++
+        }
+        return (originalQuery as any)(sql, ...rest)
+      }
+
+      for (let i = 0; i < 5; i++) {
+        await loadMessagePartsSqlite({ db, messageId: `msg_${i}` })
+      }
+
+      expect(pragmaCount).toBeLessThanOrEqual(1)
+
+      db.close()
+    })
+  })
 })

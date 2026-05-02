@@ -355,6 +355,21 @@ function validateSchemaForTables(db: Database, requirements: SchemaRequirements)
   }
 }
 
+// Per-connection column cache: avoids repeated PRAGMA table_info() calls for the same table.
+// WeakMap ensures entries are released when the Database instance is GC'd.
+const columnCache = new WeakMap<Database, Map<string, Set<string> | null>>()
+
+function getCachedTableColumns(db: Database, table: string): Set<string> | null | undefined {
+  return columnCache.get(db)?.get(table)
+}
+
+function setCachedTableColumns(db: Database, table: string, columns: Set<string> | null): void {
+  if (!columnCache.has(db)) {
+    columnCache.set(db, new Map())
+  }
+  columnCache.get(db)!.set(table, columns)
+}
+
 function getTableColumns(db: Database, table: string): string[] | null {
   const tableRow = db.query("SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?").get(table) as { name?: string } | undefined
   if (!tableRow?.name) {
@@ -372,6 +387,27 @@ function ensureTableColumns(
   context?: string,
   allowForceWrite = false
 ): Set<string> | null {
+  // Return cached result when the schema for this table was already checked on
+  // this connection.  `undefined` means not yet cached; `null` means cached-missing.
+  const cached = getCachedTableColumns(db, table)
+  if (cached !== undefined) {
+    if (!cached) {
+      const message = `${context ? `${context}: ` : ""}SQLite schema is invalid (missing table: ${table}).`
+      if (options?.strict) throw new Error(message)
+      warnSqlite(options, message)
+      return null
+    }
+    const missing = required.filter((col) => !cached.has(col))
+    if (missing.length > 0) {
+      const available = Array.from(cached).join(", ")
+      const message = `${context ? `${context}: ` : ""}SQLite schema is invalid (missing columns: ${missing.map((col) => `${table}.${col}`).join(", ")}). Available columns: ${available}.`
+      if (options?.strict) throw new Error(message)
+      warnSqlite(options, message)
+      return null
+    }
+    return cached
+  }
+
   let columns: string[] | null
   try {
     columns = getTableColumns(db, table)
@@ -388,6 +424,7 @@ function ensureTableColumns(
   }
 
   if (!columns) {
+    setCachedTableColumns(db, table, null)
     const message = `${context ? `${context}: ` : ""}SQLite schema is invalid (missing table: ${table}).`
     if (options?.strict) {
       throw new Error(message)
@@ -397,6 +434,8 @@ function ensureTableColumns(
   }
 
   const columnSet = new Set(columns)
+  setCachedTableColumns(db, table, columnSet)
+
   const missing = required.filter((column) => !columnSet.has(column))
   if (missing.length > 0) {
     const available = Array.from(columnSet).join(", ")
