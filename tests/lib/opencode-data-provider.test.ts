@@ -562,4 +562,144 @@ describe("opencode-data-provider", () => {
     })
 
   })
+
+  // ========================
+  // Hybrid aggregate token scan (perf)
+  // ========================
+
+  describe("hybrid provider token aggregation", () => {
+    /**
+     * Build an in-memory SQLite DB with N sessions, each having one assistant
+     * message carrying known token counts, written to a temp file so the
+     * hybrid provider can open it.
+     */
+    function buildTokenDb(sessionCount: number): { dbPath: string; expectedTotal: number } {
+      const dir = mkdtempSync(join(tmpdir(), "oc-hybrid-token-"))
+      const dbPath = join(dir, "tokens.db")
+      const db = new Database(dbPath)
+      db.run(`CREATE TABLE session (
+        id TEXT PRIMARY KEY, project_id TEXT, time_created INTEGER, time_updated INTEGER,
+        directory TEXT, title TEXT, version TEXT
+      )`)
+      db.run(`CREATE TABLE message (
+        id TEXT PRIMARY KEY, session_id TEXT, time_created INTEGER, data TEXT
+      )`)
+      db.run(`CREATE TABLE part (
+        id TEXT PRIMARY KEY, message_id TEXT, session_id TEXT, data TEXT
+      )`)
+      db.run(`CREATE TABLE project (id TEXT PRIMARY KEY, data TEXT)`)
+
+      const tokensPerSession = 100
+      for (let i = 0; i < sessionCount; i++) {
+        const sid = `sess_${i}`
+        db.run(
+          "INSERT INTO session VALUES (?, 'proj', ?, ?, '/tmp', 'T', '1')",
+          [sid, Date.now(), Date.now()]
+        )
+        const mid = `msg_${i}`
+        const data = JSON.stringify({
+          role: "assistant",
+          tokens: { input: tokensPerSession, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
+        })
+        db.run("INSERT INTO message VALUES (?, ?, ?, ?)", [mid, sid, Date.now(), data])
+      }
+      db.close()
+      return { dbPath, expectedTotal: sessionCount * tokensPerSession }
+    }
+
+    test("computeGlobalTokenSummary returns correct sum over many SQLite sessions", async () => {
+      const { dbPath, expectedTotal } = buildTokenDb(10)
+
+      const provider = createProvider({ backend: "sqlite", dbPath })
+      const sessions = await provider.loadSessionRecords()
+      expect(sessions).toHaveLength(10)
+
+      const result = await provider.computeGlobalTokenSummary(sessions)
+      expect(result.total.kind).toBe("known")
+      if (result.total.kind === "known") {
+        expect(result.total.tokens.input).toBe(expectedTotal)
+      }
+      provider.dispose?.()
+    })
+
+    test("computeProjectTokenSummary aggregates only sessions for the requested project", async () => {
+      const dir = mkdtempSync(join(tmpdir(), "oc-hybrid-proj-"))
+      const dbPath = join(dir, "proj.db")
+      const db = new Database(dbPath)
+      db.run(`CREATE TABLE session (
+        id TEXT PRIMARY KEY, project_id TEXT, time_created INTEGER, time_updated INTEGER,
+        directory TEXT, title TEXT, version TEXT
+      )`)
+      db.run(`CREATE TABLE message (id TEXT PRIMARY KEY, session_id TEXT, time_created INTEGER, data TEXT)`)
+      db.run(`CREATE TABLE part (id TEXT PRIMARY KEY, message_id TEXT, session_id TEXT, data TEXT)`)
+      db.run(`CREATE TABLE project (id TEXT PRIMARY KEY, data TEXT)`)
+
+      // Two projects: proj_a (3 sessions × 50 tokens) and proj_b (2 sessions × 80 tokens)
+      for (let i = 0; i < 3; i++) {
+        const sid = `sess_a${i}`
+        db.run("INSERT INTO session VALUES (?, 'proj_a', ?, ?, '/tmp', 'T', '1')", [sid, Date.now(), Date.now()])
+        db.run("INSERT INTO message VALUES (?, ?, ?, ?)", [
+          `msg_a${i}`, sid, Date.now(),
+          JSON.stringify({ role: "assistant", tokens: { input: 50, output: 0, reasoning: 0, cache: { read: 0, write: 0 } } }),
+        ])
+      }
+      for (let i = 0; i < 2; i++) {
+        const sid = `sess_b${i}`
+        db.run("INSERT INTO session VALUES (?, 'proj_b', ?, ?, '/tmp', 'T', '1')", [sid, Date.now(), Date.now()])
+        db.run("INSERT INTO message VALUES (?, ?, ?, ?)", [
+          `msg_b${i}`, sid, Date.now(),
+          JSON.stringify({ role: "assistant", tokens: { input: 80, output: 0, reasoning: 0, cache: { read: 0, write: 0 } } }),
+        ])
+      }
+      db.close()
+
+      const provider = createProvider({ backend: "sqlite", dbPath })
+      const allSessions = await provider.loadSessionRecords()
+
+      const projAResult = await provider.computeProjectTokenSummary("proj_a", allSessions)
+      expect(projAResult.total.kind).toBe("known")
+      if (projAResult.total.kind === "known") {
+        expect(projAResult.total.tokens.input).toBe(150)  // 3 × 50
+      }
+
+      const projBResult = await provider.computeProjectTokenSummary("proj_b", allSessions)
+      expect(projBResult.total.kind).toBe("known")
+      if (projBResult.total.kind === "known") {
+        expect(projBResult.total.tokens.input).toBe(160)  // 2 × 80
+      }
+
+      provider.dispose?.()
+      rmSync(dir, { recursive: true, force: true })
+    })
+
+    test("computeGlobalTokenSummary marks all sessions unknown when DB has no assistant messages", async () => {
+      const dir = mkdtempSync(join(tmpdir(), "oc-hybrid-empty-"))
+      const dbPath = join(dir, "empty.db")
+      const db = new Database(dbPath)
+      db.run(`CREATE TABLE session (
+        id TEXT PRIMARY KEY, project_id TEXT, time_created INTEGER, time_updated INTEGER,
+        directory TEXT, title TEXT, version TEXT
+      )`)
+      db.run(`CREATE TABLE message (id TEXT PRIMARY KEY, session_id TEXT, time_created INTEGER, data TEXT)`)
+      db.run(`CREATE TABLE part (id TEXT PRIMARY KEY, message_id TEXT, session_id TEXT, data TEXT)`)
+      db.run(`CREATE TABLE project (id TEXT PRIMARY KEY, data TEXT)`)
+
+      for (let i = 0; i < 3; i++) {
+        db.run("INSERT INTO session VALUES (?, 'proj', ?, ?, '/tmp', 'T', '1')", [`sess_${i}`, Date.now(), Date.now()])
+        // Only user messages — no assistant tokens
+        db.run("INSERT INTO message VALUES (?, ?, ?, ?)", [
+          `msg_${i}`, `sess_${i}`, Date.now(),
+          JSON.stringify({ role: "user" }),
+        ])
+      }
+      db.close()
+
+      const provider = createProvider({ backend: "sqlite", dbPath })
+      const sessions = await provider.loadSessionRecords()
+      const result = await provider.computeGlobalTokenSummary(sessions)
+      expect(result.unknownSessions).toBe(3)
+      provider.dispose?.()
+      rmSync(dir, { recursive: true, force: true })
+    })
+  })
 })

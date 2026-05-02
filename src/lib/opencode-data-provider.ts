@@ -685,11 +685,11 @@ function createHybridProvider(
     },
 
     async computeProjectTokenSummary(projectId: string, sessions: SessionRecord[]) {
-      return aggregateMixedTokenSummaries(sessions.filter((session) => session.projectId === projectId), sourceProvider)
+      return batchAggregateTokens(sessions.filter((s) => s.projectId === projectId), sqliteProvider, jsonProvider)
     },
 
     async computeGlobalTokenSummary(sessions: SessionRecord[]) {
-      return aggregateMixedTokenSummaries(sessions, sourceProvider)
+      return batchAggregateTokens(sessions, sqliteProvider, jsonProvider)
     },
 
     async searchSessionsChat(sessions: SessionRecord[], query: string, options?: { maxResults?: number }) {
@@ -710,48 +710,55 @@ function createHybridProvider(
   }
 }
 
-async function aggregateMixedTokenSummaries(
-  sessions: SessionRecord[],
-  sourceProvider: (record: SessionRecord) => DataProvider
-): Promise<AggregateTokenSummary> {
-  if (sessions.length === 0) {
-    return {
-      total: { kind: "unknown", reason: "no_messages" },
-      knownOnly: { input: 0, output: 0, reasoning: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
-      unknownSessions: 0,
-    }
+function zeroAggregate(): AggregateTokenSummary {
+  return {
+    total: { kind: "unknown", reason: "no_messages" },
+    knownOnly: { input: 0, output: 0, reasoning: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
+    unknownSessions: 0,
   }
+}
 
-  const knownOnly = { input: 0, output: 0, reasoning: 0, cacheRead: 0, cacheWrite: 0, total: 0 }
-  let unknownSessions = 0
-
-  for (const session of sessions) {
-    const summary = await sourceProvider(session).computeSessionTokenSummary(session)
-    if (summary.kind === "known") {
-      knownOnly.input += summary.tokens.input
-      knownOnly.output += summary.tokens.output
-      knownOnly.reasoning += summary.tokens.reasoning
-      knownOnly.cacheRead += summary.tokens.cacheRead
-      knownOnly.cacheWrite += summary.tokens.cacheWrite
-      knownOnly.total += summary.tokens.total
-    } else {
-      unknownSessions += 1
-    }
+function mergeTokenAggregates(
+  a: AggregateTokenSummary,
+  b: AggregateTokenSummary,
+  totalSessions: number
+): AggregateTokenSummary {
+  const knownOnly = {
+    input: (a.knownOnly?.input ?? 0) + (b.knownOnly?.input ?? 0),
+    output: (a.knownOnly?.output ?? 0) + (b.knownOnly?.output ?? 0),
+    reasoning: (a.knownOnly?.reasoning ?? 0) + (b.knownOnly?.reasoning ?? 0),
+    cacheRead: (a.knownOnly?.cacheRead ?? 0) + (b.knownOnly?.cacheRead ?? 0),
+    cacheWrite: (a.knownOnly?.cacheWrite ?? 0) + (b.knownOnly?.cacheWrite ?? 0),
+    total: 0,
   }
-
-  if (unknownSessions === sessions.length) {
+  knownOnly.total = knownOnly.input + knownOnly.output + knownOnly.reasoning + knownOnly.cacheRead + knownOnly.cacheWrite
+  const unknownSessions = (a.unknownSessions ?? 0) + (b.unknownSessions ?? 0)
+  if (unknownSessions === totalSessions) {
     return {
       total: { kind: "unknown", reason: "missing" },
       knownOnly: { input: 0, output: 0, reasoning: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
       unknownSessions,
     }
   }
+  return { total: { kind: "known", tokens: { ...knownOnly } }, knownOnly, unknownSessions }
+}
 
-  return {
-    total: { kind: "known", tokens: { ...knownOnly } },
-    knownOnly,
-    unknownSessions,
-  }
+async function batchAggregateTokens(
+  sessions: SessionRecord[],
+  sqliteProvider: DataProvider,
+  jsonProvider: DataProvider
+): Promise<AggregateTokenSummary> {
+  if (sessions.length === 0) return zeroAggregate()
+
+  const sqliteSessions = sessions.filter(isSqliteRecord)
+  const jsonSessions = sessions.filter((s) => !isSqliteRecord(s))
+
+  const [sqliteAgg, jsonAgg] = await Promise.all([
+    sqliteSessions.length ? sqliteProvider.computeGlobalTokenSummary(sqliteSessions) : Promise.resolve(zeroAggregate()),
+    jsonSessions.length ? jsonProvider.computeGlobalTokenSummary(jsonSessions) : Promise.resolve(zeroAggregate()),
+  ])
+
+  return mergeTokenAggregates(sqliteAgg, jsonAgg, sessions.length)
 }
 
 /**
