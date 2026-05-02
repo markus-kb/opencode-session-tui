@@ -25,4 +25,5 @@ export function executeWorkspaceReload({
     refreshSessionsPanel()
   }
   notify(status)
+  setTimeout(() => notify(""), 2500)
 }

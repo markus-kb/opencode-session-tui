@@ -102,6 +102,10 @@ export const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(functio
   }, [records])
 
   useEffect(() => {
+    setCursor(0)
+  }, [projectFilter])
+
+  useEffect(() => {
     setCursor((prev) => clampCursor(prev, visibleRecords.length))
   }, [visibleRecords.length])
 
