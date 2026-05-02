@@ -6,12 +6,15 @@
 
 import { describe, expect, it } from "bun:test";
 import { mkdtempSync, writeFileSync, mkdirSync, rmSync } from "node:fs";
+import { promises as fsPromises } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { FIXTURE_STORE_ROOT } from "../helpers";
 import {
   loadProjectRecords,
   loadSessionRecords,
+  loadSessionMessagePaths,
+  loadMessagePartPaths,
   filterProjectsByState,
   type ProjectRecord,
 } from "../../src/lib/opencode-data";
@@ -141,6 +144,82 @@ describe("filterProjectsByState", () => {
 // ========================
 // Parallel reads (perf)
 // ========================
+
+// ========================
+// pathExists removal (perf)
+// ========================
+
+describe("loadSessionMessagePaths and loadMessagePartPaths — no fs.access pre-checks", () => {
+  it("loadSessionMessagePaths does not call fs.access to check whether directories exist", async () => {
+    let accessCount = 0
+    const originalAccess = fsPromises.access.bind(fsPromises)
+    fsPromises.access = async (...args: Parameters<typeof fsPromises.access>) => {
+      accessCount++
+      return originalAccess(...args)
+    }
+
+    try {
+      // Neither primary nor legacy path will exist — should return null without access()
+      await loadSessionMessagePaths("nonexistent_session_id", "/tmp/fake-oc-root-no-exist")
+      expect(accessCount).toBe(0)
+    } finally {
+      fsPromises.access = originalAccess
+    }
+  })
+
+  it("loadMessagePartPaths does not call fs.access to check whether directories exist", async () => {
+    let accessCount = 0
+    const originalAccess = fsPromises.access.bind(fsPromises)
+    fsPromises.access = async (...args: Parameters<typeof fsPromises.access>) => {
+      accessCount++
+      return originalAccess(...args)
+    }
+
+    try {
+      await loadMessagePartPaths("nonexistent_msg_id", "/tmp/fake-oc-root-no-exist")
+      expect(accessCount).toBe(0)
+    } finally {
+      fsPromises.access = originalAccess
+    }
+  })
+
+  it("loadSessionMessagePaths returns null when neither primary nor legacy path exists", async () => {
+    const result = await loadSessionMessagePaths("does_not_exist", "/tmp/oc-no-such-root")
+    expect(result).toBeNull()
+  })
+
+  it("loadSessionMessagePaths falls back to legacy path and returns files", async () => {
+    const root = mkdtempSync(join(tmpdir(), "oc-legacy-msg-"))
+    const legacyDir = join(root, "storage", "session", "message", "sess_legacy")
+    mkdirSync(legacyDir, { recursive: true })
+    writeFileSync(join(legacyDir, "msg_01.json"), "{}")
+    writeFileSync(join(legacyDir, "msg_02.json"), "{}")
+
+    try {
+      const paths = await loadSessionMessagePaths("sess_legacy", root)
+      expect(paths).not.toBeNull()
+      expect(paths!.length).toBe(2)
+      expect(paths!.every((p) => p.endsWith(".json"))).toBe(true)
+    } finally {
+      rmSync(root, { recursive: true, force: true })
+    }
+  })
+
+  it("loadMessagePartPaths falls back to legacy path and returns files", async () => {
+    const root = mkdtempSync(join(tmpdir(), "oc-legacy-part-"))
+    const legacyDir = join(root, "storage", "session", "part", "msg_legacy")
+    mkdirSync(legacyDir, { recursive: true })
+    writeFileSync(join(legacyDir, "part_01.json"), "{}")
+
+    try {
+      const paths = await loadMessagePartPaths("msg_legacy", root)
+      expect(paths).not.toBeNull()
+      expect(paths!.length).toBe(1)
+    } finally {
+      rmSync(root, { recursive: true, force: true })
+    }
+  })
+})
 
 describe("loadSessionRecords parallel reads", () => {
   /**

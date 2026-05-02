@@ -602,31 +602,21 @@ function parseMessageTokens(tokens: MessageTokens | null | undefined): TokenBrea
 export async function loadSessionMessagePaths(sessionId: string, root: string): Promise<string[] | null> {
   // Primary path: storage/message/<sessionId>
   const primaryPath = join(root, 'storage', 'message', sessionId)
-  if (await pathExists(primaryPath)) {
-    try {
-      const entries = await fs.readdir(primaryPath)
-      return entries
-        .filter((e) => e.endsWith('.json'))
-        .map((e) => join(primaryPath, e))
-    } catch {
-      return null
-    }
+  try {
+    const entries = await fs.readdir(primaryPath)
+    return entries.filter((e) => e.endsWith('.json')).map((e) => join(primaryPath, e))
+  } catch (err: any) {
+    if (err?.code !== 'ENOENT') return null
   }
 
   // Legacy fallback: storage/session/message/<sessionId>
   const legacyPath = join(root, 'storage', 'session', 'message', sessionId)
-  if (await pathExists(legacyPath)) {
-    try {
-      const entries = await fs.readdir(legacyPath)
-      return entries
-        .filter((e) => e.endsWith('.json'))
-        .map((e) => join(legacyPath, e))
-    } catch {
-      return null
-    }
+  try {
+    const entries = await fs.readdir(legacyPath)
+    return entries.filter((e) => e.endsWith('.json')).map((e) => join(legacyPath, e))
+  } catch {
+    return null
   }
-
-  return null
 }
 
 export async function computeSessionTokenSummary(
@@ -764,31 +754,21 @@ async function computeAggregateTokenSummary(
 export async function loadMessagePartPaths(messageId: string, root: string): Promise<string[] | null> {
   // Primary path: storage/part/<messageId>
   const primaryPath = join(root, 'storage', 'part', messageId)
-  if (await pathExists(primaryPath)) {
-    try {
-      const entries = await fs.readdir(primaryPath)
-      return entries
-        .filter((e) => e.endsWith('.json'))
-        .map((e) => join(primaryPath, e))
-    } catch {
-      return null
-    }
+  try {
+    const entries = await fs.readdir(primaryPath)
+    return entries.filter((e) => e.endsWith('.json')).map((e) => join(primaryPath, e))
+  } catch (err: any) {
+    if (err?.code !== 'ENOENT') return null
   }
 
   // Legacy fallback: storage/session/part/<messageId>
   const legacyPath = join(root, 'storage', 'session', 'part', messageId)
-  if (await pathExists(legacyPath)) {
-    try {
-      const entries = await fs.readdir(legacyPath)
-      return entries
-        .filter((e) => e.endsWith('.json'))
-        .map((e) => join(legacyPath, e))
-    } catch {
-      return null
-    }
+  try {
+    const entries = await fs.readdir(legacyPath)
+    return entries.filter((e) => e.endsWith('.json')).map((e) => join(legacyPath, e))
+  } catch {
+    return null
   }
-
-  return null
 }
 
 /**
