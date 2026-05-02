@@ -196,48 +196,43 @@ export function formatDisplayPath(path: string, options?: { fullPath?: boolean }
 
 export async function loadProjectRecords(options: LoadOptions = {}): Promise<ProjectRecord[]> {
   const root = resolve(options.root ?? DEFAULT_ROOT)
-  const records: ProjectRecord[] = []
 
-  for (const bucket of PROJECT_BUCKETS) {
-    const bucketDir = join(root, "storage", bucket)
-    if (!(await pathExists(bucketDir))) {
-      continue
-    }
-    const entries = await fs.readdir(bucketDir)
-    for (const entry of entries) {
-      if (!entry.endsWith(".json")) {
-        continue
-      }
-      const filePath = join(bucketDir, entry)
-      const payload = await readJsonFile<any>(filePath)
-      if (!payload) {
-        continue
-      }
-      const createdAt = msToDate(payload?.time?.created)
-      const worktree = expandUserPath(payload?.worktree ?? undefined)
-      const state = await computeState(worktree)
-      records.push({
-        index: 0,
-        bucket,
-        filePath,
-        projectId: String(payload?.id ?? entry.replace(/\.json$/i, "")),
-        worktree: worktree ?? "",
-        vcs: typeof payload?.vcs === "string" ? payload.vcs : null,
-        createdAt,
-        state,
-      })
-    }
-  }
+  const bucketResults = await Promise.all(
+    PROJECT_BUCKETS.map(async (bucket) => {
+      const bucketDir = join(root, "storage", bucket)
+      if (!(await pathExists(bucketDir))) return []
+      const entries = await fs.readdir(bucketDir)
+      return Promise.all(
+        entries
+          .filter((e) => e.endsWith(".json"))
+          .map(async (entry) => {
+            const filePath = join(bucketDir, entry)
+            const payload = await readJsonFile<any>(filePath)
+            if (!payload) return null
+            const worktree = expandUserPath(payload?.worktree ?? undefined)
+            const [state] = await Promise.all([computeState(worktree)])
+            return {
+              index: 0,
+              bucket,
+              filePath,
+              projectId: String(payload?.id ?? entry.replace(/\.json$/i, "")),
+              worktree: worktree ?? "",
+              vcs: typeof payload?.vcs === "string" ? payload.vcs : null,
+              createdAt: msToDate(payload?.time?.created),
+              state,
+            } satisfies ProjectRecord
+          })
+      )
+    })
+  )
+
+  const records = bucketResults.flat().filter((r): r is ProjectRecord => r !== null)
 
   records.sort((a, b) => {
     const dateDelta = compareDates(a.createdAt, b.createdAt)
-    if (dateDelta !== 0) {
-      return dateDelta
-    }
+    if (dateDelta !== 0) return dateDelta
     const bucketDelta = (BUCKET_SORT.get(a.bucket) ?? 0) - (BUCKET_SORT.get(b.bucket) ?? 0)
-    if (bucketDelta !== 0) {
-      return bucketDelta
-    }
+    if (bucketDelta !== 0) return bucketDelta
     return a.projectId.localeCompare(b.projectId)
   })
 
@@ -253,56 +248,48 @@ export async function loadSessionRecords(options: SessionLoadOptions = {}): Prom
   }
 
   const projectDirs = await fs.readdir(sessionRoot, { withFileTypes: true })
-  const sessions: SessionRecord[] = []
 
   // Some older OpenCode layouts may store message/part data under `storage/session/*`.
   // Avoid treating those as project IDs when loading sessions.
   const reservedSessionDirs = new Set(["message", "part"])
 
-  for (const dirent of projectDirs) {
-    if (!dirent.isDirectory()) {
-      continue
-    }
-    const currentProjectId = dirent.name
-    if (reservedSessionDirs.has(currentProjectId)) {
-      continue
-    }
-    if (options.projectId && options.projectId !== currentProjectId) {
-      continue
-    }
-    const projectDir = join(sessionRoot, dirent.name)
-    const files = await fs.readdir(projectDir)
-    for (const file of files) {
-      if (!file.endsWith(".json")) {
-        continue
-      }
-      const filePath = join(projectDir, file)
-      const payload = await readJsonFile<any>(filePath)
-      if (!payload) {
-        continue
-      }
-      const createdAt = msToDate(payload?.time?.created)
-      const updatedAt = msToDate(payload?.time?.updated)
-      const directory = expandUserPath(payload?.directory ?? undefined)
-      sessions.push({
-        index: 0,
-        filePath,
-        sessionId: String(payload?.id ?? file.replace(/\.json$/i, "")),
-        projectId: String(payload?.projectID ?? currentProjectId),
-        directory: directory ?? "",
-        title: typeof payload?.title === "string" ? payload.title : "",
-        version: typeof payload?.version === "string" ? payload.version : "",
-        createdAt,
-        updatedAt,
-      })
-    }
-  }
+  const activeDirs = projectDirs.filter(
+    (d) => d.isDirectory() && !reservedSessionDirs.has(d.name) && (!options.projectId || options.projectId === d.name)
+  )
+
+  const perDirResults = await Promise.all(
+    activeDirs.map(async (dirent) => {
+      const currentProjectId = dirent.name
+      const projectDir = join(sessionRoot, dirent.name)
+      const files = await fs.readdir(projectDir)
+      return Promise.all(
+        files
+          .filter((f) => f.endsWith(".json"))
+          .map(async (file) => {
+            const filePath = join(projectDir, file)
+            const payload = await readJsonFile<any>(filePath)
+            if (!payload) return null
+            return {
+              index: 0,
+              filePath,
+              sessionId: String(payload?.id ?? file.replace(/\.json$/i, "")),
+              projectId: String(payload?.projectID ?? currentProjectId),
+              directory: expandUserPath(payload?.directory ?? undefined) ?? "",
+              title: typeof payload?.title === "string" ? payload.title : "",
+              version: typeof payload?.version === "string" ? payload.version : "",
+              createdAt: msToDate(payload?.time?.created),
+              updatedAt: msToDate(payload?.time?.updated),
+            } satisfies SessionRecord
+          })
+      )
+    })
+  )
+
+  const sessions = perDirResults.flat().filter((s): s is SessionRecord => s !== null)
 
   sessions.sort((a, b) => {
     const updatedDelta = compareDates(a.updatedAt ?? a.createdAt, b.updatedAt ?? b.createdAt)
-    if (updatedDelta !== 0) {
-      return updatedDelta
-    }
+    if (updatedDelta !== 0) return updatedDelta
     return a.sessionId.localeCompare(b.sessionId)
   })
 
@@ -740,43 +727,28 @@ async function computeAggregateTokenSummary(
     }
   }
 
+  const normalizedRoot = resolve(root)
+  const results = await Promise.all(sessions.map((s) => computeSessionTokenSummary(s, normalizedRoot)))
+
   const knownOnly = emptyBreakdown()
   let unknownSessions = 0
-
-  const normalizedRoot = resolve(root)
-
-  for (const session of sessions) {
-    const summary = await computeSessionTokenSummary(session, normalizedRoot)
+  for (const summary of results) {
     if (summary.kind === "known") {
       knownOnly.input += summary.tokens.input
       knownOnly.output += summary.tokens.output
       knownOnly.reasoning += summary.tokens.reasoning
       knownOnly.cacheRead += summary.tokens.cacheRead
       knownOnly.cacheWrite += summary.tokens.cacheWrite
-      knownOnly.total += summary.tokens.total
     } else {
       unknownSessions += 1
     }
   }
-
-  // Recompute knownOnly.total (defensive)
   knownOnly.total = knownOnly.input + knownOnly.output + knownOnly.reasoning + knownOnly.cacheRead + knownOnly.cacheWrite
 
-  // If all sessions are unknown, total is unknown
   if (unknownSessions === sessions.length) {
-    return {
-      total: { kind: 'unknown', reason: 'missing' },
-      knownOnly: emptyBreakdown(),
-      unknownSessions,
-    }
+    return { total: { kind: 'unknown', reason: 'missing' }, knownOnly: emptyBreakdown(), unknownSessions }
   }
-
-  // Otherwise, total is the known aggregate (even if some sessions are unknown)
-  return {
-    total: { kind: 'known', tokens: { ...knownOnly } },
-    knownOnly,
-    unknownSessions,
-  }
+  return { total: { kind: 'known', tokens: { ...knownOnly } }, knownOnly, unknownSessions }
 }
 
 // ========================

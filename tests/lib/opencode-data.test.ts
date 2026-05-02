@@ -5,9 +5,13 @@
  */
 
 import { describe, expect, it } from "bun:test";
+import { mkdtempSync, writeFileSync, mkdirSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { FIXTURE_STORE_ROOT } from "../helpers";
 import {
   loadProjectRecords,
+  loadSessionRecords,
   filterProjectsByState,
   type ProjectRecord,
 } from "../../src/lib/opencode-data";
@@ -132,4 +136,111 @@ describe("filterProjectsByState", () => {
     expect(unknown).toBeArray();
     expect(unknown.length).toBe(0);
   });
+});
+
+// ========================
+// Parallel reads (perf)
+// ========================
+
+describe("loadSessionRecords parallel reads", () => {
+  /**
+   * Build a temp store with `count` session files under one project.
+   * Each file contains a distinct title so we can verify all are loaded.
+   */
+  function buildTempStore(count: number): string {
+    const root = mkdtempSync(join(tmpdir(), "oc-data-parallel-"))
+    const projDir = join(root, "storage", "session", "proj_perf")
+    mkdirSync(projDir, { recursive: true })
+    for (let i = 0; i < count; i++) {
+      const sid = `sess_perf_${i}`
+      writeFileSync(
+        join(projDir, `${sid}.json`),
+        JSON.stringify({
+          id: sid,
+          projectID: "proj_perf",
+          title: `Session ${i}`,
+          directory: "/tmp",
+          version: "1.0",
+          time: { created: 1_700_000_000_000 + i, updated: 1_700_000_000_000 + i },
+        })
+      )
+    }
+    return root
+  }
+
+  it("loads all session files correctly regardless of read strategy", async () => {
+    const root = buildTempStore(20)
+    try {
+      const sessions = await loadSessionRecords({ root })
+      expect(sessions).toHaveLength(20)
+      const ids = sessions.map((s) => s.sessionId).sort()
+      expect(ids[0]).toBe("sess_perf_0")
+      expect(ids[19]).toBe("sess_perf_9")  // lexicographic: 9 > 19... adjust
+    } finally {
+      rmSync(root, { recursive: true, force: true })
+    }
+  })
+
+  it("all 20 sessions are present with correct titles", async () => {
+    const root = buildTempStore(20)
+    try {
+      const sessions = await loadSessionRecords({ root })
+      expect(sessions).toHaveLength(20)
+      const titles = new Set(sessions.map((s) => s.title))
+      // Every title from "Session 0" through "Session 19" must be present
+      for (let i = 0; i < 20; i++) {
+        expect(titles.has(`Session ${i}`)).toBe(true)
+      }
+    } finally {
+      rmSync(root, { recursive: true, force: true })
+    }
+  })
+
+  it("parallel reads complete faster than sequential would for many files", async () => {
+    // Build 10 session files and instrument readFile to add a small delay.
+    // With sequential reads: ≥ 10 × delay.
+    // With parallel reads: ≈ 1 × delay.
+    // We use a 5 ms artificial delay; the sequential floor would be 50 ms.
+    const DELAY_MS = 5
+    const FILE_COUNT = 10
+
+    const root = buildTempStore(FILE_COUNT)
+    try {
+      // Wrap the module's internal fs by patching its readFile at the Node level.
+      // Since we cannot mock node:fs cleanly without jest, we verify via the
+      // concurrent-access pattern: track max in-flight reads.
+      let inFlight = 0
+      let maxInFlight = 0
+
+      // Patch the global fs promises read that the module uses.
+      // We replace it on the module's imported instance via a Proxy on process.
+      // Simplest reliable approach in Bun: override at prototype level temporarily.
+      const { promises: fsPromises } = await import("node:fs")
+      const originalReadFile = fsPromises.readFile.bind(fsPromises)
+
+      fsPromises.readFile = async (...args: Parameters<typeof fsPromises.readFile>) => {
+        inFlight++
+        if (inFlight > maxInFlight) maxInFlight = inFlight
+        await new Promise((r) => setTimeout(r, DELAY_MS))
+        const result = await originalReadFile(...args)
+        inFlight--
+        return result
+      }
+
+      const start = performance.now()
+      const sessions = await loadSessionRecords({ root })
+      const elapsed = performance.now() - start
+
+      // Restore
+      fsPromises.readFile = originalReadFile
+
+      expect(sessions).toHaveLength(FILE_COUNT)
+      // With parallel reads maxInFlight > 1 (multiple reads in flight simultaneously)
+      expect(maxInFlight).toBeGreaterThan(1)
+      // And total time is much less than FILE_COUNT * DELAY_MS (50 ms)
+      expect(elapsed).toBeLessThan(FILE_COUNT * DELAY_MS)
+    } finally {
+      rmSync(root, { recursive: true, force: true })
+    }
+  })
 });
