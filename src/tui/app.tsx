@@ -654,6 +654,10 @@ export const App = ({
 
   useKeyboard(handleGlobalKey)
 
+  const handleProjectCursorChange = useCallback((projectId: string | null) => {
+    setSessionFilter(projectId)
+  }, [])
+
   const handleNavigateToSessions = useCallback(
     (projectId: string) => {
       const navigation = getProjectSessionsNavigation(projectId)
@@ -751,6 +755,7 @@ export const App = ({
             onNotify={notify}
             requestConfirm={requestConfirm}
             onNavigateToSessions={handleNavigateToSessions}
+            onProjectCursorChange={handleProjectCursorChange}
           />
           <SessionsPanel
             ref={sessionsRef}

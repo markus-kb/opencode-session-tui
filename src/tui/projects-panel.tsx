@@ -25,6 +25,10 @@ export type PanelHandle = {
   refresh: () => void
 }
 
+export type ProjectSortMode = "alpha" | "created" | "updated"
+
+const SORT_MODE_CYCLE: ProjectSortMode[] = ["created", "alpha", "updated"]
+
 export type ProjectsPanelProps = {
   provider: DataProvider
   active: boolean
@@ -39,6 +43,7 @@ export type ProjectsPanelProps = {
   onNotify: (message: string, level?: NotificationLevel) => void
   requestConfirm: (state: ConfirmState) => void
   onNavigateToSessions: (projectId: string) => void
+  onProjectCursorChange?: (projectId: string | null) => void
 }
 
 const MAX_CONFIRM_PREVIEW = 5
@@ -46,14 +51,39 @@ const MAX_CONFIRM_PREVIEW = 5
 export const getProjectsPanelRecords = (allProjects: ProjectRecord[]): ProjectRecord[] => allProjects
 
 export const ProjectsPanel = forwardRef<PanelHandle, ProjectsPanelProps>(function ProjectsPanel(
-  { provider, active, locked, searchQuery, allProjects, projectIndexLoaded, allSessions, resourcePolicy, cmdSet, onRefresh, onNotify, requestConfirm, onNavigateToSessions },
+  { provider, active, locked, searchQuery, allProjects, projectIndexLoaded, allSessions, resourcePolicy, cmdSet, onRefresh, onNotify, requestConfirm, onNavigateToSessions, onProjectCursorChange },
   ref,
 ) {
   const [missingOnly, setMissingOnly] = useState(false)
+  const [sortMode, setSortMode] = useState<ProjectSortMode>("created")
   const [cursor, setCursor] = useState(0)
   const [selectedIndexes, setSelectedIndexes] = useState<Set<number>>(new Set())
   const [currentProjectTokens, setCurrentProjectTokens] = useState<AggregateTokenSummary | null>(null)
-  const records = useMemo(() => getProjectsPanelRecords(allProjects), [allProjects])
+
+  const projectLastUpdated = useMemo(() => {
+    const map = new Map<string, number>()
+    for (const s of allSessions) {
+      const t = s.updatedAt?.getTime() ?? s.createdAt?.getTime() ?? 0
+      const prev = map.get(s.projectId) ?? 0
+      if (t > prev) map.set(s.projectId, t)
+    }
+    return map
+  }, [allSessions])
+
+  const records = useMemo(() => {
+    const base = getProjectsPanelRecords(allProjects)
+    if (sortMode === "alpha") {
+      return [...base].sort((a, b) => a.projectId.localeCompare(b.projectId))
+    }
+    if (sortMode === "updated") {
+      return [...base].sort((a, b) => {
+        const aT = projectLastUpdated.get(a.projectId) ?? a.createdAt?.getTime() ?? 0
+        const bT = projectLastUpdated.get(b.projectId) ?? b.createdAt?.getTime() ?? 0
+        return bT - aT
+      })
+    }
+    return base
+  }, [allProjects, sortMode, projectLastUpdated])
 
   const missingCount = useMemo(() => records.filter((record) => record.state === "missing").length, [records])
 
@@ -78,6 +108,10 @@ export const ProjectsPanel = forwardRef<PanelHandle, ProjectsPanelProps>(functio
   useEffect(() => {
     setCursor((prev) => clampCursor(prev, visibleRecords.length))
   }, [visibleRecords.length])
+
+  useEffect(() => {
+    onProjectCursorChange?.(currentRecord?.projectId ?? null)
+  }, [currentRecord, onProjectCursorChange])
 
   useEffect(() => {
     setCurrentProjectTokens(null)
@@ -171,6 +205,14 @@ export const ProjectsPanel = forwardRef<PanelHandle, ProjectsPanelProps>(functio
         }
         return
       }
+      if (action === "cycleSortMode") {
+        setSortMode((prev) => {
+          const idx = SORT_MODE_CYCLE.indexOf(prev)
+          return SORT_MODE_CYCLE[(idx + 1) % SORT_MODE_CYCLE.length]
+        })
+        setCursor(0)
+        return
+      }
     },
     [active, locked, currentRecord, visibleRecords, onNavigateToSessions, requestDeletion, toggleSelection, cmdSet],
   )
@@ -198,7 +240,7 @@ export const ProjectsPanel = forwardRef<PanelHandle, ProjectsPanelProps>(functio
       }}
     >
       <box flexDirection="column" marginBottom={1}>
-        <text>Filter: {missingOnly ? "missing only" : "all"}</text>
+        <text>Filter: {missingOnly ? "missing only" : "all"} | Sort: {sortMode}</text>
         <text>
           Total: {records.length} | Missing: {missingCount} | Selected: {selectedIndexes.size}
         </text>
@@ -208,6 +250,7 @@ export const ProjectsPanel = forwardRef<PanelHandle, ProjectsPanelProps>(functio
             { key: "Space", label: "select" },
             { key: "A", label: "select all" },
             { key: "M", label: "toggle missing" },
+            { key: "S", label: "sort" },
             { key: "D", label: "delete" },
             { key: "Enter", label: "view sessions" },
             { key: "Esc", label: "clear" },

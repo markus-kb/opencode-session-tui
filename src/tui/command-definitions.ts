@@ -39,6 +39,7 @@ export function buildTuiCommands(): TuiCommandSet {
     cmd("projects:clearSelection", "Clear selection", "projects", ["escape"]),
     cmd("projects:deleteSelected", "Delete", "projects", ["d"]),
     cmd("projects:navigateToSessions", "Open sessions", "projects", ["enter"]),
+    cmd("projects:cycleSortMode", "Sort", "projects", ["s"]),
 
     cmd("sessions:toggleSelect", "Toggle selection", "sessions", ["space"]),
     cmd("sessions:selectAll", "Select all", "sessions", ["a"]),
