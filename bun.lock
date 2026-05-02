@@ -5,8 +5,8 @@
     "": {
       "name": "opencode-tools",
       "dependencies": {
-        "@opentui/core": "^0.1.44",
-        "@opentui/react": "^0.1.44",
+        "@opentui/core": "0.1.44",
+        "@opentui/react": "0.1.44",
         "commander": "^12.0.0",
         "fast-fuzzy": "^1.12.0",
         "react": "^19.0.0",
