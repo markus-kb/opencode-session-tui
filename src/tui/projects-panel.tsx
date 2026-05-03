@@ -16,6 +16,7 @@ import { buildDeletionConfirmDetails, buildDeletionConfirmTitle } from "./confir
 import { formatTokenCount } from "./format"
 import { clampCursor, clearSelection, getSelectedRecords, pruneSelectedIndexes, toggleAllVisibleIndexes, toggleSelectedIndex } from "./panel-selection"
 import { openPath } from "../lib/open-path"
+import { shouldOpenInExplorer } from "./open-in-explorer-guard"
 import { resolveProjectPanelInputAction } from "./projects-panel-input"
 import { sortProjectRecords } from "./projects-panel-sort"
 import type { ResourcePolicy } from "./resource-policy"
@@ -196,8 +197,8 @@ export const ProjectsPanel = forwardRef<PanelHandle, ProjectsPanelProps>(functio
         return
       }
       if (action === "openInExplorer") {
-        if (currentRecord?.worktree) {
-          openPath(currentRecord.worktree).catch(() => {
+        if (shouldOpenInExplorer(currentRecord)) {
+          openPath(currentRecord!.worktree).catch(() => {
             onNotify("Failed to open explorer.", "error")
           })
         }
@@ -269,7 +270,7 @@ export const ProjectsPanel = forwardRef<PanelHandle, ProjectsPanelProps>(functio
             focused={active && !locked}
             showScrollIndicator
             showDescription
-            wrapSelection={false}
+            wrapSelection={true}
           />
           {currentRecord ? (
             <box title="Details" style={{ border: true, marginTop: 1, paddingTop: 1, paddingLeft: 1, paddingRight: 1 }}>

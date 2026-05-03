@@ -55,6 +55,18 @@ export function clampCursor(cursor: number, visibleCount: number): number {
   return Math.min(cursor, visibleCount - 1)
 }
 
+/**
+ * Cursor navigation with wrap-around for use when wrapSelection is enabled.
+ * Up at index 0 → last index; down at last index → 0.
+ * Handles arbitrary over/under-bounds values via modulo.
+ */
+export function wrapCursor(cursor: number, visibleCount: number): number {
+  if (visibleCount === 0) {
+    return 0
+  }
+  return ((cursor % visibleCount) + visibleCount) % visibleCount
+}
+
 export function getSelectedRecords<T extends { index: number }>(
   records: T[],
   selectedIndexes: Set<number>,

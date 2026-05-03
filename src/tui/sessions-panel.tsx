@@ -411,7 +411,7 @@ export const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(functio
             focused={active && !locked && !isSelectingProject && !isRenaming}
             showScrollIndicator
             showDescription={false}
-            wrapSelection={false}
+            wrapSelection={true}
           />
           {currentSession ? (
             <box title="Details" style={{ border: true, marginTop: 1, paddingTop: 1, paddingLeft: 1, paddingRight: 1 }}>
