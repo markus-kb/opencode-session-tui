@@ -12,7 +12,7 @@ export const leftPaneStyle = {
   flexShrink: 0,
   minWidth: 32,
   flexDirection: "column" as const,
-  padding: 1,
+  padding: 0,
   overflow: "hidden" as const,
 }
 
@@ -21,7 +21,14 @@ function sanitizePreview(text: string): string {
   return compact.length > 0 ? compact : "[no preview]"
 }
 
-function clampSnippet(text: string, maxChars = 56): string {
+// Left pane is 42 cols wide, border eats 2, leaving 40 usable.
+// Fixed prefix: marker(1) + space(1) + num(3) + space(1) + role(1) + space(1) + time(5) + space(1) = 14 chars.
+// Preview budget = 40 - 14 = 26 chars.
+const LEFT_PANE_INNER_WIDTH = 40
+const ROW_PREFIX_WIDTH = 14
+const PREVIEW_MAX_CHARS = LEFT_PANE_INNER_WIDTH - ROW_PREFIX_WIDTH  // 26
+
+function clampSnippet(text: string, maxChars = PREVIEW_MAX_CHARS): string {
   if (text.length <= maxChars) return text
   return text.slice(0, Math.max(1, maxChars - 3)).trimEnd() + "..."
 }
@@ -51,10 +58,13 @@ export function buildChatMessageOption(msg: ChatMessage, idx: number): SelectOpt
   }
 }
 
-function formatListRowLabel(msg: ChatMessage, idx: number, selected: boolean): string {
+// Format: marker(1) space(1) number(3,right-aligned) space(1) role(1) space(1) time(5) space(1) preview
+// Example: ">   1 U 22:33 hello world..."
+// Example: "   42 A 10:01 [no preview]"
+export function formatListRowLabel(msg: ChatMessage, idx: number, selected: boolean): string {
   const marker = selected ? ">" : " "
   const role = msg.role === "user" ? "U" : msg.role === "assistant" ? "A" : "?"
-  const number = String(idx + 1).padStart(4, " ")
+  const number = String(idx + 1).padStart(3, " ")
   const timestamp = msg.createdAt
     ? msg.createdAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
     : "??:??"
@@ -136,7 +146,7 @@ export const ChatViewer = ({
   }, [messages, onHydrateMessage])
 
   const messageRows = useMemo(
-    () => buildVisibleMessageRows(messages, cursor, 14),
+    () => buildVisibleMessageRows(messages, cursor, 12),
     [messages, cursor],
   )
 
