@@ -39,6 +39,8 @@ Thumbs.db
 .vscode/
 *.swp
 
+.claude/
+
 # Python byproducts
 __pycache__/
 *.py[cod]

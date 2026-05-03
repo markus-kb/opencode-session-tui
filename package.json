@@ -16,7 +16,7 @@
     "bun.lock",
     "tsconfig.json",
     "docs/CHANGES.md",
-    "opencode-manager.bat",
+      "session-tui.bat",
     "manage_opencode_projects.py",
     "LICENSE"
   ],

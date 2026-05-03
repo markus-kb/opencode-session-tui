@@ -32,7 +32,7 @@ For local development on Windows, use the package scripts instead of calling sou
 bun run start
 ```
 
-You can also double-click `opencode-manager.bat` from this repository root to launch the app in a Windows terminal.
+You can also double-click `session-tui.bat` from this repository root to launch the app in a Windows terminal.
 
 Additional options:
 
