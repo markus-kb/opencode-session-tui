@@ -81,6 +81,7 @@ export interface ProjectRecord {
   worktree: string
   vcs: string | null
   createdAt: Date | null
+  updatedAt: Date | null
   state: ProjectState
 }
 
@@ -219,6 +220,7 @@ export async function loadProjectRecords(options: LoadOptions = {}): Promise<Pro
               worktree: worktree ?? "",
               vcs: typeof payload?.vcs === "string" ? payload.vcs : null,
               createdAt: msToDate(payload?.time?.created),
+              updatedAt: msToDate(payload?.time?.updated),
               state,
             } satisfies ProjectRecord
           })

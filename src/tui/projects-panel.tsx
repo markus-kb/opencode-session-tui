@@ -60,16 +60,6 @@ export const ProjectsPanel = forwardRef<PanelHandle, ProjectsPanelProps>(functio
   const [selectedIndexes, setSelectedIndexes] = useState<Set<number>>(new Set())
   const [currentProjectTokens, setCurrentProjectTokens] = useState<AggregateTokenSummary | null>(null)
 
-  const projectLastUpdated = useMemo(() => {
-    const map = new Map<string, number>()
-    for (const s of allSessions) {
-      const t = s.updatedAt?.getTime() ?? s.createdAt?.getTime() ?? 0
-      const prev = map.get(s.projectId) ?? 0
-      if (t > prev) map.set(s.projectId, t)
-    }
-    return map
-  }, [allSessions])
-
   const records = useMemo(() => {
     const base = getProjectsPanelRecords(allProjects)
     if (sortMode === "alpha") {
@@ -77,13 +67,13 @@ export const ProjectsPanel = forwardRef<PanelHandle, ProjectsPanelProps>(functio
     }
     if (sortMode === "updated") {
       return [...base].sort((a, b) => {
-        const aT = projectLastUpdated.get(a.projectId) ?? a.createdAt?.getTime() ?? 0
-        const bT = projectLastUpdated.get(b.projectId) ?? b.createdAt?.getTime() ?? 0
+        const aT = a.updatedAt?.getTime() ?? a.createdAt?.getTime() ?? 0
+        const bT = b.updatedAt?.getTime() ?? b.createdAt?.getTime() ?? 0
         return bT - aT
       })
     }
     return base
-  }, [allProjects, sortMode, projectLastUpdated])
+  }, [allProjects, sortMode])
 
   const missingCount = useMemo(() => records.filter((record) => record.state === "missing").length, [records])
 
@@ -284,7 +274,7 @@ export const ProjectsPanel = forwardRef<PanelHandle, ProjectsPanelProps>(functio
             <box title="Details" style={{ border: true, marginTop: 1, paddingTop: 1, paddingLeft: 1, paddingRight: 1 }}>
               <text>Project: {currentRecord.projectId}  State: {currentRecord.state}</text>
               <text>Bucket: {currentRecord.bucket}  VCS: {currentRecord.vcs || "-"}</text>
-              <text>Created: {currentRecord.createdAt ? formatDate(currentRecord.createdAt) : "unknown"}</text>
+              <text>Updated: {currentRecord.updatedAt ? formatDate(currentRecord.updatedAt) : (currentRecord.createdAt ? formatDate(currentRecord.createdAt) : "unknown")}</text>
               <text>Path: {formatDisplayPath(currentRecord.worktree, { fullPath: true })}</text>
               <box style={{ marginTop: 1 }}>
                 <text fg={PALETTE.accent}>Tokens: </text>

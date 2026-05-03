@@ -2,7 +2,9 @@
   "id": "proj_present",
   "worktree": "tests/fixtures/worktrees/my-present-project",
   "vcs": "git",
+  "sandboxes": [],
   "time": {
-    "created": 1704067200000
+    "created": 1704067200000,
+    "updated": 1704153600000
   }
 }

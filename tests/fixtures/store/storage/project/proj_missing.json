@@ -2,7 +2,9 @@
   "id": "proj_missing",
   "worktree": "tests/fixtures/worktrees/nonexistent-project",
   "vcs": "git",
+  "sandboxes": [],
   "time": {
-    "created": 1704153600000
+    "created": 1704153600000,
+    "updated": 1704240000000
   }
 }

@@ -38,6 +38,7 @@ describe("loadProjectRecords", () => {
       expect(record).toHaveProperty("worktree");
       expect(record).toHaveProperty("vcs");
       expect(record).toHaveProperty("createdAt");
+      expect(record).toHaveProperty("updatedAt");
       expect(record).toHaveProperty("state");
     }
   });
@@ -59,6 +60,8 @@ describe("loadProjectRecords", () => {
     expect(present!.vcs).toBe("git");
     expect(present!.createdAt).toBeInstanceOf(Date);
     expect(present!.createdAt!.getTime()).toBe(1704067200000);
+    expect(present!.updatedAt).toBeInstanceOf(Date);
+    expect(present!.updatedAt!.getTime()).toBe(1704153600000);
 
     // Find proj_missing
     const missing = records.find((r) => r.projectId === "proj_missing");
@@ -67,6 +70,8 @@ describe("loadProjectRecords", () => {
     expect(missing!.vcs).toBe("git");
     expect(missing!.createdAt).toBeInstanceOf(Date);
     expect(missing!.createdAt!.getTime()).toBe(1704153600000);
+    expect(missing!.updatedAt).toBeInstanceOf(Date);
+    expect(missing!.updatedAt!.getTime()).toBe(1704240000000);
   });
 
   it("sorts by createdAt descending (newest first)", async () => {
