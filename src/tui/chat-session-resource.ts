@@ -38,3 +38,20 @@ export function getFailedHydrationMessage(message: ChatMessage): ChatMessage {
     totalChars: 0,
   }
 }
+
+/**
+ * Call onHydrate for every message whose parts have not yet been loaded
+ * (parts === null). Used to trigger background hydration of the full
+ * message list so preview text updates without requiring the user to
+ * navigate to each message individually.
+ */
+export function sweepUnhydratedMessages(
+  messages: ChatMessage[],
+  onHydrate: (message: ChatMessage) => void,
+): void {
+  for (const message of messages) {
+    if (message.parts === null) {
+      onHydrate(message)
+    }
+  }
+}

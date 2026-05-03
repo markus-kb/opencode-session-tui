@@ -1,6 +1,7 @@
 import type { SelectOption } from "@opentui/core"
 import { useEffect, useMemo } from "react"
 import { formatDate, type ChatMessage, type ChatPart, type SessionRecord } from "../lib/opencode-data"
+import { sweepUnhydratedMessages } from "./chat-session-resource"
 import { formatTokenCount } from "./format"
 import { OverlayFrame, PALETTE, ShortcutHints } from "./components"
 
@@ -127,6 +128,12 @@ export const ChatViewer = ({
       onHydrateMessage(currentMessage)
     }
   }, [currentMessage, onHydrateMessage])
+
+  // Background sweep: hydrate all un-hydrated messages so their preview
+  // text updates in the list without requiring the user to visit each one.
+  useEffect(() => {
+    sweepUnhydratedMessages(messages, onHydrateMessage)
+  }, [messages, onHydrateMessage])
 
   const messageRows = useMemo(
     () => buildVisibleMessageRows(messages, cursor, 14),
