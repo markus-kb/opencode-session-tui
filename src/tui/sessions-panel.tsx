@@ -340,7 +340,7 @@ export const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(functio
   return (
     <box title="Sessions" style={{ border: true, borderColor: active ? "#22c55e" : "#374151", flexDirection: "column", flexGrow: active ? 6 : 4, padding: 1 }}>
       <box flexDirection="column" marginBottom={1}>
-        <text>Filter: {projectFilter ? `project ${projectFilter}` : "none"} | Sort: {sortMode} | Search: {searchQuery ? `${searchQuery} (fuzzy)` : "(none)"} | Selected: {selectedIndexes.size}</text>
+        <text>Filter: {projectFilter ? `project ${projectFilter.slice(0, 12)}…` : "none"} | Sort: {sortMode} | Sel: {selectedIndexes.size}{searchQuery ? ` | Search: ${searchQuery}` : ""}</text>
         <ShortcutHints
           prefix="Keys:"
           items={[
@@ -414,31 +414,34 @@ export const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(functio
             wrapSelection={false}
           />
           {currentSession ? (
-            <box title="Details" style={{ border: true, marginTop: 1, padding: 1 }}>
-              <text>Session: {currentSession.sessionId}  Version: {currentSession.version || "unknown"}</text>
+            <box title="Details" style={{ border: true, marginTop: 1, paddingTop: 1, paddingLeft: 1, paddingRight: 1 }}>
+              <text>Session: {currentSession.sessionId}  v{currentSession.version || "?"}</text>
               <text>Title: {currentSession.title && currentSession.title.trim().length > 0 ? currentSession.title : "(no title)"}</text>
               <text>Project: {currentSession.projectId}</text>
               <text>Updated: {formatDate(currentSession.updatedAt || currentSession.createdAt)}</text>
-              <text>Directory:</text>
-              <text>{formatDisplayPath(currentSession.directory, { fullPath: true })}</text>
-              <box style={{ marginTop: 1 }}>
-                <text fg={PALETTE.accent}>Tokens: </text>
+              <text>Directory: {formatDisplayPath(currentSession.directory, { fullPath: true })}</text>
+              <box style={{ marginTop: 1, flexDirection: "column" }}>
+                <text fg={PALETTE.accent}>Tokens:</text>
                 {currentTokenSummary?.kind === 'known' ? (
-                  <>
-                    <text>In: {formatTokenCount(currentTokenSummary.tokens.input)} </text>
-                    <text>Out: {formatTokenCount(currentTokenSummary.tokens.output)} </text>
-                    <text>Reason: {formatTokenCount(currentTokenSummary.tokens.reasoning)} </text>
-                    <text>Cache R: {formatTokenCount(currentTokenSummary.tokens.cacheRead)} </text>
-                    <text>Cache W: {formatTokenCount(currentTokenSummary.tokens.cacheWrite)} </text>
-                    <text fg={PALETTE.success}>Total: {formatTokenCount(currentTokenSummary.tokens.total)}</text>
-                  </>
+                  <box style={{ flexDirection: "row" }}>
+                    <box style={{ flexDirection: "column", marginRight: 2 }}>
+                      <text>In:     {formatTokenCount(currentTokenSummary.tokens.input)}</text>
+                      <text>Out:    {formatTokenCount(currentTokenSummary.tokens.output)}</text>
+                      <text>Reason: {formatTokenCount(currentTokenSummary.tokens.reasoning)}</text>
+                    </box>
+                    <box style={{ flexDirection: "column" }}>
+                      <text>Cache R: {formatTokenCount(currentTokenSummary.tokens.cacheRead)}</text>
+                      <text>Cache W: {formatTokenCount(currentTokenSummary.tokens.cacheWrite)}</text>
+                      <text fg={PALETTE.success}>Total:   {formatTokenCount(currentTokenSummary.tokens.total)}</text>
+                    </box>
+                  </box>
                 ) : (
                   <text fg={PALETTE.muted}>{currentTokenSummary ? '?' : 'loading...'}</text>
                 )}
               </box>
               {projectFilter && filteredTokenSummary ? (
                 <box style={{ marginTop: 1 }}>
-                  <text fg={PALETTE.info}>Filtered ({projectFilter}): </text>
+                  <text fg={PALETTE.info}>Filtered ({projectFilter.slice(0, 12)}…): </text>
                   <text>{formatAggregateSummaryShort(filteredTokenSummary)}</text>
                 </box>
               ) : null}
@@ -448,11 +451,6 @@ export const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(functio
                   <text>{formatAggregateSummaryShort(globalTokenSummary)}</text>
                 </box>
               ) : null}
-              <box style={{ marginTop: 1, flexDirection: "row" }}>
-                <text fg={PALETTE.muted}>Press </text>
-                <text fg={PALETTE.key}>[Y]</text>
-                <text fg={PALETTE.muted}> to copy ID</text>
-              </box>
             </box>
           ) : null}
         </box>

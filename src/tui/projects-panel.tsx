@@ -281,12 +281,11 @@ export const ProjectsPanel = forwardRef<PanelHandle, ProjectsPanelProps>(functio
             wrapSelection={false}
           />
           {currentRecord ? (
-            <box title="Details" style={{ border: true, marginTop: 1, padding: 1 }}>
+            <box title="Details" style={{ border: true, marginTop: 1, paddingTop: 1, paddingLeft: 1, paddingRight: 1 }}>
               <text>Project: {currentRecord.projectId}  State: {currentRecord.state}</text>
               <text>Bucket: {currentRecord.bucket}  VCS: {currentRecord.vcs || "-"}</text>
-              <text>Created: {formatDate(currentRecord.createdAt)}</text>
-              <text>Path:</text>
-              <text>{formatDisplayPath(currentRecord.worktree, { fullPath: true })}</text>
+              <text>Created: {currentRecord.createdAt ? formatDate(currentRecord.createdAt) : "unknown"}</text>
+              <text>Path: {formatDisplayPath(currentRecord.worktree, { fullPath: true })}</text>
               <box style={{ marginTop: 1 }}>
                 <text fg={PALETTE.accent}>Tokens: </text>
                 {currentProjectTokens?.total.kind === "known" ? (
