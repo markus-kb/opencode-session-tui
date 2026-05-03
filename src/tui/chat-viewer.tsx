@@ -1,5 +1,6 @@
 import type { SelectOption } from "@opentui/core"
 import { useEffect, useMemo } from "react"
+import { useTerminalDimensions } from "@opentui/react"
 import { formatDate, type ChatMessage, type ChatPart, type SessionRecord } from "../lib/opencode-data"
 import { sweepUnhydratedMessages } from "./chat-session-resource"
 import { formatTokenCount } from "./format"
@@ -145,9 +146,14 @@ export const ChatViewer = ({
     sweepUnhydratedMessages(messages, onHydrateMessage)
   }, [messages, onHydrateMessage])
 
+  const { height: terminalHeight } = useTerminalDimensions()
+  // OverlayFrame: top(2)+bottom(2)+border(2)+padding(2) = 8 overhead rows.
+  // Session row: 1. ShortcutHints + marginTop: 2. Left-pane border: 2. +1 buffer = 14.
+  const maxRows = Math.max(4, terminalHeight - 14)
+
   const messageRows = useMemo(
-    () => buildVisibleMessageRows(messages, cursor, 12),
-    [messages, cursor],
+    () => buildVisibleMessageRows(messages, cursor, maxRows),
+    [messages, cursor, maxRows],
   )
 
   const renderMessageContent = () => {
@@ -197,7 +203,7 @@ export const ChatViewer = ({
 
   return (
     <OverlayFrame title={`Chat: ${title} (READ-ONLY)`} borderColor={PALETTE.primary}>
-      <box style={{ flexDirection: "row", marginBottom: 1 }}>
+      <box style={{ flexDirection: "row", flexShrink: 0 }}>
         <text fg={PALETTE.accent}>Session: </text>
         <text>{session.sessionId}</text>
         <text fg={PALETTE.muted}> | </text>
@@ -221,7 +227,7 @@ export const ChatViewer = ({
           >
             <box style={{ flexDirection: "column", gap: 0, overflow: "hidden", flexGrow: 1 }}>
               {messageRows.map((row) => (
-                <text key={row.key} fg={row.selected ? PALETTE.key : PALETTE.muted}>
+                <text key={row.selected ? `${row.key}:s` : row.key} fg={row.selected ? PALETTE.key : PALETTE.muted}>
                   {row.name}
                 </text>
               ))}
