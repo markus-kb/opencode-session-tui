@@ -68,6 +68,8 @@ export function buildTuiCommands(): TuiCommandSet {
     cmd("chat:end", "Last message", "chat", ["end"]),
     cmd("chat:toggleSortOrder", "Toggle chat sort order", "chat", ["s"]),
     cmd("chat:copy", "Copy message", "chat", ["y"]),
+    cmd("chat:jumpToPrevUser", "Jump to previous user message", "chat", ["C-up"]),
+    cmd("chat:jumpToNextUser", "Jump to next user message", "chat", ["C-down"]),
 
     cmd("search:close", "Close", "search", ["escape"]),
     cmd("search:action", "Search/View", "search", ["enter"]),

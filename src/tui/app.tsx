@@ -532,6 +532,24 @@ export const App = ({
           }
           return
         }
+        if (cmdId === "chat:jumpToPrevUser") {
+          setChatCursor(prev => {
+            for (let i = prev - 1; i >= 0; i--) {
+              if (visibleChatMessages[i].role === "user") return i
+            }
+            return prev
+          })
+          return
+        }
+        if (cmdId === "chat:jumpToNextUser") {
+          setChatCursor(prev => {
+            for (let i = prev + 1; i < visibleChatMessages.length; i++) {
+              if (visibleChatMessages[i].role === "user") return i
+            }
+            return prev
+          })
+          return
+        }
         return
       }
 

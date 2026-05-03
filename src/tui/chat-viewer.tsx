@@ -148,7 +148,7 @@ export const ChatViewer = ({
 
   const { height: terminalHeight } = useTerminalDimensions()
   // OverlayFrame: top(2)+bottom(2)+border(2)+padding(2) = 8 overhead rows.
-  // Session row: 1. ShortcutHints + marginTop: 2. Left-pane border: 2. +1 buffer = 14.
+  // Session row: 1. ShortcutHints: 1. Left-pane border: 2. +2 buffer = 14.
   const maxRows = Math.max(4, terminalHeight - 14)
 
   const messageRows = useMemo(
@@ -215,6 +215,18 @@ export const ChatViewer = ({
         {loading ? <text fg={PALETTE.key}> (loading...)</text> : null}
       </box>
 
+      <ShortcutHints
+        prefix=""
+        items={[
+          { key: "Esc", label: "close" },
+          { key: "Up/Down", label: "navigate" },
+          { key: "PgUp/PgDn", label: "jump" },
+          { key: "C-Up/Dn", label: "user jump" },
+          { key: "S", label: `sort ${sortOrder}` },
+          { key: "Y", label: "copy" },
+        ]}
+      />
+
       {error ? (
         <text fg={PALETTE.danger}>Error: {error}</text>
       ) : messages.length === 0 && !loading ? (
@@ -243,7 +255,9 @@ export const ChatViewer = ({
                 padding: 1,
                 overflow: "hidden",
             }}
-            title={currentMessage ? `${currentMessage.role} message` : "Details"}
+            title={currentMessage
+              ? `${currentMessage.role.charAt(0).toUpperCase() + currentMessage.role.slice(1)} message`
+              : "Details"}
           >
             {currentMessage ? (
               <box style={{ flexDirection: "column" }}>
@@ -276,19 +290,6 @@ export const ChatViewer = ({
           </box>
         </box>
       )}
-
-      <box style={{ marginTop: 1 }}>
-        <ShortcutHints
-          prefix=""
-          items={[
-            { key: "Esc", label: "close" },
-            { key: "Up/Down", label: "navigate" },
-            { key: "PgUp/PgDn", label: "jump" },
-            { key: "S", label: `sort ${sortOrder}` },
-            { key: "Y", label: "copy message" },
-          ]}
-        />
-      </box>
     </OverlayFrame>
   )
 }
