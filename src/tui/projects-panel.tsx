@@ -15,7 +15,9 @@ import type { ConfirmState } from "./confirm-bar"
 import { buildDeletionConfirmDetails, buildDeletionConfirmTitle } from "./confirm-payload"
 import { formatTokenCount } from "./format"
 import { clampCursor, clearSelection, getSelectedRecords, pruneSelectedIndexes, toggleAllVisibleIndexes, toggleSelectedIndex } from "./panel-selection"
+import { openPath } from "../lib/open-path"
 import { resolveProjectPanelInputAction } from "./projects-panel-input"
+import { sortProjectRecords } from "./projects-panel-sort"
 import type { ResourcePolicy } from "./resource-policy"
 import { computeProjectTokens } from "./token-resource"
 import type { NotificationLevel } from "./status-bar"
@@ -60,20 +62,10 @@ export const ProjectsPanel = forwardRef<PanelHandle, ProjectsPanelProps>(functio
   const [selectedIndexes, setSelectedIndexes] = useState<Set<number>>(new Set())
   const [currentProjectTokens, setCurrentProjectTokens] = useState<AggregateTokenSummary | null>(null)
 
-  const records = useMemo(() => {
-    const base = getProjectsPanelRecords(allProjects)
-    if (sortMode === "alpha") {
-      return [...base].sort((a, b) => a.projectId.localeCompare(b.projectId))
-    }
-    if (sortMode === "updated") {
-      return [...base].sort((a, b) => {
-        const aT = a.updatedAt?.getTime() ?? a.createdAt?.getTime() ?? 0
-        const bT = b.updatedAt?.getTime() ?? b.createdAt?.getTime() ?? 0
-        return bT - aT
-      })
-    }
-    return base
-  }, [allProjects, sortMode])
+  const records = useMemo(
+    () => sortProjectRecords(getProjectsPanelRecords(allProjects), sortMode),
+    [allProjects, sortMode],
+  )
 
   const missingCount = useMemo(() => records.filter((record) => record.state === "missing").length, [records])
 
@@ -203,8 +195,16 @@ export const ProjectsPanel = forwardRef<PanelHandle, ProjectsPanelProps>(functio
         setCursor(0)
         return
       }
+      if (action === "openInExplorer") {
+        if (currentRecord?.worktree) {
+          openPath(currentRecord.worktree).catch(() => {
+            onNotify("Failed to open explorer.", "error")
+          })
+        }
+        return
+      }
     },
-    [active, locked, currentRecord, visibleRecords, onNavigateToSessions, requestDeletion, toggleSelection, cmdSet],
+    [active, locked, currentRecord, visibleRecords, onNavigateToSessions, requestDeletion, toggleSelection, cmdSet, onNotify],
   )
 
   useImperativeHandle(
@@ -241,6 +241,7 @@ export const ProjectsPanel = forwardRef<PanelHandle, ProjectsPanelProps>(functio
             { key: "A", label: "select all" },
             { key: "M", label: "toggle missing" },
             { key: "S", label: "sort" },
+            { key: "O", label: "open in explorer" },
             { key: "D", label: "delete" },
             { key: "Enter", label: "view sessions" },
             { key: "Esc", label: "clear" },

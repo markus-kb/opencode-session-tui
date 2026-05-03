@@ -1,6 +1,8 @@
 import { describe, expect, test } from "bun:test"
 import { $ } from "bun"
 
+const isWindows = process.platform === "win32"
+
 describe("TUI entrypoint e2e", () => {
   test("root help documents TUI launch and storage flags", async () => {
     const result = await $`bun src/bin/opencode-manager.ts --help`.quiet()
@@ -50,7 +52,7 @@ describe("TUI entrypoint e2e", () => {
     expect(output).toContain("TUI STORAGE OPTIONS")
   })
 
-  test("windows batch launcher opens manager entrypoint", async () => {
+  test.skipIf(!isWindows)("windows batch launcher opens manager entrypoint", async () => {
     const result = await $`cmd /c opencode-manager.bat --help`.quiet()
     const output = result.stdout.toString()
 

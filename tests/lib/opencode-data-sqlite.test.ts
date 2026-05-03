@@ -489,6 +489,40 @@ describe("opencode-data-sqlite", () => {
       expect(records).toHaveLength(1)
       expect(records[0].projectId).toBe("file_proj")
     })
+
+    test("parses updatedAt from data.time.updated", async () => {
+      const db = createTestDb()
+      db.run("INSERT INTO project (id, data) VALUES (?, ?)", [
+        "proj_upd",
+        JSON.stringify({ id: "proj_upd", time: { created: 1700000000000, updated: 1700200000000 } })
+      ])
+      const records = await loadProjectRecordsSqlite({ db })
+      expect(records[0].updatedAt).toBeInstanceOf(Date)
+      expect(records[0].updatedAt?.getTime()).toBe(1700200000000)
+      db.close()
+    })
+
+    test("parses updatedAt from updated_at column when present", async () => {
+      const db = new Database(":memory:")
+      db.run("CREATE TABLE project (id TEXT PRIMARY KEY, data TEXT NOT NULL, updated_at INTEGER)")
+      db.run("INSERT INTO project (id, data, updated_at) VALUES (?, ?, ?)", [
+        "proj_col", JSON.stringify({ id: "proj_col" }), 1700300000000
+      ])
+      const records = await loadProjectRecordsSqlite({ db })
+      expect(records[0].updatedAt).toBeInstanceOf(Date)
+      expect(records[0].updatedAt?.getTime()).toBe(1700300000000)
+      db.close()
+    })
+
+    test("updatedAt falls back to null when not present", async () => {
+      const db = createTestDb()
+      db.run("INSERT INTO project (id, data) VALUES (?, ?)", [
+        "proj_no_upd", JSON.stringify({ id: "proj_no_upd", time: { created: 1700000000000 } })
+      ])
+      const records = await loadProjectRecordsSqlite({ db })
+      expect(records[0].updatedAt).toBeNull()
+      db.close()
+    })
   })
 
   describe("loadSessionRecordsSqlite", () => {

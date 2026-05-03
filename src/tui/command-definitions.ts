@@ -40,6 +40,7 @@ export function buildTuiCommands(): TuiCommandSet {
     cmd("projects:deleteSelected", "Delete", "projects", ["d"]),
     cmd("projects:navigateToSessions", "Open sessions", "projects", ["enter"]),
     cmd("projects:cycleSortMode", "Sort", "projects", ["s"]),
+    cmd("projects:openInExplorer", "Open in explorer", "projects", ["o"]),
 
     cmd("sessions:toggleSelect", "Toggle selection", "sessions", ["space"]),
     cmd("sessions:selectAll", "Select all", "sessions", ["a"]),

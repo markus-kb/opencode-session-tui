@@ -577,6 +577,7 @@ interface ProjectRow {
   worktree?: string | null
   vcs?: string | null
   created_at?: number | string | null
+  updated_at?: number | string | null
 }
 
 /**
@@ -591,6 +592,7 @@ interface ProjectData {
   vcs?: string
   time?: {
     created?: number
+    updated?: number
   }
 }
 
@@ -630,6 +632,7 @@ export async function loadProjectRecordsSqlite(
     const worktreeColumn = pickColumn(columns, ["worktree", "directory", "path", "root", "repo_path"])
     const vcsColumn = pickColumn(columns, ["vcs", "scm", "vcs_type"])
     const createdColumn = pickColumn(columns, ["created_at", "created", "created_ms", "createdAt"])
+    const updatedColumn = pickColumn(columns, ["updated_at", "updated", "updated_ms", "updatedAt"])
 
     const selectColumns = [
       buildColumnAlias(idColumn, "id"),
@@ -637,6 +640,7 @@ export async function loadProjectRecordsSqlite(
       buildColumnAlias(worktreeColumn, "worktree"),
       buildColumnAlias(vcsColumn, "vcs"),
       buildColumnAlias(createdColumn, "created_at"),
+      buildColumnAlias(updatedColumn, "updated_at"),
     ]
 
     // Query all projects from the database
@@ -685,6 +689,7 @@ export async function loadProjectRecordsSqlite(
       const worktreeRaw = row.worktree ?? data.worktree ?? data.directory ?? data.path ?? data.root
       const worktree = expandUserPath(worktreeRaw ?? null)
       const createdAt = parseTimestamp(row.created_at) ?? parseTimestamp(data.time?.created)
+      const updatedAt = parseTimestamp(row.updated_at) ?? parseTimestamp(data.time?.updated)
       const vcs = typeof row.vcs === "string" ? row.vcs : (typeof data.vcs === "string" ? data.vcs : null)
       const state = await computeState(worktree)
 
@@ -696,6 +701,7 @@ export async function loadProjectRecordsSqlite(
         worktree: worktree ?? "",
         vcs,
         createdAt,
+        updatedAt,
         state,
       })
     }

@@ -6,6 +6,7 @@ export type ProjectPanelAction =
   | "deleteSelected"
   | "navigateToSessions"
   | "cycleSortMode"
+  | "openInExplorer"
 
 export function toProjectPanelAction(commandId: string | undefined): ProjectPanelAction | undefined {
   switch (commandId) {
@@ -23,6 +24,8 @@ export function toProjectPanelAction(commandId: string | undefined): ProjectPane
       return "navigateToSessions"
     case "projects:cycleSortMode":
       return "cycleSortMode"
+    case "projects:openInExplorer":
+      return "openInExplorer"
     default:
       return undefined
   }

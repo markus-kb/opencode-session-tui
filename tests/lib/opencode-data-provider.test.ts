@@ -251,10 +251,9 @@ describe("opencode-data-provider", () => {
       ;(provider as any).dispose()
     })
 
-    test("SQLite provider uses default path when dbPath not provided", () => {
-      // This test verifies the provider is created (may fail at runtime
-      // if default path doesn't exist, but that's expected behavior)
-      const provider = createProvider({ backend: "sqlite" })
+    test("SQLite provider is created with explicit dbPath", () => {
+      createTestDatabase(testDbPath)
+      const provider = createProvider({ backend: "sqlite", dbPath: testDbPath })
 
       expect(provider).toBeDefined()
       expect(provider.backend).toBe("sqlite")
@@ -297,8 +296,10 @@ describe("opencode-data-provider", () => {
     })
 
     test("returns SQLite provider when experimentalSqlite is true", () => {
+      createTestDatabase(testDbPath)
       const provider = createProviderFromGlobalOptions({
         experimentalSqlite: true,
+        dbPath: testDbPath,
       })
 
       expect(provider.backend).toBe("sqlite")
