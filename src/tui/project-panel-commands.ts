@@ -7,6 +7,8 @@ export type ProjectPanelAction =
   | "navigateToSessions"
   | "cycleSortMode"
   | "openInExplorer"
+  | "pageUp"
+  | "pageDown"
 
 export function toProjectPanelAction(commandId: string | undefined): ProjectPanelAction | undefined {
   switch (commandId) {
@@ -26,6 +28,10 @@ export function toProjectPanelAction(commandId: string | undefined): ProjectPane
       return "cycleSortMode"
     case "projects:openInExplorer":
       return "openInExplorer"
+    case "projects:pageUp":
+      return "pageUp"
+    case "projects:pageDown":
+      return "pageDown"
     default:
       return undefined
   }

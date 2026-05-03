@@ -17,7 +17,7 @@ import { PALETTE, ShortcutHints } from "./components"
 import type { ConfirmState } from "./confirm-bar"
 import { buildDeletionConfirmDetails, buildDeletionConfirmTitle } from "./confirm-payload"
 import { formatAggregateSummaryShort, formatTokenCount } from "./format"
-import { clampCursor, clearSelection, getSelectedRecords, pruneSelectedIndexes, toggleAllVisibleIndexes, toggleSelectedIndex } from "./panel-selection"
+import { clampCursor, clearSelection, getSelectedRecords, PAGE_SIZE, pruneSelectedIndexes, toggleAllVisibleIndexes, toggleSelectedIndex, wrapCursor } from "./panel-selection"
 import { ProjectSelector } from "./project-selector"
 import { closeProjectSelectorState, openProjectSelectorState } from "./project-selector-lifecycle"
 import { filterSessionsByProject, reindexSessions } from "./project-resource"
@@ -331,6 +331,14 @@ export const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(functio
           onNotify(`Session ${title} [${currentSession.sessionId}] -> ${formatDisplayPath(currentSession.directory)}`)
         }
       }
+      if (action === "pageUp") {
+        setCursor((prev) => wrapCursor(prev - PAGE_SIZE, visibleRecords.length))
+        return
+      }
+      if (action === "pageDown") {
+        setCursor((prev) => wrapCursor(prev + PAGE_SIZE, visibleRecords.length))
+        return
+      }
     },
     [active, locked, currentSession, projectFilter, onClearFilter, onNotify, requestDeletion, toggleSelection, isRenaming, executeRename, isSelectingProject, availableProjects, projectCursor, operationMode, executeTransfer, selectedSessions, allProjects, onOpenChatViewer, cmdSet, visibleRecords],
   )
@@ -356,6 +364,7 @@ export const SessionsPanel = forwardRef<PanelHandle, SessionsPanelProps>(functio
             { key: "P", label: "copy" },
             { key: "C", label: "clear filter" },
             { key: "Esc", label: "clear" },
+            { key: "PgUp/Dn", label: "page" },
           ]}
         />
       </box>

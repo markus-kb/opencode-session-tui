@@ -11,6 +11,8 @@ export type SessionPanelAction =
   | "copySessions"
   | "viewChat"
   | "sessionInfo"
+  | "pageUp"
+  | "pageDown"
 
 export function toSessionPanelAction(commandId: string | undefined): SessionPanelAction | undefined {
   switch (commandId) {
@@ -38,6 +40,10 @@ export function toSessionPanelAction(commandId: string | undefined): SessionPane
       return "viewChat"
     case "sessions:sessionInfo":
       return "sessionInfo"
+    case "sessions:pageUp":
+      return "pageUp"
+    case "sessions:pageDown":
+      return "pageDown"
     default:
       return undefined
   }

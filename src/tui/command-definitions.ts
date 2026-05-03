@@ -41,6 +41,8 @@ export function buildTuiCommands(): TuiCommandSet {
     cmd("projects:navigateToSessions", "Open sessions", "projects", ["enter"]),
     cmd("projects:cycleSortMode", "Sort", "projects", ["s"]),
     cmd("projects:openInExplorer", "Open in explorer", "projects", ["o"]),
+    cmd("projects:pageUp", "Page up", "projects", ["pageup"]),
+    cmd("projects:pageDown", "Page down", "projects", ["pagedown"]),
 
     cmd("sessions:toggleSelect", "Toggle selection", "sessions", ["space"]),
     cmd("sessions:selectAll", "Select all", "sessions", ["a"]),
@@ -54,6 +56,8 @@ export function buildTuiCommands(): TuiCommandSet {
     cmd("sessions:copySessions", "Copy", "sessions", ["p"]),
     cmd("sessions:viewChat", "View chat", "sessions", ["v"]),
     cmd("sessions:sessionInfo", "Session info", "sessions", ["enter"]),
+    cmd("sessions:pageUp", "Page up", "sessions", ["pageup"]),
+    cmd("sessions:pageDown", "Page down", "sessions", ["pagedown"]),
 
     cmd("chat:close", "Close", "chat", ["escape"]),
     cmd("chat:prev", "Previous", "chat", ["up"]),

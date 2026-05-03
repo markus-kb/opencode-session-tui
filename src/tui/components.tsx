@@ -66,18 +66,23 @@ export const ShortcutHints = ({
 }: {
   prefix?: string
   items: Array<{ key: string; label: string }>
-}) => (
-  <box style={{ flexDirection: "row", flexWrap: "wrap", gap: 1 }}>
-    {prefix ? <text>{prefix}</text> : null}
-    {items.map((item, idx) => (
-      <box key={`${item.key}-${item.label}-${idx}`} style={{ flexDirection: "row", gap: 1 }}>
-        <KeyChip k={item.key} />
-        <text>{item.label}</text>
-        {idx < items.length - 1 ? <text fg={PALETTE.muted}>|</text> : null}
-      </box>
-    ))}
-  </box>
-)
+}) => {
+  // Render as a single text line to avoid flex-wrap blank-line artifacts.
+  // The terminal wraps the line naturally at the box boundary without inserting
+  // empty rows between wrapped segments (which flexWrap: "wrap" + gap caused).
+  const parts: React.ReactNode[] = []
+  if (prefix) {
+    parts.push(<text key="prefix">{prefix} </text>)
+  }
+  items.forEach((item, idx) => {
+    parts.push(<text key={`k-${idx}`} fg={PALETTE.key}>[{item.key}]</text>)
+    parts.push(<text key={`l-${idx}`}> {item.label}</text>)
+    if (idx < items.length - 1) {
+      parts.push(<text key={`sep-${idx}`} fg={PALETTE.muted}> | </text>)
+    }
+  })
+  return <box style={{ flexDirection: "row", flexWrap: "wrap" }}>{parts}</box>
+}
 
 export const OverlayFrame = ({
   title,

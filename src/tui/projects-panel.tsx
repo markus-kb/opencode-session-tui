@@ -14,7 +14,7 @@ import { PALETTE, ShortcutHints } from "./components"
 import type { ConfirmState } from "./confirm-bar"
 import { buildDeletionConfirmDetails, buildDeletionConfirmTitle } from "./confirm-payload"
 import { formatTokenCount } from "./format"
-import { clampCursor, clearSelection, getSelectedRecords, pruneSelectedIndexes, toggleAllVisibleIndexes, toggleSelectedIndex } from "./panel-selection"
+import { clampCursor, clearSelection, getSelectedRecords, PAGE_SIZE, pruneSelectedIndexes, toggleAllVisibleIndexes, toggleSelectedIndex, wrapCursor } from "./panel-selection"
 import { openPath } from "../lib/open-path"
 import { shouldOpenInExplorer } from "./open-in-explorer-guard"
 import { resolveProjectPanelInputAction } from "./projects-panel-input"
@@ -204,6 +204,14 @@ export const ProjectsPanel = forwardRef<PanelHandle, ProjectsPanelProps>(functio
         }
         return
       }
+      if (action === "pageUp") {
+        setCursor((prev) => wrapCursor(prev - PAGE_SIZE, visibleRecords.length))
+        return
+      }
+      if (action === "pageDown") {
+        setCursor((prev) => wrapCursor(prev + PAGE_SIZE, visibleRecords.length))
+        return
+      }
     },
     [active, locked, currentRecord, visibleRecords, onNavigateToSessions, requestDeletion, toggleSelection, cmdSet, onNotify],
   )
@@ -246,6 +254,7 @@ export const ProjectsPanel = forwardRef<PanelHandle, ProjectsPanelProps>(functio
             { key: "D", label: "delete" },
             { key: "Enter", label: "view sessions" },
             { key: "Esc", label: "clear" },
+            { key: "PgUp/Dn", label: "page" },
           ]}
         />
       </box>

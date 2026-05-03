@@ -1,3 +1,6 @@
+/** Number of items to jump per Page Up / Page Down keystroke. */
+export const PAGE_SIZE = 10
+
 export function toggleSelectedIndex(selected: Set<number>, index: number | undefined): Set<number> {
   if (index === undefined) {
     return selected
