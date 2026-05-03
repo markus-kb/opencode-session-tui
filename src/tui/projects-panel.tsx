@@ -121,10 +121,10 @@ export const ProjectsPanel = forwardRef<PanelHandle, ProjectsPanelProps>(functio
   )
 
   const selectOptions: SelectOption[] = useMemo(() => {
-    return visibleRecords.map((record) => {
+    return visibleRecords.map((record, pos) => {
       const selected = selectedIndexes.has(record.index)
       const prefix = selected ? "[*]" : "[ ]"
-      const label = `${prefix} #${record.index} ${formatDisplayPath(record.worktree)} (${record.state})`
+      const label = `${prefix} #${pos + 1} ${formatDisplayPath(record.worktree)} (${record.state})`
       return {
         name: label,
         description: "",
@@ -274,7 +274,7 @@ export const ProjectsPanel = forwardRef<PanelHandle, ProjectsPanelProps>(functio
           {currentRecord ? (
             <box title="Details" style={{ border: true, marginTop: 1, paddingTop: 1, paddingLeft: 1, paddingRight: 1 }}>
               <text>Project: {currentRecord.projectId}  State: {currentRecord.state}</text>
-              <text>Bucket: {currentRecord.bucket}  VCS: {currentRecord.vcs || "-"}</text>
+              <text>Bucket: {currentRecord.bucket}</text>
               <text>Updated: {currentRecord.updatedAt ? formatDate(currentRecord.updatedAt) : (currentRecord.createdAt ? formatDate(currentRecord.createdAt) : "unknown")}</text>
               <text>Path: {formatDisplayPath(currentRecord.worktree, { fullPath: true })}</text>
               <box style={{ marginTop: 1 }}>
