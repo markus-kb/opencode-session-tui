@@ -3,7 +3,7 @@ import type { ProjectSortMode } from "./projects-panel"
 
 export function sortProjectRecords(records: ProjectRecord[], mode: ProjectSortMode): ProjectRecord[] {
   if (mode === "alpha") {
-    return [...records].sort((a, b) => a.projectId.localeCompare(b.projectId))
+    return [...records].sort((a, b) => a.worktree.localeCompare(b.worktree))
   }
   if (mode === "updated") {
     return [...records].sort((a, b) => {

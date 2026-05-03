@@ -2,13 +2,13 @@ import { describe, it, expect } from "bun:test"
 import { sortProjectRecords } from "../../src/tui/projects-panel-sort"
 import type { ProjectRecord } from "../../src/lib/opencode-data"
 
-function makeRecord(id: string, created: number, updated: number): ProjectRecord {
+function makeRecord(id: string, created: number, updated: number, worktree = ""): ProjectRecord {
   return {
     index: 0,
     bucket: "project",
     filePath: "",
     projectId: id,
-    worktree: "",
+    worktree,
     vcs: null,
     state: "unknown",
     createdAt: new Date(created),
@@ -16,9 +16,10 @@ function makeRecord(id: string, created: number, updated: number): ProjectRecord
   }
 }
 
-const a = makeRecord("alpha", 1000, 3000)
-const b = makeRecord("beta", 2000, 1000)
-const c = makeRecord("gamma", 3000, 2000)
+// worktree paths intentionally out of sync with projectId order to verify sort key
+const a = makeRecord("alpha", 1000, 3000, "/home/user/projects/zebra")
+const b = makeRecord("beta", 2000, 1000, "/home/user/projects/apple")
+const c = makeRecord("gamma", 3000, 2000, "/home/user/projects/mango")
 const base = [a, b, c]
 
 describe("sortProjectRecords", () => {
@@ -27,9 +28,10 @@ describe("sortProjectRecords", () => {
     expect(sorted.map((r) => r.projectId)).toEqual(["gamma", "beta", "alpha"])
   })
 
-  it("alpha mode: alphabetical by projectId", () => {
+  it("alpha mode: alphabetical by full worktree path", () => {
     const sorted = sortProjectRecords(base, "alpha")
-    expect(sorted.map((r) => r.projectId)).toEqual(["alpha", "beta", "gamma"])
+    // worktree order: apple < mango < zebra → beta, gamma, alpha
+    expect(sorted.map((r) => r.projectId)).toEqual(["beta", "gamma", "alpha"])
   })
 
   it("updated mode: newest updatedAt first", () => {
