@@ -1,6 +1,5 @@
 import type { SelectOption } from "@opentui/core"
 import { useEffect, useMemo } from "react"
-import { useTerminalDimensions } from "@opentui/react"
 import { formatDate, type ChatMessage, type ChatPart, type SessionRecord } from "../lib/opencode-data"
 import { sweepUnhydratedMessages } from "./chat-session-resource"
 import { formatTokenCount } from "./format"
@@ -120,6 +119,7 @@ export type ChatViewerProps = {
   onClose: () => void
   onHydrateMessage: (message: ChatMessage) => void
   onCopyMessage: (message: ChatMessage) => void
+  maxRows: number
 }
 
 export const ChatViewer = ({
@@ -131,6 +131,7 @@ export const ChatViewer = ({
   loading,
   error,
   onHydrateMessage,
+  maxRows,
 }: ChatViewerProps) => {
   const currentMessage = messages[cursor]
 
@@ -145,11 +146,6 @@ export const ChatViewer = ({
   useEffect(() => {
     sweepUnhydratedMessages(messages, onHydrateMessage)
   }, [messages, onHydrateMessage])
-
-  const { height: terminalHeight } = useTerminalDimensions()
-  // OverlayFrame: top(2)+bottom(2)+border(2)+padding(2) = 8 overhead rows.
-  // Session row: 1. ShortcutHints: 1. Left-pane border: 2. +2 buffer = 14.
-  const maxRows = Math.max(4, terminalHeight - 14)
 
   const messageRows = useMemo(
     () => buildVisibleMessageRows(messages, cursor, maxRows),

@@ -1,3 +1,4 @@
+import { useTerminalDimensions } from "@opentui/react"
 import type { ChatMessage, ChatSearchResult, SessionRecord } from "../lib/opencode-data"
 import { ChatSearchOverlay } from "./chat-search-overlay"
 import { ChatViewer } from "./chat-viewer"
@@ -45,6 +46,11 @@ export const OverlayHost = ({
   chatSearchCursor,
   onChatSearchCursorChange,
 }: OverlayHostProps) => {
+  const { height: terminalHeight } = useTerminalDimensions()
+  // OverlayFrame: top(2)+bottom(2)+border(2)+padding(2) = 8 overhead.
+  // Session row: 1. ShortcutHints: 1. Left-pane border: 2. +2 buffer = 14.
+  const maxRows = Math.max(4, terminalHeight - 14)
+
   return (
     <>
       {chatViewerOpen && chatSession ? (
@@ -59,6 +65,7 @@ export const OverlayHost = ({
           onClose={onCloseChatViewer}
           onHydrateMessage={onHydrateMessage}
           onCopyMessage={onCopyMessage}
+          maxRows={maxRows}
         />
       ) : null}
 

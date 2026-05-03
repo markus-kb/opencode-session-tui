@@ -26,6 +26,7 @@
     "tui": "bun src/tui/index.tsx",
     "dev": "bun --watch src/tui/index.tsx",
     "test": "bun test",
+    "test:chat": "bun test tests/tui/chat-viewer-format.test.ts tests/tui/chat-viewer-render.test.tsx tests/tui/chat-jump.test.ts",
     "typecheck": "bunx tsc --noEmit",
     "prepublishOnly": "bun run typecheck"
   },

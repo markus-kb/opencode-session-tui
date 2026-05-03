@@ -56,6 +56,7 @@ import { SessionsPanel } from "./sessions-panel"
 import { OverlayHost } from "./overlay-host"
 import { sortChatMessages } from "./chat-viewer"
 import { isActiveRequest, upsertHydratedMessage } from "./chat-memory-policy"
+import { findPrevUserMessage, findNextUserMessage } from "./chat-jump"
 
 type TabKey = TuiTab
 
@@ -533,21 +534,11 @@ export const App = ({
           return
         }
         if (cmdId === "chat:jumpToPrevUser") {
-          setChatCursor(prev => {
-            for (let i = prev - 1; i >= 0; i--) {
-              if (visibleChatMessages[i].role === "user") return i
-            }
-            return prev
-          })
+          setChatCursor(prev => findPrevUserMessage(visibleChatMessages, prev))
           return
         }
         if (cmdId === "chat:jumpToNextUser") {
-          setChatCursor(prev => {
-            for (let i = prev + 1; i < visibleChatMessages.length; i++) {
-              if (visibleChatMessages[i].role === "user") return i
-            }
-            return prev
-          })
+          setChatCursor(prev => findNextUserMessage(visibleChatMessages, prev))
           return
         }
         return
