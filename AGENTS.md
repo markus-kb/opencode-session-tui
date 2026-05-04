@@ -39,6 +39,20 @@ Operational musts for coding agents working in this repository.
    - hydrated message parts cache
    - delayed search->open-chat cursor handoff
 
+## TUI testing discipline
+
+These rules apply to any change touching `chat-viewer.tsx`, `overlay-host.tsx`, or `components.tsx`.
+
+1. **Write the failing test FIRST.** Before touching layout code, add a test that covers the broken scenario. Run it. Read the `captureCharFrame` output in the failure message — that captured frame IS the diagnostic. Do not guess root cause from screenshots.
+2. **Confirm RED before writing a fix.** A test that has never been seen to fail proves nothing. Run `bun run test:chat` against the current broken code, record which tests fail, and read the frame output.
+3. **Coverage requirements:**
+   - Multiple terminal heights: at minimum 120×20, 120×24, 120×28, 120×30
+   - Real-world data: session IDs ≥ 28 chars, project IDs ≥ 40 chars
+   - All overlay states: loading, error, empty, normal
+   - Resize stability: shrink then grow, verify key elements survive
+4. **`bun run test:chat` must be green before any commit** that touches those files.
+5. **TypeScript passing ≠ layout correct.** `bunx tsc --noEmit` is a necessary pre-commit check, not a sufficient one.
+
 ## Documentation discipline
 
 1. Keep `README.md` and `docs/CHANGES.md` consistent with behavior.

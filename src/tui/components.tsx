@@ -81,7 +81,7 @@ export const ShortcutHints = ({
       parts.push(<text key={`sep-${idx}`} fg={PALETTE.muted}> | </text>)
     }
   })
-  return <box style={{ flexDirection: "row", flexWrap: "wrap" }}>{parts}</box>
+  return <box style={{ flexDirection: "row", flexWrap: "wrap", flexShrink: 0 }}>{parts}</box>
 }
 
 export const OverlayFrame = ({
