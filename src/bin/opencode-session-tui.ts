@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * Main CLI entrypoint for opencode-manager.
+ * Main CLI entrypoint for opencode-session-tui.
  *
  * Routes between TUI and CLI modes based on provided subcommands:
  * - No subcommand → launches TUI
@@ -26,7 +26,7 @@ const TUI_SUBCOMMANDS = new Set(["tui"])
 const VERSION = "0.4.6"
 
 function printHelp(): void {
-  console.log(`opencode-manager v${VERSION} (fork)
+  console.log(`opencode-session-tui v${VERSION} (fork)
 
 Inspect and manage OpenCode metadata stores via TUI or CLI.
 
@@ -34,7 +34,7 @@ Forked from shuv1337/oc-manager and maintained here for the current
 OpenCode SQLite schema plus Windows compatibility.
 
 USAGE:
-  opencode-manager [command] [options]
+  opencode-session-tui [command] [options]
 
 MODES:
   (no command)              Launch interactive TUI (default)
@@ -64,27 +64,27 @@ OPTIONS:
   --version, -v             Show version
 
 TUI STORAGE OPTIONS:
-  opencode-manager --root <path>                 Launch TUI with legacy JSONL root
-  opencode-manager --experimental-sqlite         Launch TUI in SQLite-only mode
-  opencode-manager --db <path>                   Launch TUI with a specific SQLite database path
-  opencode-manager tui --root <path>             Use a specific legacy JSONL storage root
-  opencode-manager tui --experimental-sqlite     Force SQLite-only mode
-  opencode-manager tui --db <path>               Use a specific SQLite database path
+  opencode-session-tui --root <path>                 Launch TUI with legacy JSONL root
+  opencode-session-tui --experimental-sqlite         Launch TUI in SQLite-only mode
+  opencode-session-tui --db <path>                   Launch TUI with a specific SQLite database path
+  opencode-session-tui tui --root <path>             Use a specific legacy JSONL storage root
+  opencode-session-tui tui --experimental-sqlite     Force SQLite-only mode
+  opencode-session-tui tui --db <path>               Use a specific SQLite database path
 
 STORAGE DEFAULT:
   Hybrid mode is used by default when both opencode.db and legacy JSON sessions exist.
 
 EXAMPLES:
-  opencode-manager                              # Launch TUI (default)
-  opencode-manager tui                          # Launch TUI
-  opencode-manager tui --db ~/.local/share/opencode/opencode.db
-  opencode-manager projects list --format json  # List projects as JSON
-  opencode-manager sessions list --project X    # List sessions for project
-  opencode-manager chat search --query "error"  # Search chat content
+  opencode-session-tui                              # Launch TUI (default)
+  opencode-session-tui tui                          # Launch TUI
+  opencode-session-tui tui --db ~/.local/share/opencode/opencode.db
+  opencode-session-tui projects list --format json  # List projects as JSON
+  opencode-session-tui sessions list --project X    # List sessions for project
+  opencode-session-tui chat search --query "error"  # Search chat content
 
 For detailed help on any command:
-  opencode-manager <command> --help
-  opencode-manager <command> <subcommand> --help
+  opencode-session-tui <command> --help
+  opencode-session-tui <command> <subcommand> --help
 `)
 }
 

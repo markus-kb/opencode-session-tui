@@ -10,7 +10,7 @@ import { FIXTURE_STORE_ROOT } from "../../helpers";
 
 describe("chat list --format json", () => {
   it("outputs valid JSON with success envelope", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -20,7 +20,7 @@ describe("chat list --format json", () => {
   });
 
   it("includes correct message count", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -29,7 +29,7 @@ describe("chat list --format json", () => {
   });
 
   it("includes message fields in JSON output", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -42,7 +42,7 @@ describe("chat list --format json", () => {
   });
 
   it("serializes Date fields as ISO strings", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -55,7 +55,7 @@ describe("chat list --format json", () => {
   });
 
   it("includes meta with limit info", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -64,7 +64,7 @@ describe("chat list --format json", () => {
   });
 
   it("respects --limit option", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json --limit 1`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json --limit 1`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -72,7 +72,7 @@ describe("chat list --format json", () => {
   });
 
   it("supports prefix matching for session ID", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat list --session session_add --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat list --session session_add --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -81,7 +81,7 @@ describe("chat list --format json", () => {
   });
 
   it("returns exit code 3 for non-existent session", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat list --session nonexistent_session --root ${FIXTURE_STORE_ROOT} --format json`.quiet().nothrow();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat list --session nonexistent_session --root ${FIXTURE_STORE_ROOT} --format json`.quiet().nothrow();
 
     expect(result.exitCode).toBe(3);
   });
@@ -89,7 +89,7 @@ describe("chat list --format json", () => {
 
 describe("chat list --format ndjson", () => {
   it("outputs valid NDJSON (one JSON object per line)", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format ndjson`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format ndjson`.quiet();
     const output = result.stdout.toString().trim();
     const lines = output.split("\n");
 
@@ -100,7 +100,7 @@ describe("chat list --format ndjson", () => {
   });
 
   it("includes correct message count (one per line)", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format ndjson`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format ndjson`.quiet();
     const output = result.stdout.toString().trim();
     const lines = output.split("\n");
 
@@ -108,7 +108,7 @@ describe("chat list --format ndjson", () => {
   });
 
   it("includes message fields in each NDJSON line", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format ndjson`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format ndjson`.quiet();
     const output = result.stdout.toString().trim();
     const lines = output.split("\n");
 
@@ -122,7 +122,7 @@ describe("chat list --format ndjson", () => {
   });
 
   it("does not include envelope wrapper (raw records only)", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format ndjson`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format ndjson`.quiet();
     const output = result.stdout.toString().trim();
     const lines = output.split("\n");
 
@@ -134,7 +134,7 @@ describe("chat list --format ndjson", () => {
   });
 
   it("respects --limit option", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format ndjson --limit 1`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format ndjson --limit 1`.quiet();
     const output = result.stdout.toString().trim();
     const lines = output.split("\n");
 
@@ -144,7 +144,7 @@ describe("chat list --format ndjson", () => {
 
 describe("chat list --format table", () => {
   it("outputs table with headers", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format table`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format table`.quiet();
     const output = result.stdout.toString();
 
     // Should have header row
@@ -154,7 +154,7 @@ describe("chat list --format table", () => {
   });
 
   it("outputs table with header underline", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format table`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format table`.quiet();
     const output = result.stdout.toString();
     const lines = output.split("\n");
 
@@ -164,7 +164,7 @@ describe("chat list --format table", () => {
   });
 
   it("includes message data rows", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format table`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format table`.quiet();
     const output = result.stdout.toString();
 
     // Should include message roles
@@ -173,7 +173,7 @@ describe("chat list --format table", () => {
   });
 
   it("shows correct message count (header + underline + data rows)", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format table`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format table`.quiet();
     const output = result.stdout.toString().trim();
     const lines = output.split("\n");
 
@@ -182,7 +182,7 @@ describe("chat list --format table", () => {
   });
 
   it("respects --limit option", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format table --limit 1`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format table --limit 1`.quiet();
     const output = result.stdout.toString().trim();
     const lines = output.split("\n");
 
@@ -199,7 +199,7 @@ describe("chat list --format table", () => {
  */
 describe("chat list ordering", () => {
   it("orders messages by createdAt ascending (oldest first)", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -214,7 +214,7 @@ describe("chat list ordering", () => {
   it("uses messageId as tiebreaker for identical timestamps", async () => {
     // This tests the stable sort behavior - if two messages have the same
     // createdAt, they should be sorted by messageId lexicographically
-    const result = await $`bun src/bin/opencode-manager.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -225,7 +225,7 @@ describe("chat list ordering", () => {
   });
 
   it("user message comes before assistant response in conversation order", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -237,8 +237,8 @@ describe("chat list ordering", () => {
 
   it("maintains consistent ordering across multiple list calls", async () => {
     // Run the same list multiple times and verify consistent ordering
-    const list1 = await $`bun src/bin/opencode-manager.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
-    const list2 = await $`bun src/bin/opencode-manager.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const list1 = await $`bun src/bin/opencode-session-tui.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const list2 = await $`bun src/bin/opencode-session-tui.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
 
     const parsed1 = JSON.parse(list1.stdout.toString());
     const parsed2 = JSON.parse(list2.stdout.toString());
@@ -257,7 +257,7 @@ describe("chat list ordering", () => {
  */
 describe("chat list index numbering", () => {
   it("assigns 1-based indexes to messages", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -269,7 +269,7 @@ describe("chat list index numbering", () => {
   });
 
   it("indexes are sequential starting from 1", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -282,7 +282,7 @@ describe("chat list index numbering", () => {
   });
 
   it("index 1 corresponds to the oldest message", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -293,7 +293,7 @@ describe("chat list index numbering", () => {
   });
 
   it("indexes are included in NDJSON output", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format ndjson`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format ndjson`.quiet();
     const output = result.stdout.toString().trim();
     const lines = output.split("\n");
 
@@ -305,7 +305,7 @@ describe("chat list index numbering", () => {
   });
 
   it("indexes are shown in table output", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format table`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format table`.quiet();
     const output = result.stdout.toString();
 
     // Table should have a # column with indexes
@@ -316,7 +316,7 @@ describe("chat list index numbering", () => {
   });
 
   it("limit affects index assignment (indexes are post-limit)", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json --limit 1`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json --limit 1`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -329,7 +329,7 @@ describe("chat list index numbering", () => {
 
 describe("chat list --include-parts", () => {
   it("includes parts when flag is set", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json --include-parts`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json --include-parts`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -339,7 +339,7 @@ describe("chat list --include-parts", () => {
   });
 
   it("parts are null when flag is not set", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -350,7 +350,7 @@ describe("chat list --include-parts", () => {
   });
 
   it("includes previewText computed from parts when flag is set", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json --include-parts`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json --include-parts`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -364,7 +364,7 @@ describe("chat list --include-parts", () => {
   });
 
   it("includes totalChars when parts are loaded", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json --include-parts`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat list --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json --include-parts`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -384,7 +384,7 @@ describe("chat list --include-parts", () => {
 
 describe("chat show --message", () => {
   it("shows message by exact message ID", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat show --session session_add_tests --message msg_user_01 --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat show --session session_add_tests --message msg_user_01 --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -394,7 +394,7 @@ describe("chat show --message", () => {
   });
 
   it("shows message by message ID prefix", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat show --session session_add_tests --message msg_user --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat show --session session_add_tests --message msg_user --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -403,7 +403,7 @@ describe("chat show --message", () => {
   });
 
   it("includes hydrated message parts", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat show --session session_add_tests --message msg_user_01 --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat show --session session_add_tests --message msg_user_01 --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -412,7 +412,7 @@ describe("chat show --message", () => {
   });
 
   it("includes previewText computed from parts", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat show --session session_add_tests --message msg_user_01 --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat show --session session_add_tests --message msg_user_01 --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -420,14 +420,14 @@ describe("chat show --message", () => {
   });
 
   it("returns exit code 3 for non-existent message ID", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat show --session session_add_tests --message nonexistent_msg --root ${FIXTURE_STORE_ROOT} --format json`.quiet().nothrow();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat show --session session_add_tests --message nonexistent_msg --root ${FIXTURE_STORE_ROOT} --format json`.quiet().nothrow();
 
     expect(result.exitCode).toBe(3);
   });
 
   it("returns exit code 3 for ambiguous message ID prefix", async () => {
     // "msg_" matches both msg_user_01 and msg_assistant_01
-    const result = await $`bun src/bin/opencode-manager.ts chat show --session session_add_tests --message msg_ --root ${FIXTURE_STORE_ROOT} --format json`.quiet().nothrow();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat show --session session_add_tests --message msg_ --root ${FIXTURE_STORE_ROOT} --format json`.quiet().nothrow();
 
     expect(result.exitCode).toBe(3);
     const output = result.stderr.toString();
@@ -436,7 +436,7 @@ describe("chat show --message", () => {
   });
 
   it("works with session ID prefix", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat show --session session_add --message msg_user_01 --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat show --session session_add --message msg_user_01 --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -447,7 +447,7 @@ describe("chat show --message", () => {
 
 describe("chat show --index", () => {
   it("shows message by 1-based index", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat show --session session_add_tests --index 1 --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat show --session session_add_tests --index 1 --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -457,7 +457,7 @@ describe("chat show --index", () => {
   });
 
   it("index 2 returns second message", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat show --session session_add_tests --index 2 --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat show --session session_add_tests --index 2 --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -466,13 +466,13 @@ describe("chat show --index", () => {
   });
 
   it("returns exit code 3 for index 0", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat show --session session_add_tests --index 0 --root ${FIXTURE_STORE_ROOT} --format json`.quiet().nothrow();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat show --session session_add_tests --index 0 --root ${FIXTURE_STORE_ROOT} --format json`.quiet().nothrow();
 
     expect(result.exitCode).toBe(3);
   });
 
   it("returns exit code 3 for index greater than message count", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat show --session session_add_tests --index 100 --root ${FIXTURE_STORE_ROOT} --format json`.quiet().nothrow();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat show --session session_add_tests --index 100 --root ${FIXTURE_STORE_ROOT} --format json`.quiet().nothrow();
 
     expect(result.exitCode).toBe(3);
     const output = result.stderr.toString();
@@ -481,7 +481,7 @@ describe("chat show --index", () => {
   });
 
   it("returns exit code 3 for negative index", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat show --session session_add_tests --index -1 --root ${FIXTURE_STORE_ROOT} --format json`.quiet().nothrow();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat show --session session_add_tests --index -1 --root ${FIXTURE_STORE_ROOT} --format json`.quiet().nothrow();
 
     expect(result.exitCode).toBe(3);
   });
@@ -489,7 +489,7 @@ describe("chat show --index", () => {
 
 describe("chat show validation", () => {
   it("returns exit code 2 when neither --message nor --index is provided", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat show --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json`.quiet().nothrow();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat show --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json`.quiet().nothrow();
 
     expect(result.exitCode).toBe(2);
     const output = result.stderr.toString();
@@ -498,7 +498,7 @@ describe("chat show validation", () => {
   });
 
   it("returns exit code 2 when both --message and --index are provided", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat show --session session_add_tests --message msg_user_01 --index 1 --root ${FIXTURE_STORE_ROOT} --format json`.quiet().nothrow();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat show --session session_add_tests --message msg_user_01 --index 1 --root ${FIXTURE_STORE_ROOT} --format json`.quiet().nothrow();
 
     expect(result.exitCode).toBe(2);
     const output = result.stderr.toString();
@@ -507,14 +507,14 @@ describe("chat show validation", () => {
   });
 
   it("returns exit code 3 for non-existent session", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat show --session nonexistent_session --message msg_user_01 --root ${FIXTURE_STORE_ROOT} --format json`.quiet().nothrow();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat show --session nonexistent_session --message msg_user_01 --root ${FIXTURE_STORE_ROOT} --format json`.quiet().nothrow();
 
     expect(result.exitCode).toBe(3);
   });
 
   it("returns exit code 3 for empty session (no messages)", async () => {
     // session_parser_fix exists but has no messages in fixture
-    const result = await $`bun src/bin/opencode-manager.ts chat show --session session_parser_fix --index 1 --root ${FIXTURE_STORE_ROOT} --format json`.quiet().nothrow();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat show --session session_parser_fix --index 1 --root ${FIXTURE_STORE_ROOT} --format json`.quiet().nothrow();
 
     expect(result.exitCode).toBe(3);
     const output = result.stderr.toString();
@@ -525,7 +525,7 @@ describe("chat show validation", () => {
 
 describe("chat show output formats", () => {
   it("outputs valid JSON with success envelope", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat show --session session_add_tests --index 1 --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat show --session session_add_tests --index 1 --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -535,7 +535,7 @@ describe("chat show output formats", () => {
   });
 
   it("outputs valid NDJSON (single line)", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat show --session session_add_tests --index 1 --root ${FIXTURE_STORE_ROOT} --format ndjson`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat show --session session_add_tests --index 1 --root ${FIXTURE_STORE_ROOT} --format ndjson`.quiet();
     const output = result.stdout.toString().trim();
     const lines = output.split("\n");
 
@@ -546,7 +546,7 @@ describe("chat show output formats", () => {
   });
 
   it("outputs formatted table with message details", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat show --session session_add_tests --index 1 --root ${FIXTURE_STORE_ROOT} --format table`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat show --session session_add_tests --index 1 --root ${FIXTURE_STORE_ROOT} --format table`.quiet();
     const output = result.stdout.toString();
 
     expect(output).toContain("Message ID:");
@@ -555,7 +555,7 @@ describe("chat show output formats", () => {
   });
 
   it("table format shows full message content", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat show --session session_add_tests --message msg_user_01 --root ${FIXTURE_STORE_ROOT} --format table`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat show --session session_add_tests --message msg_user_01 --root ${FIXTURE_STORE_ROOT} --format table`.quiet();
     const output = result.stdout.toString();
 
     expect(output).toContain("add unit tests");
@@ -565,7 +565,7 @@ describe("chat show output formats", () => {
 describe("chat show full text content", () => {
   it("includes combined full text from all parts", async () => {
     // msg_assistant_01 has multiple parts: text and tool
-    const result = await $`bun src/bin/opencode-manager.ts chat show --session session_add_tests --message msg_assistant_01 --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat show --session session_add_tests --message msg_assistant_01 --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -574,7 +574,7 @@ describe("chat show full text content", () => {
   });
 
   it("previewText includes text content from parts", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat show --session session_add_tests --message msg_assistant_01 --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat show --session session_add_tests --message msg_assistant_01 --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -582,7 +582,7 @@ describe("chat show full text content", () => {
   });
 
   it("includes parts with different types (text, tool, subtask)", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat show --session session_add_tests --message msg_assistant_01 --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat show --session session_add_tests --message msg_assistant_01 --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -599,7 +599,7 @@ describe("chat show full text content", () => {
 
 describe("chat search --format json", () => {
   it("outputs valid JSON with success envelope", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat search --query "unit tests" --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat search --query "unit tests" --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -609,7 +609,7 @@ describe("chat search --format json", () => {
   });
 
   it("finds matches for query in message content", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat search --query "unit tests" --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat search --query "unit tests" --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -618,7 +618,7 @@ describe("chat search --format json", () => {
   });
 
   it("includes search result fields in JSON output", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat search --query "unit tests" --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat search --query "unit tests" --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -634,7 +634,7 @@ describe("chat search --format json", () => {
   });
 
   it("includes matched text snippet around query", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat search --query "utils module" --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat search --query "utils module" --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -645,7 +645,7 @@ describe("chat search --format json", () => {
   });
 
   it("serializes Date fields as ISO strings", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat search --query "unit tests" --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat search --query "unit tests" --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -657,7 +657,7 @@ describe("chat search --format json", () => {
   });
 
   it("includes meta with limit info", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat search --query "unit tests" --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat search --query "unit tests" --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -666,7 +666,7 @@ describe("chat search --format json", () => {
   });
 
   it("returns empty array for non-matching query", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat search --query "xyznonexistent123" --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat search --query "xyznonexistent123" --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -676,7 +676,7 @@ describe("chat search --format json", () => {
   });
 
   it("respects --limit option", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat search --query "unit tests" --root ${FIXTURE_STORE_ROOT} --format json --limit 1`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat search --query "unit tests" --root ${FIXTURE_STORE_ROOT} --format json --limit 1`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -686,7 +686,7 @@ describe("chat search --format json", () => {
 
 describe("chat search --format ndjson", () => {
   it("outputs valid NDJSON (one JSON object per line)", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat search --query "unit tests" --root ${FIXTURE_STORE_ROOT} --format ndjson`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat search --query "unit tests" --root ${FIXTURE_STORE_ROOT} --format ndjson`.quiet();
     const output = result.stdout.toString().trim();
 
     if (output) {
@@ -698,7 +698,7 @@ describe("chat search --format ndjson", () => {
   });
 
   it("includes search result fields in each NDJSON line", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat search --query "unit tests" --root ${FIXTURE_STORE_ROOT} --format ndjson`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat search --query "unit tests" --root ${FIXTURE_STORE_ROOT} --format ndjson`.quiet();
     const output = result.stdout.toString().trim();
 
     if (output) {
@@ -714,7 +714,7 @@ describe("chat search --format ndjson", () => {
   });
 
   it("does not include envelope wrapper (raw records only)", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat search --query "unit tests" --root ${FIXTURE_STORE_ROOT} --format ndjson`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat search --query "unit tests" --root ${FIXTURE_STORE_ROOT} --format ndjson`.quiet();
     const output = result.stdout.toString().trim();
 
     if (output) {
@@ -727,7 +727,7 @@ describe("chat search --format ndjson", () => {
   });
 
   it("respects --limit option", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat search --query "unit tests" --root ${FIXTURE_STORE_ROOT} --format ndjson --limit 1`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat search --query "unit tests" --root ${FIXTURE_STORE_ROOT} --format ndjson --limit 1`.quiet();
     const output = result.stdout.toString().trim();
 
     if (output) {
@@ -739,7 +739,7 @@ describe("chat search --format ndjson", () => {
 
 describe("chat search --format table", () => {
   it("outputs table with headers", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat search --query "unit tests" --root ${FIXTURE_STORE_ROOT} --format table`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat search --query "unit tests" --root ${FIXTURE_STORE_ROOT} --format table`.quiet();
     const output = result.stdout.toString();
 
     // Should have header row
@@ -748,7 +748,7 @@ describe("chat search --format table", () => {
   });
 
   it("outputs table with header underline", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat search --query "unit tests" --root ${FIXTURE_STORE_ROOT} --format table`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat search --query "unit tests" --root ${FIXTURE_STORE_ROOT} --format table`.quiet();
     const output = result.stdout.toString();
     const lines = output.split("\n");
 
@@ -758,7 +758,7 @@ describe("chat search --format table", () => {
   });
 
   it("includes match data rows", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat search --query "unit tests" --root ${FIXTURE_STORE_ROOT} --format table`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat search --query "unit tests" --root ${FIXTURE_STORE_ROOT} --format table`.quiet();
     const output = result.stdout.toString();
 
     // Should include session title in the output
@@ -766,7 +766,7 @@ describe("chat search --format table", () => {
   });
 
   it("respects --limit option", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat search --query "unit tests" --root ${FIXTURE_STORE_ROOT} --format table --limit 1`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat search --query "unit tests" --root ${FIXTURE_STORE_ROOT} --format table --limit 1`.quiet();
     const output = result.stdout.toString().trim();
     const lines = output.split("\n");
 
@@ -777,7 +777,7 @@ describe("chat search --format table", () => {
 
 describe("chat search --project filter", () => {
   it("filters results by project ID", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat search --query "unit tests" --project proj_present --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat search --query "unit tests" --project proj_present --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -787,7 +787,7 @@ describe("chat search --project filter", () => {
   });
 
   it("returns empty array for non-matching project", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat search --query "unit tests" --project nonexistent_proj --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat search --query "unit tests" --project nonexistent_proj --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -797,7 +797,7 @@ describe("chat search --project filter", () => {
   });
 
   it("combines project filter with query matching", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat search --query "utils module" --project proj_present --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat search --query "utils module" --project proj_present --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -811,7 +811,7 @@ describe("chat search --project filter", () => {
 
 describe("chat search ordering and indexing", () => {
   it("assigns 1-based indexes to search results", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat search --query "unit tests" --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat search --query "unit tests" --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -821,7 +821,7 @@ describe("chat search ordering and indexing", () => {
   });
 
   it("indexes are sequential starting from 1", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat search --query "unit tests" --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat search --query "unit tests" --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -835,7 +835,7 @@ describe("chat search ordering and indexing", () => {
   it("returns one result per message (no duplicates from multiple part matches)", async () => {
     // "utils module" appears in both msg_user_01 and msg_assistant_01
     // Each message should only appear once in results
-    const result = await $`bun src/bin/opencode-manager.ts chat search --query "utils module" --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat search --query "utils module" --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -845,8 +845,8 @@ describe("chat search ordering and indexing", () => {
   });
 
   it("maintains consistent ordering across multiple search calls", async () => {
-    const result1 = await $`bun src/bin/opencode-manager.ts chat search --query "unit tests" --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
-    const result2 = await $`bun src/bin/opencode-manager.ts chat search --query "unit tests" --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result1 = await $`bun src/bin/opencode-session-tui.ts chat search --query "unit tests" --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result2 = await $`bun src/bin/opencode-session-tui.ts chat search --query "unit tests" --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
 
     const parsed1 = JSON.parse(result1.stdout.toString());
     const parsed2 = JSON.parse(result2.stdout.toString());
@@ -860,9 +860,9 @@ describe("chat search ordering and indexing", () => {
 
 describe("chat search case sensitivity", () => {
   it("search is case-insensitive", async () => {
-    const resultLower = await $`bun src/bin/opencode-manager.ts chat search --query "unit tests" --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
-    const resultUpper = await $`bun src/bin/opencode-manager.ts chat search --query "UNIT TESTS" --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
-    const resultMixed = await $`bun src/bin/opencode-manager.ts chat search --query "Unit Tests" --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const resultLower = await $`bun src/bin/opencode-session-tui.ts chat search --query "unit tests" --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const resultUpper = await $`bun src/bin/opencode-session-tui.ts chat search --query "UNIT TESTS" --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const resultMixed = await $`bun src/bin/opencode-session-tui.ts chat search --query "Unit Tests" --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
 
     const parsedLower = JSON.parse(resultLower.stdout.toString());
     const parsedUpper = JSON.parse(resultUpper.stdout.toString());
@@ -877,7 +877,7 @@ describe("chat search case sensitivity", () => {
 
 describe("chat search whitespace query", () => {
   it("returns empty results for whitespace-only query", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat search --query "   " --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat search --query "   " --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -893,7 +893,7 @@ describe("chat search whitespace query", () => {
 
 describe("chat show --clipboard", () => {
   it("succeeds with --clipboard flag and JSON format", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat show --session session_add_tests --index 1 --root ${FIXTURE_STORE_ROOT} --format json --clipboard`.quiet().nothrow();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat show --session session_add_tests --index 1 --root ${FIXTURE_STORE_ROOT} --format json --clipboard`.quiet().nothrow();
 
     // Command should succeed (exit code 0) even if clipboard tool isn't available
     // The clipboard copy may fail but command should complete
@@ -906,7 +906,7 @@ describe("chat show --clipboard", () => {
   });
 
   it("succeeds with --clipboard flag and NDJSON format", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat show --session session_add_tests --index 1 --root ${FIXTURE_STORE_ROOT} --format ndjson --clipboard`.quiet().nothrow();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat show --session session_add_tests --index 1 --root ${FIXTURE_STORE_ROOT} --format ndjson --clipboard`.quiet().nothrow();
 
     expect(result.exitCode).toBe(0);
 
@@ -916,7 +916,7 @@ describe("chat show --clipboard", () => {
   });
 
   it("attempts clipboard copy and shows feedback in table format", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat show --session session_add_tests --index 1 --root ${FIXTURE_STORE_ROOT} --format table --clipboard`.nothrow();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat show --session session_add_tests --index 1 --root ${FIXTURE_STORE_ROOT} --format table --clipboard`.nothrow();
 
     // Command should succeed
     expect(result.exitCode).toBe(0);
@@ -937,7 +937,7 @@ describe("chat show --clipboard", () => {
   });
 
   it("works with --message flag", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat show --session session_add_tests --message msg_user_01 --root ${FIXTURE_STORE_ROOT} --format json --clipboard`.quiet().nothrow();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat show --session session_add_tests --message msg_user_01 --root ${FIXTURE_STORE_ROOT} --format json --clipboard`.quiet().nothrow();
 
     expect(result.exitCode).toBe(0);
 
@@ -948,7 +948,7 @@ describe("chat show --clipboard", () => {
   });
 
   it("works with -c short flag", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat show --session session_add_tests --index 1 --root ${FIXTURE_STORE_ROOT} --format json -c`.quiet().nothrow();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat show --session session_add_tests --index 1 --root ${FIXTURE_STORE_ROOT} --format json -c`.quiet().nothrow();
 
     expect(result.exitCode).toBe(0);
 
@@ -959,7 +959,7 @@ describe("chat show --clipboard", () => {
 
   it("processes message with multiple parts", async () => {
     // msg_assistant_01 has multiple parts (text, tool, subtask)
-    const result = await $`bun src/bin/opencode-manager.ts chat show --session session_add_tests --message msg_assistant_01 --root ${FIXTURE_STORE_ROOT} --format table --clipboard`.nothrow();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat show --session session_add_tests --message msg_assistant_01 --root ${FIXTURE_STORE_ROOT} --format table --clipboard`.nothrow();
 
     expect(result.exitCode).toBe(0);
 
@@ -969,7 +969,7 @@ describe("chat show --clipboard", () => {
   });
 
   it("returns exit code 3 for non-existent message with --clipboard", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat show --session session_add_tests --message nonexistent --root ${FIXTURE_STORE_ROOT} --format json --clipboard`.quiet().nothrow();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat show --session session_add_tests --message nonexistent --root ${FIXTURE_STORE_ROOT} --format json --clipboard`.quiet().nothrow();
 
     // Should still return proper exit code for not found
     expect(result.exitCode).toBe(3);
@@ -988,7 +988,7 @@ import { FIXTURE_SQLITE_PATH } from "../../helpers";
 
 describe("chat show --experimental-sqlite", () => {
   it("shows message by exact message ID with --db flag", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat show --session session_add_tests --message msg_user_01 --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat show --session session_add_tests --message msg_user_01 --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -998,7 +998,7 @@ describe("chat show --experimental-sqlite", () => {
   });
 
   it("shows message by message ID prefix with SQLite", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat show --session session_add_tests --message msg_user --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat show --session session_add_tests --message msg_user --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -1007,7 +1007,7 @@ describe("chat show --experimental-sqlite", () => {
   });
 
   it("shows message by 1-based index with SQLite", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat show --session session_add_tests --index 1 --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat show --session session_add_tests --index 1 --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -1018,7 +1018,7 @@ describe("chat show --experimental-sqlite", () => {
   });
 
   it("index 2 returns second message with SQLite", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat show --session session_add_tests --index 2 --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat show --session session_add_tests --index 2 --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -1028,7 +1028,7 @@ describe("chat show --experimental-sqlite", () => {
   });
 
   it("includes hydrated message parts from SQLite", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat show --session session_add_tests --message msg_user_01 --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat show --session session_add_tests --message msg_user_01 --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -1037,7 +1037,7 @@ describe("chat show --experimental-sqlite", () => {
   });
 
   it("includes previewText computed from parts with SQLite", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat show --session session_add_tests --message msg_user_01 --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat show --session session_add_tests --message msg_user_01 --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -1045,7 +1045,7 @@ describe("chat show --experimental-sqlite", () => {
   });
 
   it("serializes Date fields as ISO strings with SQLite", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat show --session session_add_tests --index 1 --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat show --session session_add_tests --index 1 --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -1055,7 +1055,7 @@ describe("chat show --experimental-sqlite", () => {
   });
 
   it("works with table format output and SQLite", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat show --session session_add_tests --index 1 --db ${FIXTURE_SQLITE_PATH} --format table`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat show --session session_add_tests --index 1 --db ${FIXTURE_SQLITE_PATH} --format table`.quiet();
     const output = result.stdout.toString();
 
     expect(output).toContain("Message ID:");
@@ -1065,7 +1065,7 @@ describe("chat show --experimental-sqlite", () => {
   });
 
   it("works with ndjson format output and SQLite", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat show --session session_add_tests --index 1 --db ${FIXTURE_SQLITE_PATH} --format ndjson`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat show --session session_add_tests --index 1 --db ${FIXTURE_SQLITE_PATH} --format ndjson`.quiet();
     const output = result.stdout.toString().trim();
     const lines = output.split("\n");
 
@@ -1078,7 +1078,7 @@ describe("chat show --experimental-sqlite", () => {
   });
 
   it("supports session ID prefix matching with SQLite", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat show --session session_add --message msg_user_01 --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat show --session session_add --message msg_user_01 --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -1087,14 +1087,14 @@ describe("chat show --experimental-sqlite", () => {
   });
 
   it("returns exit code 3 for non-existent message ID with SQLite", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat show --session session_add_tests --message nonexistent_msg --db ${FIXTURE_SQLITE_PATH} --format json`.quiet().nothrow();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat show --session session_add_tests --message nonexistent_msg --db ${FIXTURE_SQLITE_PATH} --format json`.quiet().nothrow();
 
     expect(result.exitCode).toBe(3);
   });
 
   it("returns exit code 3 for ambiguous message ID prefix with SQLite", async () => {
     // "msg_" matches both msg_user_01 and msg_assistant_01
-    const result = await $`bun src/bin/opencode-manager.ts chat show --session session_add_tests --message msg_ --db ${FIXTURE_SQLITE_PATH} --format json`.quiet().nothrow();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat show --session session_add_tests --message msg_ --db ${FIXTURE_SQLITE_PATH} --format json`.quiet().nothrow();
 
     expect(result.exitCode).toBe(3);
     const output = result.stderr.toString();
@@ -1103,7 +1103,7 @@ describe("chat show --experimental-sqlite", () => {
   });
 
   it("returns exit code 3 for index out of range with SQLite", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat show --session session_add_tests --index 100 --db ${FIXTURE_SQLITE_PATH} --format json`.quiet().nothrow();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat show --session session_add_tests --index 100 --db ${FIXTURE_SQLITE_PATH} --format json`.quiet().nothrow();
 
     expect(result.exitCode).toBe(3);
     const output = result.stderr.toString();
@@ -1112,13 +1112,13 @@ describe("chat show --experimental-sqlite", () => {
   });
 
   it("returns exit code 3 for non-existent session with SQLite", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat show --session nonexistent_session --message msg_user_01 --db ${FIXTURE_SQLITE_PATH} --format json`.quiet().nothrow();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat show --session nonexistent_session --message msg_user_01 --db ${FIXTURE_SQLITE_PATH} --format json`.quiet().nothrow();
 
     expect(result.exitCode).toBe(3);
   });
 
   it("returns error for non-existent database file", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat show --session session_add_tests --index 1 --db /nonexistent/path/to/db.sqlite --format json`.quiet().nothrow();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat show --session session_add_tests --index 1 --db /nonexistent/path/to/db.sqlite --format json`.quiet().nothrow();
 
     expect(result.exitCode).not.toBe(0);
   });
@@ -1130,7 +1130,7 @@ describe("chat show --experimental-sqlite", () => {
 
 describe("chat list --experimental-sqlite", () => {
   it("loads messages from SQLite database with --db flag", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat list --session session_add_tests --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat list --session session_add_tests --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -1141,7 +1141,7 @@ describe("chat list --experimental-sqlite", () => {
   });
 
   it("returns correct message IDs from SQLite database", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat list --session session_add_tests --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat list --session session_add_tests --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -1152,7 +1152,7 @@ describe("chat list --experimental-sqlite", () => {
   });
 
   it("includes all expected message fields", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat list --session session_add_tests --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat list --session session_add_tests --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -1166,7 +1166,7 @@ describe("chat list --experimental-sqlite", () => {
   });
 
   it("orders messages chronologically (oldest first)", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat list --session session_add_tests --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat list --session session_add_tests --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -1176,7 +1176,7 @@ describe("chat list --experimental-sqlite", () => {
   });
 
   it("assigns 1-based indexes to messages", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat list --session session_add_tests --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat list --session session_add_tests --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -1185,7 +1185,7 @@ describe("chat list --experimental-sqlite", () => {
   });
 
   it("respects --limit option with SQLite backend", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat list --session session_add_tests --db ${FIXTURE_SQLITE_PATH} --format json --limit 1`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat list --session session_add_tests --db ${FIXTURE_SQLITE_PATH} --format json --limit 1`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -1193,7 +1193,7 @@ describe("chat list --experimental-sqlite", () => {
   });
 
   it("includes parts when --include-parts flag is set", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat list --session session_add_tests --db ${FIXTURE_SQLITE_PATH} --format json --include-parts`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat list --session session_add_tests --db ${FIXTURE_SQLITE_PATH} --format json --include-parts`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -1203,7 +1203,7 @@ describe("chat list --experimental-sqlite", () => {
   });
 
   it("serializes Date fields as ISO strings", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat list --session session_add_tests --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat list --session session_add_tests --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -1215,7 +1215,7 @@ describe("chat list --experimental-sqlite", () => {
   });
 
   it("works with table format output", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat list --session session_add_tests --db ${FIXTURE_SQLITE_PATH} --format table`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat list --session session_add_tests --db ${FIXTURE_SQLITE_PATH} --format table`.quiet();
     const output = result.stdout.toString();
 
     expect(output).toContain("#");
@@ -1226,7 +1226,7 @@ describe("chat list --experimental-sqlite", () => {
   });
 
   it("works with ndjson format output", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat list --session session_add_tests --db ${FIXTURE_SQLITE_PATH} --format ndjson`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat list --session session_add_tests --db ${FIXTURE_SQLITE_PATH} --format ndjson`.quiet();
     const output = result.stdout.toString().trim();
     const lines = output.split("\n");
 
@@ -1239,19 +1239,19 @@ describe("chat list --experimental-sqlite", () => {
   });
 
   it("returns exit code 3 for non-existent session", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat list --session nonexistent_session --db ${FIXTURE_SQLITE_PATH} --format json`.quiet().nothrow();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat list --session nonexistent_session --db ${FIXTURE_SQLITE_PATH} --format json`.quiet().nothrow();
 
     expect(result.exitCode).toBe(3);
   });
 
   it("returns error for non-existent database file", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat list --session session_add_tests --db /nonexistent/path/to/db.sqlite --format json`.quiet().nothrow();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat list --session session_add_tests --db /nonexistent/path/to/db.sqlite --format json`.quiet().nothrow();
 
     expect(result.exitCode).not.toBe(0);
   });
 
   it("supports prefix matching for session ID with SQLite", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat list --session session_add --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat list --session session_add --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -1266,7 +1266,7 @@ describe("chat list --experimental-sqlite", () => {
 
 describe("chat search --experimental-sqlite", () => {
   it("outputs valid JSON with success envelope using --db flag", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat search --query "unit tests" --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat search --query "unit tests" --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -1276,7 +1276,7 @@ describe("chat search --experimental-sqlite", () => {
   });
 
   it("finds matches for query in message content with SQLite", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat search --query "unit tests" --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat search --query "unit tests" --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -1285,7 +1285,7 @@ describe("chat search --experimental-sqlite", () => {
   });
 
   it("includes search result fields in JSON output with SQLite", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat search --query "unit tests" --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat search --query "unit tests" --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -1301,7 +1301,7 @@ describe("chat search --experimental-sqlite", () => {
   });
 
   it("includes matched text snippet around query with SQLite", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat search --query "utils module" --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat search --query "utils module" --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -1312,7 +1312,7 @@ describe("chat search --experimental-sqlite", () => {
   });
 
   it("returns empty array for non-matching query with SQLite", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat search --query "xyznonexistent123" --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat search --query "xyznonexistent123" --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -1322,7 +1322,7 @@ describe("chat search --experimental-sqlite", () => {
   });
 
   it("respects --limit option with SQLite", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat search --query "unit tests" --db ${FIXTURE_SQLITE_PATH} --format json --limit 1`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat search --query "unit tests" --db ${FIXTURE_SQLITE_PATH} --format json --limit 1`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -1330,8 +1330,8 @@ describe("chat search --experimental-sqlite", () => {
   });
 
   it("search is case-insensitive with SQLite", async () => {
-    const resultLower = await $`bun src/bin/opencode-manager.ts chat search --query "unit tests" --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
-    const resultUpper = await $`bun src/bin/opencode-manager.ts chat search --query "UNIT TESTS" --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
+    const resultLower = await $`bun src/bin/opencode-session-tui.ts chat search --query "unit tests" --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
+    const resultUpper = await $`bun src/bin/opencode-session-tui.ts chat search --query "UNIT TESTS" --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
 
     const parsedLower = JSON.parse(resultLower.stdout.toString());
     const parsedUpper = JSON.parse(resultUpper.stdout.toString());
@@ -1342,7 +1342,7 @@ describe("chat search --experimental-sqlite", () => {
   });
 
   it("respects --project filter with SQLite", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat search --query "unit tests" --project proj_present --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat search --query "unit tests" --project proj_present --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -1352,7 +1352,7 @@ describe("chat search --experimental-sqlite", () => {
   });
 
   it("returns empty array for non-matching project filter with SQLite", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat search --query "unit tests" --project nonexistent_proj --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat search --query "unit tests" --project nonexistent_proj --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -1361,7 +1361,7 @@ describe("chat search --experimental-sqlite", () => {
   });
 
   it("works with ndjson format output and SQLite", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat search --query "unit tests" --db ${FIXTURE_SQLITE_PATH} --format ndjson`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat search --query "unit tests" --db ${FIXTURE_SQLITE_PATH} --format ndjson`.quiet();
     const output = result.stdout.toString().trim();
 
     if (output) {
@@ -1376,7 +1376,7 @@ describe("chat search --experimental-sqlite", () => {
   });
 
   it("works with table format output and SQLite", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat search --query "unit tests" --db ${FIXTURE_SQLITE_PATH} --format table`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat search --query "unit tests" --db ${FIXTURE_SQLITE_PATH} --format table`.quiet();
     const output = result.stdout.toString();
 
     expect(output).toContain("#");
@@ -1384,13 +1384,13 @@ describe("chat search --experimental-sqlite", () => {
   });
 
   it("returns error for non-existent database file", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat search --query "unit tests" --db /nonexistent/path/to/db.sqlite --format json`.quiet().nothrow();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat search --query "unit tests" --db /nonexistent/path/to/db.sqlite --format json`.quiet().nothrow();
 
     expect(result.exitCode).not.toBe(0);
   });
 
   it("returns empty results for whitespace-only query with SQLite", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts chat search --query "   " --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts chat search --query "   " --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);

@@ -112,8 +112,8 @@ export function registerProjectsCommands(parent: Command): void {
     [
       "",
       "Examples:",
-      "  opencode-manager projects list --experimental-sqlite",
-      "  opencode-manager projects list --db ~/.local/share/opencode/opencode.db",
+      "  opencode-session-tui projects list --experimental-sqlite",
+      "  opencode-session-tui projects list --db ~/.local/share/opencode/opencode.db",
     ].join("\n")
   )
 }

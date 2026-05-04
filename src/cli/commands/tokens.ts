@@ -101,8 +101,8 @@ export function registerTokensCommands(parent: Command): void {
     [
       "",
       "Examples:",
-      "  opencode-manager tokens session --session <id> --experimental-sqlite",
-      "  opencode-manager tokens global --db ~/.local/share/opencode/opencode.db",
+      "  opencode-session-tui tokens session --session <id> --experimental-sqlite",
+      "  opencode-session-tui tokens global --db ~/.local/share/opencode/opencode.db",
     ].join("\n")
   )
 }

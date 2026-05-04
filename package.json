@@ -1,5 +1,5 @@
 {
-  "name": "opencode-manager-fork",
+  "name": "opencode-session-tui",
   "version": "0.4.6",
   "description": "Fork of OpenCode Metadata Manager for inspecting OpenCode metadata stores.",
   "type": "module",
@@ -9,20 +9,20 @@
     "bun": ">=1.3.0"
   },
   "bin": {
-    "opencode-manager": "src/bin/opencode-manager.ts"
+    "opencode-session-tui": "src/bin/opencode-session-tui.ts"
   },
   "files": [
     "src",
     "bun.lock",
     "tsconfig.json",
     "docs/CHANGES.md",
-      "session-tui.bat",
+      "launch-oc-session-tui.bat",
     "manage_opencode_projects.py",
     "LICENSE"
   ],
   "scripts": {
-    "start": "bun src/bin/opencode-manager.ts",
-    "manager": "bun src/bin/opencode-manager.ts",
+    "start": "bun src/bin/opencode-session-tui.ts",
+    "manager": "bun src/bin/opencode-session-tui.ts",
     "tui": "bun src/tui/index.tsx",
     "dev": "bun --watch src/tui/index.tsx",
     "test": "bun test",

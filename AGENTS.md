@@ -20,7 +20,7 @@ Operational musts for coding agents working in this repository.
 1. Local launch must be simple:
    - `bun run start` launches TUI.
    - `bun run manager -- <cli args>` routes through main CLI entry.
-2. Do not require users to run `bun run src/bin/opencode-manager.ts ...` for normal usage.
+2. Do not require users to run `bun run src/bin/opencode-session-tui.ts ...` for normal usage.
 3. Keep help output accurate with script-based launch guidance.
 
 ## Architecture constraints

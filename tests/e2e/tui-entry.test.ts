@@ -5,19 +5,19 @@ const isWindows = process.platform === "win32"
 
 describe("TUI entrypoint e2e", () => {
   test("root help documents TUI launch and storage flags", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts --help`.quiet()
+    const result = await $`bun src/bin/opencode-session-tui.ts --help`.quiet()
     const output = result.stdout.toString()
 
     expect(result.exitCode).toBe(0)
     expect(output).toContain("(no command)")
-    expect(output).toContain("opencode-manager tui")
+    expect(output).toContain("opencode-session-tui tui")
     expect(output).toContain("--experimental-sqlite")
     expect(output).toContain("--db <path>")
     expect(output).toContain("Hybrid")
   })
 
   test("tui help exits before interactive renderer launch", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts tui --help`.quiet()
+    const result = await $`bun src/bin/opencode-session-tui.ts tui --help`.quiet()
     const output = result.stdout.toString()
 
     expect(result.exitCode).toBe(0)
@@ -35,7 +35,7 @@ describe("TUI entrypoint e2e", () => {
   })
 
   test("root TUI storage flags work without explicit tui subcommand", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts --db C:/temp/opencode.db --help`.quiet()
+    const result = await $`bun src/bin/opencode-session-tui.ts --db C:/temp/opencode.db --help`.quiet()
     const output = result.stdout.toString()
 
     expect(result.exitCode).toBe(0)
@@ -53,7 +53,7 @@ describe("TUI entrypoint e2e", () => {
   })
 
   test.skipIf(!isWindows)("windows batch launcher opens manager entrypoint", async () => {
-    const result = await $`cmd /c opencode-manager.bat --help`.quiet()
+    const result = await $`cmd /c launch-oc-session-tui.bat --help`.quiet()
     const output = result.stdout.toString()
 
     expect(result.exitCode).toBe(0)

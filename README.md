@@ -4,7 +4,7 @@ Terminal UI for inspecting, filtering, and pruning OpenCode metadata stored on d
 
 ## Install
 
-Install this fork globally from the git repository to get the `opencode-manager` command on your PATH:
+Install this fork globally from the git repository to get the `opencode-session-tui` command on your PATH:
 
 ```bash
 bun add -g git+https://github.com/markus-kb/opencode-session-tui.git
@@ -13,14 +13,14 @@ bun add -g git+https://github.com/markus-kb/opencode-session-tui.git
 Then run it from any directory:
 
 ```bash
-opencode-manager --help
-opencode-manager --root ~/.local/share/opencode
+opencode-session-tui --help
+opencode-session-tui --root ~/.local/share/opencode
 ```
 
 If you only want to try it locally from the source checkout, use `bunx` or `bun run` instead of a global install:
 
 ```bash
-bunx opencode-manager --help
+bunx opencode-session-tui --help
 bun run manager -- --help
 ```
 
@@ -32,7 +32,7 @@ For local development on Windows, use the package scripts instead of calling sou
 bun run start
 ```
 
-You can also double-click `session-tui.bat` from this repository root to launch the app in a Windows terminal.
+You can also double-click `launch-oc-session-tui.bat` from this repository root to launch the app in a Windows terminal.
 
 Additional options:
 
@@ -70,7 +70,7 @@ The current TUI still renders through `src/tui/app.tsx`. Consolidated architectu
 
 The target architecture keeps OpenTUI, but moves from a monolithic root component toward explicit screens, first-class overlays, shared data resources, scoped input handling, and a fast home dashboard that does not trigger expensive metadata scans.
 
-Regression coverage includes pure TUI state/resource-policy/session-resource tests and process-level e2e checks for `opencode-manager --help`, `opencode-manager --db <path> --help`, and `opencode-manager tui --help` so users can discover TUI storage modes without launching the interactive renderer.
+Regression coverage includes pure TUI state/resource-policy/session-resource tests and process-level e2e checks for `opencode-session-tui --help`, `opencode-session-tui --db <path> --help`, and `opencode-session-tui tui --help` so users can discover TUI storage modes without launching the interactive renderer.
 
 Key TUI seams now live in dedicated modules under `src/tui/`, including:
 
@@ -96,7 +96,7 @@ Current Phase 10 status:
 
 ### Entry points
 
-- `src/bin/opencode-manager.ts`: routes to CLI or TUI.
+- `src/bin/opencode-session-tui.ts`: routes to CLI or TUI.
 - CLI mode: `projects`, `sessions`, `chat`, `tokens` commands.
 - TUI mode: default launch or explicit `tui` subcommand.
 

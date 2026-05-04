@@ -13,7 +13,7 @@ import { parseGlobalOptions, DEFAULT_OPTIONS } from "../../src/cli/index";
 describe("CLI smoke tests", () => {
   it("displays projects subcommand help", async () => {
     const result =
-      await $`bun src/bin/opencode-manager.ts projects --help`.quiet();
+      await $`bun src/bin/opencode-session-tui.ts projects --help`.quiet();
     const output = result.stdout.toString();
 
     expect(output).toContain("projects");
@@ -28,7 +28,7 @@ describe("CLI smoke tests", () => {
 
   it("displays sessions subcommand help", async () => {
     const result =
-      await $`bun src/bin/opencode-manager.ts sessions --help`.quiet();
+      await $`bun src/bin/opencode-session-tui.ts sessions --help`.quiet();
     const output = result.stdout.toString();
 
     expect(output).toContain("sessions");
@@ -41,7 +41,7 @@ describe("CLI smoke tests", () => {
 
   it("displays chat subcommand help", async () => {
     const result =
-      await $`bun src/bin/opencode-manager.ts chat --help`.quiet();
+      await $`bun src/bin/opencode-session-tui.ts chat --help`.quiet();
     const output = result.stdout.toString();
 
     expect(output).toContain("chat");
@@ -52,7 +52,7 @@ describe("CLI smoke tests", () => {
 
   it("displays tokens subcommand help", async () => {
     const result =
-      await $`bun src/bin/opencode-manager.ts tokens --help`.quiet();
+      await $`bun src/bin/opencode-session-tui.ts tokens --help`.quiet();
     const output = result.stdout.toString();
 
     expect(output).toContain("tokens");
@@ -63,7 +63,7 @@ describe("CLI smoke tests", () => {
 
   it("displays nested subcommand help for projects list", async () => {
     const result =
-      await $`bun src/bin/opencode-manager.ts projects list --help`.quiet();
+      await $`bun src/bin/opencode-session-tui.ts projects list --help`.quiet();
     const output = result.stdout.toString();
 
     expect(output).toContain("list");
@@ -73,7 +73,7 @@ describe("CLI smoke tests", () => {
 
   it("displays nested subcommand help for sessions list", async () => {
     const result =
-      await $`bun src/bin/opencode-manager.ts sessions list --help`.quiet();
+      await $`bun src/bin/opencode-session-tui.ts sessions list --help`.quiet();
     const output = result.stdout.toString();
 
     expect(output).toContain("list");
@@ -83,7 +83,7 @@ describe("CLI smoke tests", () => {
 
   it("displays nested subcommand help for chat show", async () => {
     const result =
-      await $`bun src/bin/opencode-manager.ts chat show --help`.quiet();
+      await $`bun src/bin/opencode-session-tui.ts chat show --help`.quiet();
     const output = result.stdout.toString();
 
     expect(output).toContain("show");
@@ -94,7 +94,7 @@ describe("CLI smoke tests", () => {
 
   it("displays nested subcommand help for tokens session", async () => {
     const result =
-      await $`bun src/bin/opencode-manager.ts tokens session --help`.quiet();
+      await $`bun src/bin/opencode-session-tui.ts tokens session --help`.quiet();
     const output = result.stdout.toString();
 
     expect(output).toContain("session");

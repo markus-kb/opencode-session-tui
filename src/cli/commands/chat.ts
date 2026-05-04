@@ -142,8 +142,8 @@ export function registerChatCommands(parent: Command): void {
     [
       "",
       "Examples:",
-      "  opencode-manager chat list --session <id> --experimental-sqlite",
-      "  opencode-manager chat list --session <id> --db ~/.local/share/opencode/opencode.db",
+      "  opencode-session-tui chat list --session <id> --experimental-sqlite",
+      "  opencode-session-tui chat list --session <id> --db ~/.local/share/opencode/opencode.db",
     ].join("\n")
   )
 }

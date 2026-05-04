@@ -88,7 +88,7 @@ function createProgram(): Command {
   program.configureHelp({ showGlobalOptions: true })
 
   program
-    .name("opencode-manager")
+    .name("opencode-session-tui")
     .description("Fork of OpenCode Metadata Manager for managing OpenCode metadata stores")
     .version("0.4.6")
     // Global options
@@ -201,7 +201,7 @@ function validateSort(sort: string): GlobalOptions["sort"] {
 
 /**
  * Run the CLI with the given arguments.
- * This is the main entry point called from opencode-manager.ts.
+ * This is the main entry point called from opencode-session-tui.ts.
  */
 export async function runCLI(args: string[]): Promise<void> {
   const program = createProgram()

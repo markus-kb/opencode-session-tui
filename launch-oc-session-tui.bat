@@ -10,12 +10,12 @@ if errorlevel 1 (
 )
 
 set "SCRIPT_DIR=%~dp0"
-bun "%SCRIPT_DIR%src\bin\opencode-manager.ts" %*
+bun "%SCRIPT_DIR%src\bin\opencode-session-tui.ts" %*
 set "EXIT_CODE=%ERRORLEVEL%"
 
 if not "%EXIT_CODE%"=="0" (
   echo.
-  echo opencode-manager exited with code %EXIT_CODE%.
+  echo opencode-session-tui exited with code %EXIT_CODE%.
   pause
 )
 

@@ -13,7 +13,7 @@ import { FIXTURE_STORE_ROOT, FIXTURE_SQLITE_PATH } from "../../helpers";
 
 describe("sessions list --format json", () => {
   it("outputs valid JSON with success envelope", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions list --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions list --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -23,7 +23,7 @@ describe("sessions list --format json", () => {
   });
 
   it("includes correct session count", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions list --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions list --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -31,7 +31,7 @@ describe("sessions list --format json", () => {
   });
 
   it("includes session fields in JSON output", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions list --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions list --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -45,7 +45,7 @@ describe("sessions list --format json", () => {
   });
 
   it("serializes Date fields as ISO strings", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions list --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions list --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -61,7 +61,7 @@ describe("sessions list --format json", () => {
   });
 
   it("includes meta with limit info", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions list --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions list --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -70,7 +70,7 @@ describe("sessions list --format json", () => {
   });
 
   it("respects --project filter", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions list --root ${FIXTURE_STORE_ROOT} --format json --project proj_present`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions list --root ${FIXTURE_STORE_ROOT} --format json --project proj_present`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -81,7 +81,7 @@ describe("sessions list --format json", () => {
   });
 
   it("respects --search filter", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions list --root ${FIXTURE_STORE_ROOT} --format json --search parser`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions list --root ${FIXTURE_STORE_ROOT} --format json --search parser`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -90,7 +90,7 @@ describe("sessions list --format json", () => {
   });
 
   it("respects --limit option", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions list --root ${FIXTURE_STORE_ROOT} --format json --limit 1`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions list --root ${FIXTURE_STORE_ROOT} --format json --limit 1`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -100,7 +100,7 @@ describe("sessions list --format json", () => {
 
 describe("sessions list --format ndjson", () => {
   it("outputs valid NDJSON (one JSON object per line)", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions list --root ${FIXTURE_STORE_ROOT} --format ndjson`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions list --root ${FIXTURE_STORE_ROOT} --format ndjson`.quiet();
     const output = result.stdout.toString().trim();
     const lines = output.split("\n");
 
@@ -111,7 +111,7 @@ describe("sessions list --format ndjson", () => {
   });
 
   it("includes correct session count (one per line)", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions list --root ${FIXTURE_STORE_ROOT} --format ndjson`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions list --root ${FIXTURE_STORE_ROOT} --format ndjson`.quiet();
     const output = result.stdout.toString().trim();
     const lines = output.split("\n");
 
@@ -119,7 +119,7 @@ describe("sessions list --format ndjson", () => {
   });
 
   it("includes session fields in each NDJSON line", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions list --root ${FIXTURE_STORE_ROOT} --format ndjson`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions list --root ${FIXTURE_STORE_ROOT} --format ndjson`.quiet();
     const output = result.stdout.toString().trim();
     const lines = output.split("\n");
 
@@ -134,7 +134,7 @@ describe("sessions list --format ndjson", () => {
   });
 
   it("serializes Date fields as ISO strings", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions list --root ${FIXTURE_STORE_ROOT} --format ndjson`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions list --root ${FIXTURE_STORE_ROOT} --format ndjson`.quiet();
     const output = result.stdout.toString().trim();
     const lines = output.split("\n");
 
@@ -151,7 +151,7 @@ describe("sessions list --format ndjson", () => {
   });
 
   it("does not include envelope wrapper (raw records only)", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions list --root ${FIXTURE_STORE_ROOT} --format ndjson`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions list --root ${FIXTURE_STORE_ROOT} --format ndjson`.quiet();
     const output = result.stdout.toString().trim();
     const lines = output.split("\n");
 
@@ -163,7 +163,7 @@ describe("sessions list --format ndjson", () => {
   });
 
   it("respects --project filter", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions list --root ${FIXTURE_STORE_ROOT} --format ndjson --project proj_present`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions list --root ${FIXTURE_STORE_ROOT} --format ndjson --project proj_present`.quiet();
     const output = result.stdout.toString().trim();
     const lines = output.split("\n");
 
@@ -175,7 +175,7 @@ describe("sessions list --format ndjson", () => {
   });
 
   it("respects --search filter", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions list --root ${FIXTURE_STORE_ROOT} --format ndjson --search parser`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions list --root ${FIXTURE_STORE_ROOT} --format ndjson --search parser`.quiet();
     const output = result.stdout.toString().trim();
     const lines = output.split("\n");
 
@@ -185,7 +185,7 @@ describe("sessions list --format ndjson", () => {
   });
 
   it("respects --limit option", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions list --root ${FIXTURE_STORE_ROOT} --format ndjson --limit 1`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions list --root ${FIXTURE_STORE_ROOT} --format ndjson --limit 1`.quiet();
     const output = result.stdout.toString().trim();
     const lines = output.split("\n");
 
@@ -195,7 +195,7 @@ describe("sessions list --format ndjson", () => {
 
 describe("sessions list --format table", () => {
   it("outputs table with headers", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions list --root ${FIXTURE_STORE_ROOT} --format table`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions list --root ${FIXTURE_STORE_ROOT} --format table`.quiet();
     const output = result.stdout.toString();
 
     // Should have header row
@@ -206,7 +206,7 @@ describe("sessions list --format table", () => {
   });
 
   it("outputs table with header underline", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions list --root ${FIXTURE_STORE_ROOT} --format table`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions list --root ${FIXTURE_STORE_ROOT} --format table`.quiet();
     const output = result.stdout.toString();
     const lines = output.split("\n");
 
@@ -216,7 +216,7 @@ describe("sessions list --format table", () => {
   });
 
   it("includes session data rows", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions list --root ${FIXTURE_STORE_ROOT} --format table`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions list --root ${FIXTURE_STORE_ROOT} --format table`.quiet();
     const output = result.stdout.toString();
 
     // Should include session titles
@@ -225,7 +225,7 @@ describe("sessions list --format table", () => {
   });
 
   it("shows correct session count (header + underline + data rows)", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions list --root ${FIXTURE_STORE_ROOT} --format table`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions list --root ${FIXTURE_STORE_ROOT} --format table`.quiet();
     const output = result.stdout.toString().trim();
     const lines = output.split("\n");
 
@@ -234,7 +234,7 @@ describe("sessions list --format table", () => {
   });
 
   it("respects --project filter", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions list --root ${FIXTURE_STORE_ROOT} --format table --project proj_present`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions list --root ${FIXTURE_STORE_ROOT} --format table --project proj_present`.quiet();
     const output = result.stdout.toString();
 
     // Should include sessions from proj_present
@@ -243,7 +243,7 @@ describe("sessions list --format table", () => {
   });
 
   it("respects --search filter", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions list --root ${FIXTURE_STORE_ROOT} --format table --search parser`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions list --root ${FIXTURE_STORE_ROOT} --format table --search parser`.quiet();
     const output = result.stdout.toString();
 
     // Should only include parser session
@@ -252,7 +252,7 @@ describe("sessions list --format table", () => {
   });
 
   it("respects --limit option", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions list --root ${FIXTURE_STORE_ROOT} --format table --limit 1`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions list --root ${FIXTURE_STORE_ROOT} --format table --limit 1`.quiet();
     const output = result.stdout.toString().trim();
     const lines = output.split("\n");
 
@@ -261,7 +261,7 @@ describe("sessions list --format table", () => {
   });
 
   it("sorts by updated date descending by default", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions list --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions list --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -283,7 +283,7 @@ describe("sessions list search order matches TUI", () => {
   it("orders by fuzzy score descending when searching", async () => {
     // Search for "parser" - should match session_parser_fix with higher score
     // than session_add_tests (which doesn't contain "parser")
-    const result = await $`bun src/bin/opencode-manager.ts sessions list --root ${FIXTURE_STORE_ROOT} --format json --search parser`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions list --root ${FIXTURE_STORE_ROOT} --format json --search parser`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -295,7 +295,7 @@ describe("sessions list search order matches TUI", () => {
   it("uses time as secondary sort when scores are equal", async () => {
     // Search for "proj" - matches both sessions via projectId "proj_present"
     // with similar scores, so time should be the tiebreaker
-    const result = await $`bun src/bin/opencode-manager.ts sessions list --root ${FIXTURE_STORE_ROOT} --format json --search proj`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions list --root ${FIXTURE_STORE_ROOT} --format json --search proj`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -310,7 +310,7 @@ describe("sessions list search order matches TUI", () => {
 
   it("uses createdAt for time tiebreaker when --sort created", async () => {
     // Search for "proj" with --sort created
-    const result = await $`bun src/bin/opencode-manager.ts sessions list --root ${FIXTURE_STORE_ROOT} --format json --search proj --sort created`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions list --root ${FIXTURE_STORE_ROOT} --format json --search proj --sort created`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -325,8 +325,8 @@ describe("sessions list search order matches TUI", () => {
 
   it("maintains consistent ordering across multiple searches", async () => {
     // Run the same search multiple times and verify consistent ordering
-    const search1 = await $`bun src/bin/opencode-manager.ts sessions list --root ${FIXTURE_STORE_ROOT} --format json --search present`.quiet();
-    const search2 = await $`bun src/bin/opencode-manager.ts sessions list --root ${FIXTURE_STORE_ROOT} --format json --search present`.quiet();
+    const search1 = await $`bun src/bin/opencode-session-tui.ts sessions list --root ${FIXTURE_STORE_ROOT} --format json --search present`.quiet();
+    const search2 = await $`bun src/bin/opencode-session-tui.ts sessions list --root ${FIXTURE_STORE_ROOT} --format json --search present`.quiet();
 
     const parsed1 = JSON.parse(search1.stdout.toString());
     const parsed2 = JSON.parse(search2.stdout.toString());
@@ -340,7 +340,7 @@ describe("sessions list search order matches TUI", () => {
   it("sessionId is final tiebreaker for identical scores and times", async () => {
     // Search for "proj_present" - exact match in projectId for both sessions
     // Both have same projectId, so after score and time, sessionId is tiebreaker
-    const result = await $`bun src/bin/opencode-manager.ts sessions list --root ${FIXTURE_STORE_ROOT} --format json --search proj_present`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions list --root ${FIXTURE_STORE_ROOT} --format json --search proj_present`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -355,7 +355,7 @@ describe("sessions list search order matches TUI", () => {
 
 describe("sessions delete --dry-run", () => {
   it("outputs dry-run JSON format with paths to delete", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions delete --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json --dry-run`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions delete --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json --dry-run`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -372,7 +372,7 @@ describe("sessions delete --dry-run", () => {
   });
 
   it("includes correct file path in dry-run output", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions delete --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json --dry-run`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions delete --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json --dry-run`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -380,7 +380,7 @@ describe("sessions delete --dry-run", () => {
   });
 
   it("outputs dry-run table format with header", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions delete --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format table --dry-run`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions delete --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format table --dry-run`.quiet();
     const output = result.stdout.toString();
 
     expect(output).toContain("[DRY RUN]");
@@ -390,17 +390,17 @@ describe("sessions delete --dry-run", () => {
 
   it("does not actually delete the file", async () => {
     // Run dry-run delete
-    await $`bun src/bin/opencode-manager.ts sessions delete --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json --dry-run`.quiet();
+    await $`bun src/bin/opencode-session-tui.ts sessions delete --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json --dry-run`.quiet();
 
     // Verify file still exists by running sessions list
-    const listResult = await $`bun src/bin/opencode-manager.ts sessions list --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const listResult = await $`bun src/bin/opencode-session-tui.ts sessions list --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const parsed = JSON.parse(listResult.stdout.toString());
     const sessionIds = parsed.data.map((s: { sessionId: string }) => s.sessionId);
     expect(sessionIds).toContain("session_add_tests");
   });
 
   it("supports prefix matching in dry-run mode", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions delete --session session_add --root ${FIXTURE_STORE_ROOT} --format json --dry-run`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions delete --session session_add --root ${FIXTURE_STORE_ROOT} --format json --dry-run`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -408,7 +408,7 @@ describe("sessions delete --dry-run", () => {
   });
 
   it("returns exit code 3 for non-existent session", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions delete --session nonexistent_session --root ${FIXTURE_STORE_ROOT} --format json --dry-run`.quiet().nothrow();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions delete --session nonexistent_session --root ${FIXTURE_STORE_ROOT} --format json --dry-run`.quiet().nothrow();
     
     expect(result.exitCode).toBe(3);
   });
@@ -436,7 +436,7 @@ describe("sessions delete --backup-dir", () => {
   });
 
   it("creates backup before deleting session", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions delete --session session_add_tests --root ${tempRoot} --format json --yes --backup-dir ${tempBackupDir}`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions delete --session session_add_tests --root ${tempRoot} --format json --yes --backup-dir ${tempBackupDir}`.quiet();
     
     expect(result.exitCode).toBe(0);
 
@@ -447,7 +447,7 @@ describe("sessions delete --backup-dir", () => {
   });
 
   it("backup contains the session file", async () => {
-    await $`bun src/bin/opencode-manager.ts sessions delete --session session_add_tests --root ${tempRoot} --format json --yes --backup-dir ${tempBackupDir}`.quiet();
+    await $`bun src/bin/opencode-session-tui.ts sessions delete --session session_add_tests --root ${tempRoot} --format json --yes --backup-dir ${tempBackupDir}`.quiet();
 
     // Find the backup subdirectory
     const backupContents = await fs.readdir(tempBackupDir);
@@ -466,7 +466,7 @@ describe("sessions delete --backup-dir", () => {
     const existsBefore = await fs.access(originalFile).then(() => true).catch(() => false);
     expect(existsBefore).toBe(true);
 
-    await $`bun src/bin/opencode-manager.ts sessions delete --session session_add_tests --root ${tempRoot} --format json --yes --backup-dir ${tempBackupDir}`.quiet();
+    await $`bun src/bin/opencode-session-tui.ts sessions delete --session session_add_tests --root ${tempRoot} --format json --yes --backup-dir ${tempBackupDir}`.quiet();
 
     // Verify file is deleted after backup
     const existsAfter = await fs.access(originalFile).then(() => true).catch(() => false);
@@ -474,7 +474,7 @@ describe("sessions delete --backup-dir", () => {
   });
 
   it("outputs success message with session ID", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions delete --session session_add_tests --root ${tempRoot} --format json --yes --quiet --backup-dir ${tempBackupDir}`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions delete --session session_add_tests --root ${tempRoot} --format json --yes --quiet --backup-dir ${tempBackupDir}`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -483,7 +483,7 @@ describe("sessions delete --backup-dir", () => {
   });
 
   it("backup preserves directory structure relative to root", async () => {
-    await $`bun src/bin/opencode-manager.ts sessions delete --session session_add_tests --root ${tempRoot} --format json --yes --backup-dir ${tempBackupDir}`.quiet();
+    await $`bun src/bin/opencode-session-tui.ts sessions delete --session session_add_tests --root ${tempRoot} --format json --yes --backup-dir ${tempBackupDir}`.quiet();
 
     // Find the backup subdirectory
     const backupContents = await fs.readdir(tempBackupDir);
@@ -500,7 +500,7 @@ describe("sessions delete --backup-dir", () => {
   });
 
   it("returns exit code 2 when --yes is not provided", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions delete --session session_add_tests --root ${tempRoot} --format json --backup-dir ${tempBackupDir}`.quiet().nothrow();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions delete --session session_add_tests --root ${tempRoot} --format json --backup-dir ${tempBackupDir}`.quiet().nothrow();
     
     expect(result.exitCode).toBe(2);
   });
@@ -508,13 +508,13 @@ describe("sessions delete --backup-dir", () => {
 
 describe("sessions delete requires --yes", () => {
   it("returns exit code 2 when --yes is missing", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions delete --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json`.quiet().nothrow();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions delete --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json`.quiet().nothrow();
     
     expect(result.exitCode).toBe(2);
   });
 
   it("error message mentions --yes flag", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions delete --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json`.quiet().nothrow();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions delete --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json`.quiet().nothrow();
     // Error output goes to stderr
     const output = result.stderr.toString();
 
@@ -524,7 +524,7 @@ describe("sessions delete requires --yes", () => {
   });
 
   it("suggests using --dry-run in error message", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions delete --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json`.quiet().nothrow();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions delete --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json`.quiet().nothrow();
     // Error output goes to stderr
     const output = result.stderr.toString();
 
@@ -552,7 +552,7 @@ describe("sessions rename", () => {
   });
 
   it("renames a session successfully", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions rename --session session_add_tests --title "New Title" --root ${tempRoot} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions rename --session session_add_tests --title "New Title" --root ${tempRoot} --format json`.quiet();
     
     expect(result.exitCode).toBe(0);
     
@@ -563,10 +563,10 @@ describe("sessions rename", () => {
   });
 
   it("updates the session file with new title", async () => {
-    await $`bun src/bin/opencode-manager.ts sessions rename --session session_add_tests --title "Updated Title" --root ${tempRoot} --format json`.quiet();
+    await $`bun src/bin/opencode-session-tui.ts sessions rename --session session_add_tests --title "Updated Title" --root ${tempRoot} --format json`.quiet();
 
     // Verify the file was updated by listing sessions
-    const listResult = await $`bun src/bin/opencode-manager.ts sessions list --root ${tempRoot} --format json`.quiet();
+    const listResult = await $`bun src/bin/opencode-session-tui.ts sessions list --root ${tempRoot} --format json`.quiet();
     const parsed = JSON.parse(listResult.stdout.toString());
     
     const session = parsed.data.find((s: { sessionId: string }) => s.sessionId === "session_add_tests");
@@ -574,7 +574,7 @@ describe("sessions rename", () => {
   });
 
   it("supports prefix matching for session ID", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions rename --session session_add --title "Prefix Match" --root ${tempRoot} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions rename --session session_add --title "Prefix Match" --root ${tempRoot} --format json`.quiet();
     
     expect(result.exitCode).toBe(0);
     
@@ -584,19 +584,19 @@ describe("sessions rename", () => {
   });
 
   it("returns exit code 3 for non-existent session", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions rename --session nonexistent --title "Test" --root ${tempRoot} --format json`.quiet().nothrow();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions rename --session nonexistent --title "Test" --root ${tempRoot} --format json`.quiet().nothrow();
     
     expect(result.exitCode).toBe(3);
   });
 
   it("returns exit code 2 for empty title", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions rename --session session_add_tests --title "   " --root ${tempRoot} --format json`.quiet().nothrow();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions rename --session session_add_tests --title "   " --root ${tempRoot} --format json`.quiet().nothrow();
     
     expect(result.exitCode).toBe(2);
   });
 
   it("error message mentions empty title validation", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions rename --session session_add_tests --title "   " --root ${tempRoot} --format json`.quiet().nothrow();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions rename --session session_add_tests --title "   " --root ${tempRoot} --format json`.quiet().nothrow();
     const output = result.stderr.toString();
 
     const parsed = JSON.parse(output);
@@ -605,10 +605,10 @@ describe("sessions rename", () => {
   });
 
   it("trims whitespace from title", async () => {
-    await $`bun src/bin/opencode-manager.ts sessions rename --session session_add_tests --title "  Trimmed Title  " --root ${tempRoot} --format json`.quiet();
+    await $`bun src/bin/opencode-session-tui.ts sessions rename --session session_add_tests --title "  Trimmed Title  " --root ${tempRoot} --format json`.quiet();
 
     // Verify the file was updated with trimmed title
-    const listResult = await $`bun src/bin/opencode-manager.ts sessions list --root ${tempRoot} --format json`.quiet();
+    const listResult = await $`bun src/bin/opencode-session-tui.ts sessions list --root ${tempRoot} --format json`.quiet();
     const parsed = JSON.parse(listResult.stdout.toString());
     
     const session = parsed.data.find((s: { sessionId: string }) => s.sessionId === "session_add_tests");
@@ -639,7 +639,7 @@ describe("sessions move", () => {
   });
 
   it("moves a session to another project successfully", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions move --session session_add_tests --to proj_missing --root ${tempRoot} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions move --session session_add_tests --to proj_missing --root ${tempRoot} --format json`.quiet();
     
     expect(result.exitCode).toBe(0);
     
@@ -651,7 +651,7 @@ describe("sessions move", () => {
   });
 
   it("removes session from source project after move", async () => {
-    await $`bun src/bin/opencode-manager.ts sessions move --session session_add_tests --to proj_missing --root ${tempRoot} --format json`.quiet();
+    await $`bun src/bin/opencode-session-tui.ts sessions move --session session_add_tests --to proj_missing --root ${tempRoot} --format json`.quiet();
 
     // Verify session is no longer in source project
     const originalFile = join(tempRoot, "storage", "session", "proj_present", "session_add_tests.json");
@@ -660,7 +660,7 @@ describe("sessions move", () => {
   });
 
   it("creates session in target project after move", async () => {
-    await $`bun src/bin/opencode-manager.ts sessions move --session session_add_tests --to proj_missing --root ${tempRoot} --format json`.quiet();
+    await $`bun src/bin/opencode-session-tui.ts sessions move --session session_add_tests --to proj_missing --root ${tempRoot} --format json`.quiet();
 
     // Verify session exists in target project
     const targetFile = join(tempRoot, "storage", "session", "proj_missing", "session_add_tests.json");
@@ -669,7 +669,7 @@ describe("sessions move", () => {
   });
 
   it("updates projectID in session file", async () => {
-    await $`bun src/bin/opencode-manager.ts sessions move --session session_add_tests --to proj_missing --root ${tempRoot} --format json`.quiet();
+    await $`bun src/bin/opencode-session-tui.ts sessions move --session session_add_tests --to proj_missing --root ${tempRoot} --format json`.quiet();
 
     // Read the moved session file and verify projectID
     const targetFile = join(tempRoot, "storage", "session", "proj_missing", "session_add_tests.json");
@@ -679,7 +679,7 @@ describe("sessions move", () => {
   });
 
   it("supports prefix matching for session ID", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions move --session session_add --to proj_missing --root ${tempRoot} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions move --session session_add --to proj_missing --root ${tempRoot} --format json`.quiet();
     
     expect(result.exitCode).toBe(0);
     
@@ -688,19 +688,19 @@ describe("sessions move", () => {
   });
 
   it("returns exit code 3 for non-existent session", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions move --session nonexistent --to proj_missing --root ${tempRoot} --format json`.quiet().nothrow();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions move --session nonexistent --to proj_missing --root ${tempRoot} --format json`.quiet().nothrow();
     
     expect(result.exitCode).toBe(3);
   });
 
   it("returns exit code 3 for non-existent target project", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions move --session session_add_tests --to nonexistent_project --root ${tempRoot} --format json`.quiet().nothrow();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions move --session session_add_tests --to nonexistent_project --root ${tempRoot} --format json`.quiet().nothrow();
     
     expect(result.exitCode).toBe(3);
   });
 
   it("handles move to same project gracefully", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions move --session session_add_tests --to proj_present --root ${tempRoot} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions move --session session_add_tests --to proj_present --root ${tempRoot} --format json`.quiet();
     
     expect(result.exitCode).toBe(0);
     
@@ -711,10 +711,10 @@ describe("sessions move", () => {
   });
 
   it("session is still accessible after move", async () => {
-    await $`bun src/bin/opencode-manager.ts sessions move --session session_add_tests --to proj_missing --root ${tempRoot} --format json`.quiet();
+    await $`bun src/bin/opencode-session-tui.ts sessions move --session session_add_tests --to proj_missing --root ${tempRoot} --format json`.quiet();
 
     // Verify session appears in list with new project
-    const listResult = await $`bun src/bin/opencode-manager.ts sessions list --root ${tempRoot} --format json --project proj_missing`.quiet();
+    const listResult = await $`bun src/bin/opencode-session-tui.ts sessions list --root ${tempRoot} --format json --project proj_missing`.quiet();
     const parsed = JSON.parse(listResult.stdout.toString());
     
     const session = parsed.data.find((s: { sessionId: string }) => s.sessionId === "session_add_tests");
@@ -746,7 +746,7 @@ describe("sessions copy", () => {
   });
 
   it("copies a session to another project successfully", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions copy --session session_add_tests --to proj_missing --root ${tempRoot} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions copy --session session_add_tests --to proj_missing --root ${tempRoot} --format json`.quiet();
     
     expect(result.exitCode).toBe(0);
     
@@ -760,7 +760,7 @@ describe("sessions copy", () => {
   });
 
   it("keeps original session in source project after copy", async () => {
-    await $`bun src/bin/opencode-manager.ts sessions copy --session session_add_tests --to proj_missing --root ${tempRoot} --format json`.quiet();
+    await $`bun src/bin/opencode-session-tui.ts sessions copy --session session_add_tests --to proj_missing --root ${tempRoot} --format json`.quiet();
 
     // Verify session is still in source project
     const originalFile = join(tempRoot, "storage", "session", "proj_present", "session_add_tests.json");
@@ -769,7 +769,7 @@ describe("sessions copy", () => {
   });
 
   it("creates new session in target project after copy", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions copy --session session_add_tests --to proj_missing --root ${tempRoot} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions copy --session session_add_tests --to proj_missing --root ${tempRoot} --format json`.quiet();
     const parsed = JSON.parse(result.stdout.toString());
     const newSessionId = parsed.data.newSessionId;
 
@@ -780,7 +780,7 @@ describe("sessions copy", () => {
   });
 
   it("sets projectID in copied session file", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions copy --session session_add_tests --to proj_missing --root ${tempRoot} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions copy --session session_add_tests --to proj_missing --root ${tempRoot} --format json`.quiet();
     const parsed = JSON.parse(result.stdout.toString());
     const newSessionId = parsed.data.newSessionId;
 
@@ -792,7 +792,7 @@ describe("sessions copy", () => {
   });
 
   it("supports prefix matching for session ID", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions copy --session session_add --to proj_missing --root ${tempRoot} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions copy --session session_add --to proj_missing --root ${tempRoot} --format json`.quiet();
     
     expect(result.exitCode).toBe(0);
     
@@ -801,19 +801,19 @@ describe("sessions copy", () => {
   });
 
   it("returns exit code 3 for non-existent session", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions copy --session nonexistent --to proj_missing --root ${tempRoot} --format json`.quiet().nothrow();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions copy --session nonexistent --to proj_missing --root ${tempRoot} --format json`.quiet().nothrow();
     
     expect(result.exitCode).toBe(3);
   });
 
   it("returns exit code 3 for non-existent target project", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions copy --session session_add_tests --to nonexistent_project --root ${tempRoot} --format json`.quiet().nothrow();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions copy --session session_add_tests --to nonexistent_project --root ${tempRoot} --format json`.quiet().nothrow();
     
     expect(result.exitCode).toBe(3);
   });
 
   it("allows copy to same project (creates duplicate with new ID)", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions copy --session session_add_tests --to proj_present --root ${tempRoot} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions copy --session session_add_tests --to proj_present --root ${tempRoot} --format json`.quiet();
     
     expect(result.exitCode).toBe(0);
     
@@ -825,12 +825,12 @@ describe("sessions copy", () => {
   });
 
   it("copied session is accessible in list", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions copy --session session_add_tests --to proj_missing --root ${tempRoot} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions copy --session session_add_tests --to proj_missing --root ${tempRoot} --format json`.quiet();
     const parsed = JSON.parse(result.stdout.toString());
     const newSessionId = parsed.data.newSessionId;
 
     // Verify new session appears in list with target project
-    const listResult = await $`bun src/bin/opencode-manager.ts sessions list --root ${tempRoot} --format json --project proj_missing`.quiet();
+    const listResult = await $`bun src/bin/opencode-session-tui.ts sessions list --root ${tempRoot} --format json --project proj_missing`.quiet();
     const listParsed = JSON.parse(listResult.stdout.toString());
     
     const session = listParsed.data.find((s: { sessionId: string }) => s.sessionId === newSessionId);
@@ -851,7 +851,7 @@ describe("sessions copy", () => {
  */
 describe("sessions list --experimental-sqlite", () => {
   it("loads sessions from SQLite database with --db flag", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions list --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions list --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -861,7 +861,7 @@ describe("sessions list --experimental-sqlite", () => {
   });
 
   it("returns correct session IDs from SQLite database", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions list --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions list --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -875,7 +875,7 @@ describe("sessions list --experimental-sqlite", () => {
   });
 
   it("includes all expected session fields", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions list --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions list --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -890,7 +890,7 @@ describe("sessions list --experimental-sqlite", () => {
   });
 
   it("uses SQLite virtual filePath format (sqlite:session:{id})", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions list --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions list --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -902,7 +902,7 @@ describe("sessions list --experimental-sqlite", () => {
   });
 
   it("respects --project filter with SQLite backend", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions list --db ${FIXTURE_SQLITE_PATH} --format json --project proj_present`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions list --db ${FIXTURE_SQLITE_PATH} --format json --project proj_present`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -914,7 +914,7 @@ describe("sessions list --experimental-sqlite", () => {
   });
 
   it("respects --search filter with SQLite backend", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions list --db ${FIXTURE_SQLITE_PATH} --format json --search parser`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions list --db ${FIXTURE_SQLITE_PATH} --format json --search parser`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -926,7 +926,7 @@ describe("sessions list --experimental-sqlite", () => {
   });
 
   it("respects --limit option with SQLite backend", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions list --db ${FIXTURE_SQLITE_PATH} --format json --limit 2`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions list --db ${FIXTURE_SQLITE_PATH} --format json --limit 2`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -934,7 +934,7 @@ describe("sessions list --experimental-sqlite", () => {
   });
 
   it("serializes Date fields as ISO strings", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions list --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions list --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -950,7 +950,7 @@ describe("sessions list --experimental-sqlite", () => {
   });
 
   it("works with table format output", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions list --db ${FIXTURE_SQLITE_PATH} --format table`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions list --db ${FIXTURE_SQLITE_PATH} --format table`.quiet();
     const output = result.stdout.toString();
 
     // Should have header row with expected columns
@@ -965,7 +965,7 @@ describe("sessions list --experimental-sqlite", () => {
   });
 
   it("works with ndjson format output", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions list --db ${FIXTURE_SQLITE_PATH} --format ndjson`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions list --db ${FIXTURE_SQLITE_PATH} --format ndjson`.quiet();
     const output = result.stdout.toString().trim();
     const lines = output.split("\n");
 
@@ -981,7 +981,7 @@ describe("sessions list --experimental-sqlite", () => {
   });
 
   it("returns error for non-existent database file", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions list --db /nonexistent/path/db.sqlite --format json`.quiet().nothrow();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions list --db /nonexistent/path/db.sqlite --format json`.quiet().nothrow();
 
     // Should fail with non-zero exit code
     expect(result.exitCode).not.toBe(0);
@@ -993,7 +993,7 @@ describe("sessions list --experimental-sqlite", () => {
   });
 
   it("sorts by updated date descending by default", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions list --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions list --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -1042,13 +1042,13 @@ describe("sessions delete --experimental-sqlite", () => {
 
   it("deletes session from SQLite database with --db flag and --yes", async () => {
     // Verify session exists before deletion
-    const listBefore = await $`bun src/bin/opencode-manager.ts sessions list --db ${tempDbPath} --format json`.quiet();
+    const listBefore = await $`bun src/bin/opencode-session-tui.ts sessions list --db ${tempDbPath} --format json`.quiet();
     const parsedBefore = JSON.parse(listBefore.stdout.toString());
     const sessionsBefore = parsedBefore.data.map((s: { sessionId: string }) => s.sessionId);
     expect(sessionsBefore).toContain("session_add_tests");
 
     // Delete the session
-    const result = await $`bun src/bin/opencode-manager.ts sessions delete --session session_add_tests --db ${tempDbPath} --format json --yes`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions delete --session session_add_tests --db ${tempDbPath} --format json --yes`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -1058,7 +1058,7 @@ describe("sessions delete --experimental-sqlite", () => {
     expect(parsed.data.deleted).toBeArray();
 
     // Verify session is gone after deletion
-    const listAfter = await $`bun src/bin/opencode-manager.ts sessions list --db ${tempDbPath} --format json`.quiet();
+    const listAfter = await $`bun src/bin/opencode-session-tui.ts sessions list --db ${tempDbPath} --format json`.quiet();
     const parsedAfter = JSON.parse(listAfter.stdout.toString());
     const sessionsAfter = parsedAfter.data.map((s: { sessionId: string }) => s.sessionId);
     expect(sessionsAfter).not.toContain("session_add_tests");
@@ -1069,7 +1069,7 @@ describe("sessions delete --experimental-sqlite", () => {
 
   it("supports session ID prefix matching with SQLite", async () => {
     // Delete using prefix "session_add"
-    const result = await $`bun src/bin/opencode-manager.ts sessions delete --session session_add --db ${tempDbPath} --format json --yes`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions delete --session session_add --db ${tempDbPath} --format json --yes`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -1078,14 +1078,14 @@ describe("sessions delete --experimental-sqlite", () => {
     expect(parsed.data).toHaveProperty("sessionId", "session_add_tests");
 
     // Verify session is deleted
-    const listAfter = await $`bun src/bin/opencode-manager.ts sessions list --db ${tempDbPath} --format json`.quiet();
+    const listAfter = await $`bun src/bin/opencode-session-tui.ts sessions list --db ${tempDbPath} --format json`.quiet();
     const parsedAfter = JSON.parse(listAfter.stdout.toString());
     const sessionsAfter = parsedAfter.data.map((s: { sessionId: string }) => s.sessionId);
     expect(sessionsAfter).not.toContain("session_add_tests");
   });
 
   it("outputs dry-run result with SQLite backend", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions delete --session session_add_tests --db ${tempDbPath} --format json --dry-run`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions delete --session session_add_tests --db ${tempDbPath} --format json --dry-run`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -1099,26 +1099,26 @@ describe("sessions delete --experimental-sqlite", () => {
     expect(parsed.data.paths[0]).toContain("sqlite:session:session_add_tests");
 
     // Verify session is NOT deleted (dry run)
-    const listAfter = await $`bun src/bin/opencode-manager.ts sessions list --db ${tempDbPath} --format json`.quiet();
+    const listAfter = await $`bun src/bin/opencode-session-tui.ts sessions list --db ${tempDbPath} --format json`.quiet();
     const parsedAfter = JSON.parse(listAfter.stdout.toString());
     const sessionsAfter = parsedAfter.data.map((s: { sessionId: string }) => s.sessionId);
     expect(sessionsAfter).toContain("session_add_tests");
   });
 
   it("requires --yes flag for destructive operation (SQLite)", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions delete --session session_add_tests --db ${tempDbPath} --format json`.quiet().nothrow();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions delete --session session_add_tests --db ${tempDbPath} --format json`.quiet().nothrow();
 
     expect(result.exitCode).toBe(2);
 
     // Session should still exist
-    const listAfter = await $`bun src/bin/opencode-manager.ts sessions list --db ${tempDbPath} --format json`.quiet();
+    const listAfter = await $`bun src/bin/opencode-session-tui.ts sessions list --db ${tempDbPath} --format json`.quiet();
     const parsedAfter = JSON.parse(listAfter.stdout.toString());
     const sessionsAfter = parsedAfter.data.map((s: { sessionId: string }) => s.sessionId);
     expect(sessionsAfter).toContain("session_add_tests");
   });
 
   it("returns error for non-existent session ID with SQLite", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions delete --session nonexistent_session --db ${tempDbPath} --format json --yes`.quiet().nothrow();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions delete --session nonexistent_session --db ${tempDbPath} --format json --yes`.quiet().nothrow();
 
     expect(result.exitCode).toBe(3);
 
@@ -1137,7 +1137,7 @@ describe("sessions delete --experimental-sqlite", () => {
   });
 
   it("returns error for non-existent database file", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions delete --session session_add_tests --db /nonexistent/path/db.sqlite --format json --yes`.quiet().nothrow();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions delete --session session_add_tests --db /nonexistent/path/db.sqlite --format json --yes`.quiet().nothrow();
 
     expect(result.exitCode).not.toBe(0);
 
@@ -1148,7 +1148,7 @@ describe("sessions delete --experimental-sqlite", () => {
   });
 
   it("works with table format output (SQLite)", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions delete --session session_add_tests --db ${tempDbPath} --format table --yes`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions delete --session session_add_tests --db ${tempDbPath} --format table --yes`.quiet();
     const output = result.stdout.toString();
 
     // Table format should show success message
@@ -1157,7 +1157,7 @@ describe("sessions delete --experimental-sqlite", () => {
   });
 
   it("works with ndjson format output (SQLite)", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions delete --session session_add_tests --db ${tempDbPath} --format ndjson --yes`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions delete --session session_add_tests --db ${tempDbPath} --format ndjson --yes`.quiet();
     const output = result.stdout.toString().trim();
 
     // NDJSON format wraps output in success envelope for consistency
@@ -1169,29 +1169,29 @@ describe("sessions delete --experimental-sqlite", () => {
 
   it("deletes session and all related messages/parts atomically", async () => {
     // Get initial counts by loading chat messages
-    const chatBefore = await $`bun src/bin/opencode-manager.ts chat list --session session_parser_fix --db ${tempDbPath} --format json`.quiet();
+    const chatBefore = await $`bun src/bin/opencode-session-tui.ts chat list --session session_parser_fix --db ${tempDbPath} --format json`.quiet();
     const parsedChatBefore = JSON.parse(chatBefore.stdout.toString());
     const messageCountBefore = parsedChatBefore.data.length;
     expect(messageCountBefore).toBeGreaterThan(0); // session_parser_fix has 4 messages
 
     // Delete the session
-    await $`bun src/bin/opencode-manager.ts sessions delete --session session_parser_fix --db ${tempDbPath} --format json --yes`.quiet();
+    await $`bun src/bin/opencode-session-tui.ts sessions delete --session session_parser_fix --db ${tempDbPath} --format json --yes`.quiet();
 
     // Verify session is gone
-    const listAfter = await $`bun src/bin/opencode-manager.ts sessions list --db ${tempDbPath} --format json`.quiet();
+    const listAfter = await $`bun src/bin/opencode-session-tui.ts sessions list --db ${tempDbPath} --format json`.quiet();
     const parsedAfter = JSON.parse(listAfter.stdout.toString());
     const sessionsAfter = parsedAfter.data.map((s: { sessionId: string }) => s.sessionId);
     expect(sessionsAfter).not.toContain("session_parser_fix");
 
     // Verify messages are also gone (chat list should fail for non-existent session)
-    const chatAfter = await $`bun src/bin/opencode-manager.ts chat list --session session_parser_fix --db ${tempDbPath} --format json`.quiet().nothrow();
+    const chatAfter = await $`bun src/bin/opencode-session-tui.ts chat list --session session_parser_fix --db ${tempDbPath} --format json`.quiet().nothrow();
     expect(chatAfter.exitCode).toBe(3); // Session not found
   });
 
   it("ignores --backup-dir flag with SQLite backend (virtual paths cannot be backed up)", async () => {
     // backup-dir is only meaningful for JSONL file backend
     // SQLite backend should ignore it and proceed with deletion
-    const result = await $`bun src/bin/opencode-manager.ts sessions delete --session session_add_tests --db ${tempDbPath} --format json --yes --backup-dir ${tempDbDir}`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions delete --session session_add_tests --db ${tempDbPath} --format json --yes --backup-dir ${tempDbDir}`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -1199,7 +1199,7 @@ describe("sessions delete --experimental-sqlite", () => {
     expect(parsed.data).toHaveProperty("sessionId", "session_add_tests");
 
     // Session should be deleted
-    const listAfter = await $`bun src/bin/opencode-manager.ts sessions list --db ${tempDbPath} --format json`.quiet();
+    const listAfter = await $`bun src/bin/opencode-session-tui.ts sessions list --db ${tempDbPath} --format json`.quiet();
     const parsedAfter = JSON.parse(listAfter.stdout.toString());
     const sessionsAfter = parsedAfter.data.map((s: { sessionId: string }) => s.sessionId);
     expect(sessionsAfter).not.toContain("session_add_tests");
@@ -1235,7 +1235,7 @@ describe("sessions move --experimental-sqlite", () => {
   });
 
   it("moves session to another project in SQLite database with --db flag", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions move --session session_add_tests --to proj_missing --db ${tempDbPath} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions move --session session_add_tests --to proj_missing --db ${tempDbPath} --format json`.quiet();
     const output = result.stdout.toString();
 
     expect(result.exitCode).toBe(0);
@@ -1248,10 +1248,10 @@ describe("sessions move --experimental-sqlite", () => {
   });
 
   it("updates project_id in database after move", async () => {
-    await $`bun src/bin/opencode-manager.ts sessions move --session session_add_tests --to proj_missing --db ${tempDbPath} --format json`.quiet();
+    await $`bun src/bin/opencode-session-tui.ts sessions move --session session_add_tests --to proj_missing --db ${tempDbPath} --format json`.quiet();
 
     // Verify session is now in target project by listing sessions
-    const listResult = await $`bun src/bin/opencode-manager.ts sessions list --db ${tempDbPath} --format json --project proj_missing`.quiet();
+    const listResult = await $`bun src/bin/opencode-session-tui.ts sessions list --db ${tempDbPath} --format json --project proj_missing`.quiet();
     const parsed = JSON.parse(listResult.stdout.toString());
 
     const session = parsed.data.find((s: { sessionId: string }) => s.sessionId === "session_add_tests");
@@ -1260,10 +1260,10 @@ describe("sessions move --experimental-sqlite", () => {
   });
 
   it("session is no longer in source project after move", async () => {
-    await $`bun src/bin/opencode-manager.ts sessions move --session session_add_tests --to proj_missing --db ${tempDbPath} --format json`.quiet();
+    await $`bun src/bin/opencode-session-tui.ts sessions move --session session_add_tests --to proj_missing --db ${tempDbPath} --format json`.quiet();
 
     // Verify session is not in source project anymore
-    const listResult = await $`bun src/bin/opencode-manager.ts sessions list --db ${tempDbPath} --format json --project proj_present`.quiet();
+    const listResult = await $`bun src/bin/opencode-session-tui.ts sessions list --db ${tempDbPath} --format json --project proj_present`.quiet();
     const parsed = JSON.parse(listResult.stdout.toString());
 
     const session = parsed.data.find((s: { sessionId: string }) => s.sessionId === "session_add_tests");
@@ -1271,7 +1271,7 @@ describe("sessions move --experimental-sqlite", () => {
   });
 
   it("supports session ID prefix matching with SQLite", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions move --session session_add --to proj_missing --db ${tempDbPath} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions move --session session_add --to proj_missing --db ${tempDbPath} --format json`.quiet();
 
     expect(result.exitCode).toBe(0);
 
@@ -1280,7 +1280,7 @@ describe("sessions move --experimental-sqlite", () => {
   });
 
   it("supports project ID prefix matching with SQLite", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions move --session session_add_tests --to proj_miss --db ${tempDbPath} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions move --session session_add_tests --to proj_miss --db ${tempDbPath} --format json`.quiet();
 
     expect(result.exitCode).toBe(0);
 
@@ -1289,7 +1289,7 @@ describe("sessions move --experimental-sqlite", () => {
   });
 
   it("returns exit code 3 for non-existent session with SQLite", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions move --session nonexistent_session --to proj_missing --db ${tempDbPath} --format json`.quiet().nothrow();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions move --session nonexistent_session --to proj_missing --db ${tempDbPath} --format json`.quiet().nothrow();
 
     expect(result.exitCode).toBe(3);
 
@@ -1303,7 +1303,7 @@ describe("sessions move --experimental-sqlite", () => {
   });
 
   it("returns exit code 3 for non-existent target project with SQLite", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions move --session session_add_tests --to nonexistent_project --db ${tempDbPath} --format json`.quiet().nothrow();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions move --session session_add_tests --to nonexistent_project --db ${tempDbPath} --format json`.quiet().nothrow();
 
     expect(result.exitCode).toBe(3);
 
@@ -1317,7 +1317,7 @@ describe("sessions move --experimental-sqlite", () => {
   });
 
   it("handles move to same project gracefully with SQLite", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions move --session session_add_tests --to proj_present --db ${tempDbPath} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions move --session session_add_tests --to proj_present --db ${tempDbPath} --format json`.quiet();
 
     expect(result.exitCode).toBe(0);
 
@@ -1328,7 +1328,7 @@ describe("sessions move --experimental-sqlite", () => {
   });
 
   it("returns error for non-existent database file", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions move --session session_add_tests --to proj_missing --db /nonexistent/path/db.sqlite --format json`.quiet().nothrow();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions move --session session_add_tests --to proj_missing --db /nonexistent/path/db.sqlite --format json`.quiet().nothrow();
 
     expect(result.exitCode).not.toBe(0);
 
@@ -1339,7 +1339,7 @@ describe("sessions move --experimental-sqlite", () => {
   });
 
   it("works with table format output (SQLite)", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions move --session session_add_tests --to proj_missing --db ${tempDbPath} --format table`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions move --session session_add_tests --to proj_missing --db ${tempDbPath} --format table`.quiet();
     const output = result.stdout.toString();
 
     // Table format should show success message
@@ -1349,7 +1349,7 @@ describe("sessions move --experimental-sqlite", () => {
   });
 
   it("works with ndjson format output (SQLite)", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts sessions move --session session_add_tests --to proj_missing --db ${tempDbPath} --format ndjson`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts sessions move --session session_add_tests --to proj_missing --db ${tempDbPath} --format ndjson`.quiet();
     const output = result.stdout.toString().trim();
 
     // NDJSON format wraps output in success envelope
@@ -1360,10 +1360,10 @@ describe("sessions move --experimental-sqlite", () => {
   });
 
   it("updates virtual filePath after move", async () => {
-    await $`bun src/bin/opencode-manager.ts sessions move --session session_add_tests --to proj_missing --db ${tempDbPath} --format json`.quiet();
+    await $`bun src/bin/opencode-session-tui.ts sessions move --session session_add_tests --to proj_missing --db ${tempDbPath} --format json`.quiet();
 
     // Verify filePath still uses SQLite virtual format
-    const listResult = await $`bun src/bin/opencode-manager.ts sessions list --db ${tempDbPath} --format json`.quiet();
+    const listResult = await $`bun src/bin/opencode-session-tui.ts sessions list --db ${tempDbPath} --format json`.quiet();
     const parsed = JSON.parse(listResult.stdout.toString());
 
     const session = parsed.data.find((s: { sessionId: string }) => s.sessionId === "session_add_tests");
@@ -1373,15 +1373,15 @@ describe("sessions move --experimental-sqlite", () => {
 
   it("messages remain accessible after move", async () => {
     // Verify session has messages before move
-    const chatBefore = await $`bun src/bin/opencode-manager.ts chat list --session session_add_tests --db ${tempDbPath} --format json`.quiet();
+    const chatBefore = await $`bun src/bin/opencode-session-tui.ts chat list --session session_add_tests --db ${tempDbPath} --format json`.quiet();
     const parsedBefore = JSON.parse(chatBefore.stdout.toString());
     expect(parsedBefore.data.length).toBeGreaterThan(0);
 
     // Move the session
-    await $`bun src/bin/opencode-manager.ts sessions move --session session_add_tests --to proj_missing --db ${tempDbPath} --format json`.quiet();
+    await $`bun src/bin/opencode-session-tui.ts sessions move --session session_add_tests --to proj_missing --db ${tempDbPath} --format json`.quiet();
 
     // Verify messages are still accessible after move
-    const chatAfter = await $`bun src/bin/opencode-manager.ts chat list --session session_add_tests --db ${tempDbPath} --format json`.quiet();
+    const chatAfter = await $`bun src/bin/opencode-session-tui.ts chat list --session session_add_tests --db ${tempDbPath} --format json`.quiet();
     const parsedAfter = JSON.parse(chatAfter.stdout.toString());
     expect(parsedAfter.data.length).toBe(parsedBefore.data.length);
   });

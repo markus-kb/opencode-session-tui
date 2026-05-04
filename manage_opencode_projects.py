@@ -2,7 +2,7 @@
 """Launch the OpenCode metadata manager (TUI or CLI).
 
 This wrapper keeps the previous entry point name but shells out to the
-Bun-powered entrypoint at ``src/bin/opencode-manager.ts``. The routing logic
+Bun-powered entrypoint at ``src/bin/opencode-session-tui.ts``. The routing logic
 detects CLI subcommands (projects, sessions, chat, tokens) and passes them
 directly, otherwise defaults to the TUI.
 
@@ -60,7 +60,7 @@ def run_entrypoint(bun_exe: str, args: Sequence[str]) -> int:
     if args_list and args_list[0] == "--":
         args_list = args_list[1:]
     
-    cmd = [bun_exe, "src/bin/opencode-manager.ts"] + args_list
+    cmd = [bun_exe, "src/bin/opencode-session-tui.ts"] + args_list
     process = subprocess.run(cmd, cwd=PROJECT_DIR)
     return process.returncode
 

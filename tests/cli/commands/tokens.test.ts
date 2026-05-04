@@ -18,7 +18,7 @@ import { FIXTURE_STORE_ROOT, FIXTURE_SQLITE_PATH } from "../../helpers";
 
 describe("tokens session --format json", () => {
   it("outputs valid JSON with success envelope", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts tokens session --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts tokens session --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -27,7 +27,7 @@ describe("tokens session --format json", () => {
   });
 
   it("includes token summary with kind 'known' for session with messages", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts tokens session --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts tokens session --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -36,7 +36,7 @@ describe("tokens session --format json", () => {
   });
 
   it("includes correct token breakdown values", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts tokens session --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts tokens session --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -50,7 +50,7 @@ describe("tokens session --format json", () => {
   });
 
   it("returns unknown summary for session without messages", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts tokens session --session session_parser_fix --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts tokens session --session session_parser_fix --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -59,7 +59,7 @@ describe("tokens session --format json", () => {
   });
 
   it("returns error for non-existent session", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts tokens session --session nonexistent_session --root ${FIXTURE_STORE_ROOT} --format json`.nothrow().quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts tokens session --session nonexistent_session --root ${FIXTURE_STORE_ROOT} --format json`.nothrow().quiet();
     // Error output goes to stderr
     const output = result.stderr.toString();
 
@@ -72,7 +72,7 @@ describe("tokens session --format json", () => {
 
 describe("tokens session --format ndjson", () => {
   it("outputs valid NDJSON (single line)", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts tokens session --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format ndjson`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts tokens session --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format ndjson`.quiet();
     const output = result.stdout.toString().trim();
     const lines = output.split("\n");
 
@@ -81,7 +81,7 @@ describe("tokens session --format ndjson", () => {
   });
 
   it("includes token summary in NDJSON line", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts tokens session --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format ndjson`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts tokens session --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format ndjson`.quiet();
     const output = result.stdout.toString().trim();
 
     const parsed = JSON.parse(output);
@@ -91,7 +91,7 @@ describe("tokens session --format ndjson", () => {
   });
 
   it("does not include envelope wrapper", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts tokens session --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format ndjson`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts tokens session --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format ndjson`.quiet();
     const output = result.stdout.toString().trim();
 
     const parsed = JSON.parse(output);
@@ -102,7 +102,7 @@ describe("tokens session --format ndjson", () => {
 
 describe("tokens session --format table", () => {
   it("outputs formatted table with headers", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts tokens session --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format table`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts tokens session --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format table`.quiet();
     const output = result.stdout.toString();
 
     expect(output).toContain("Category");
@@ -111,7 +111,7 @@ describe("tokens session --format table", () => {
   });
 
   it("includes token category rows", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts tokens session --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format table`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts tokens session --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format table`.quiet();
     const output = result.stdout.toString();
 
     expect(output).toContain("Input");
@@ -120,7 +120,7 @@ describe("tokens session --format table", () => {
   });
 
   it("includes total row", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts tokens session --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format table`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts tokens session --session session_add_tests --root ${FIXTURE_STORE_ROOT} --format table`.quiet();
     const output = result.stdout.toString();
 
     expect(output).toContain("Total");
@@ -134,7 +134,7 @@ describe("tokens session --format table", () => {
 
 describe("tokens project --format json", () => {
   it("outputs valid JSON with success envelope", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts tokens project --project proj_present --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts tokens project --project proj_present --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -143,7 +143,7 @@ describe("tokens project --format json", () => {
   });
 
   it("includes aggregate token summary structure", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts tokens project --project proj_present --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts tokens project --project proj_present --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -153,7 +153,7 @@ describe("tokens project --format json", () => {
   });
 
   it("includes knownOnly breakdown when tokens are known", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts tokens project --project proj_present --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts tokens project --project proj_present --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -164,7 +164,7 @@ describe("tokens project --format json", () => {
 
   it("tracks unknown sessions count", async () => {
     // proj_present has 2 sessions: session_add_tests (with tokens) and session_parser_fix (without)
-    const result = await $`bun src/bin/opencode-manager.ts tokens project --project proj_present --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts tokens project --project proj_present --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -172,7 +172,7 @@ describe("tokens project --format json", () => {
   });
 
   it("returns error for non-existent project", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts tokens project --project nonexistent_project --root ${FIXTURE_STORE_ROOT} --format json`.nothrow().quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts tokens project --project nonexistent_project --root ${FIXTURE_STORE_ROOT} --format json`.nothrow().quiet();
     // Error output goes to stderr
     const output = result.stderr.toString();
 
@@ -185,7 +185,7 @@ describe("tokens project --format json", () => {
 
 describe("tokens project --format ndjson", () => {
   it("outputs valid NDJSON (single line)", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts tokens project --project proj_present --root ${FIXTURE_STORE_ROOT} --format ndjson`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts tokens project --project proj_present --root ${FIXTURE_STORE_ROOT} --format ndjson`.quiet();
     const output = result.stdout.toString().trim();
     const lines = output.split("\n");
 
@@ -194,7 +194,7 @@ describe("tokens project --format ndjson", () => {
   });
 
   it("includes aggregate summary fields", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts tokens project --project proj_present --root ${FIXTURE_STORE_ROOT} --format ndjson`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts tokens project --project proj_present --root ${FIXTURE_STORE_ROOT} --format ndjson`.quiet();
     const output = result.stdout.toString().trim();
 
     const parsed = JSON.parse(output);
@@ -206,7 +206,7 @@ describe("tokens project --format ndjson", () => {
 
 describe("tokens project --format table", () => {
   it("outputs formatted table with headers", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts tokens project --project proj_present --root ${FIXTURE_STORE_ROOT} --format table`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts tokens project --project proj_present --root ${FIXTURE_STORE_ROOT} --format table`.quiet();
     const output = result.stdout.toString();
 
     expect(output).toContain("Category");
@@ -214,7 +214,7 @@ describe("tokens project --format table", () => {
   });
 
   it("includes project label", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts tokens project --project proj_present --root ${FIXTURE_STORE_ROOT} --format table`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts tokens project --project proj_present --root ${FIXTURE_STORE_ROOT} --format table`.quiet();
     const output = result.stdout.toString();
 
     expect(output).toContain("proj_present");
@@ -227,7 +227,7 @@ describe("tokens project --format table", () => {
 
 describe("tokens global --format json", () => {
   it("outputs valid JSON with success envelope", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts tokens global --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts tokens global --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -236,7 +236,7 @@ describe("tokens global --format json", () => {
   });
 
   it("includes aggregate token summary structure", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts tokens global --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts tokens global --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -245,7 +245,7 @@ describe("tokens global --format json", () => {
   });
 
   it("aggregates tokens from all sessions", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts tokens global --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts tokens global --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -254,7 +254,7 @@ describe("tokens global --format json", () => {
   });
 
   it("counts all unknown sessions globally", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts tokens global --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts tokens global --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -265,7 +265,7 @@ describe("tokens global --format json", () => {
 
 describe("tokens global --format ndjson", () => {
   it("outputs valid NDJSON (single line)", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts tokens global --root ${FIXTURE_STORE_ROOT} --format ndjson`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts tokens global --root ${FIXTURE_STORE_ROOT} --format ndjson`.quiet();
     const output = result.stdout.toString().trim();
     const lines = output.split("\n");
 
@@ -274,7 +274,7 @@ describe("tokens global --format ndjson", () => {
   });
 
   it("includes aggregate summary fields", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts tokens global --root ${FIXTURE_STORE_ROOT} --format ndjson`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts tokens global --root ${FIXTURE_STORE_ROOT} --format ndjson`.quiet();
     const output = result.stdout.toString().trim();
 
     const parsed = JSON.parse(output);
@@ -285,7 +285,7 @@ describe("tokens global --format ndjson", () => {
 
 describe("tokens global --format table", () => {
   it("outputs formatted table with headers", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts tokens global --root ${FIXTURE_STORE_ROOT} --format table`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts tokens global --root ${FIXTURE_STORE_ROOT} --format table`.quiet();
     const output = result.stdout.toString();
 
     expect(output).toContain("Category");
@@ -293,14 +293,14 @@ describe("tokens global --format table", () => {
   });
 
   it("includes global label", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts tokens global --root ${FIXTURE_STORE_ROOT} --format table`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts tokens global --root ${FIXTURE_STORE_ROOT} --format table`.quiet();
     const output = result.stdout.toString();
 
     expect(output).toContain("Global");
   });
 
   it("includes total tokens row", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts tokens global --root ${FIXTURE_STORE_ROOT} --format table`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts tokens global --root ${FIXTURE_STORE_ROOT} --format table`.quiet();
     const output = result.stdout.toString();
 
     expect(output).toContain("Total");
@@ -314,7 +314,7 @@ describe("tokens global --format table", () => {
 
 describe("tokens session --experimental-sqlite", () => {
   it("outputs valid JSON with success envelope using --db flag", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts tokens session --session session_add_tests --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts tokens session --session session_add_tests --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -323,7 +323,7 @@ describe("tokens session --experimental-sqlite", () => {
   });
 
   it("includes token summary with kind 'known' for session with messages", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts tokens session --session session_add_tests --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts tokens session --session session_add_tests --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -332,7 +332,7 @@ describe("tokens session --experimental-sqlite", () => {
   });
 
   it("includes correct token breakdown values from SQLite", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts tokens session --session session_add_tests --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts tokens session --session session_add_tests --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -348,7 +348,7 @@ describe("tokens session --experimental-sqlite", () => {
 
   it("aggregates tokens from multiple messages in session", async () => {
     // session_parser_fix has 2 assistant messages with tokens
-    const result = await $`bun src/bin/opencode-manager.ts tokens session --session session_parser_fix --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts tokens session --session session_parser_fix --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -367,7 +367,7 @@ describe("tokens session --experimental-sqlite", () => {
 
   it("returns unknown summary for session without messages", async () => {
     // session_fork_parser has no messages in the SQLite fixture
-    const result = await $`bun src/bin/opencode-manager.ts tokens session --session session_fork_parser --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts tokens session --session session_fork_parser --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -376,7 +376,7 @@ describe("tokens session --experimental-sqlite", () => {
   });
 
   it("returns error for non-existent session", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts tokens session --session nonexistent_session --db ${FIXTURE_SQLITE_PATH} --format json`.nothrow().quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts tokens session --session nonexistent_session --db ${FIXTURE_SQLITE_PATH} --format json`.nothrow().quiet();
     const output = result.stderr.toString();
 
     const parsed = JSON.parse(output);
@@ -386,7 +386,7 @@ describe("tokens session --experimental-sqlite", () => {
   });
 
   it("works with ndjson format", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts tokens session --session session_add_tests --db ${FIXTURE_SQLITE_PATH} --format ndjson`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts tokens session --session session_add_tests --db ${FIXTURE_SQLITE_PATH} --format ndjson`.quiet();
     const output = result.stdout.toString().trim();
     const lines = output.split("\n");
 
@@ -398,7 +398,7 @@ describe("tokens session --experimental-sqlite", () => {
   });
 
   it("works with table format", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts tokens session --session session_add_tests --db ${FIXTURE_SQLITE_PATH} --format table`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts tokens session --session session_add_tests --db ${FIXTURE_SQLITE_PATH} --format table`.quiet();
     const output = result.stdout.toString();
 
     expect(output).toContain("Category");
@@ -408,7 +408,7 @@ describe("tokens session --experimental-sqlite", () => {
   });
 
   it("returns error for non-existent database file", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts tokens session --session session_add_tests --db /nonexistent/path/to/db.sqlite --format json`.nothrow().quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts tokens session --session session_add_tests --db /nonexistent/path/to/db.sqlite --format json`.nothrow().quiet();
 
     expect(result.exitCode).toBe(1);
     const output = result.stderr.toString();
@@ -422,7 +422,7 @@ describe("tokens session --experimental-sqlite", () => {
 
 describe("tokens project --experimental-sqlite", () => {
   it("outputs valid JSON with success envelope using --db flag", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts tokens project --project proj_present --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts tokens project --project proj_present --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -431,7 +431,7 @@ describe("tokens project --experimental-sqlite", () => {
   });
 
   it("includes aggregate token summary structure", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts tokens project --project proj_present --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts tokens project --project proj_present --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -444,7 +444,7 @@ describe("tokens project --experimental-sqlite", () => {
     // proj_present has 4 sessions: session_parser_fix (745), session_add_tests (310),
     // session_refactor_api (970), session_fork_parser (0, no messages)
     // Total known = 745 + 310 + 970 = 2025
-    const result = await $`bun src/bin/opencode-manager.ts tokens project --project proj_present --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts tokens project --project proj_present --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -454,7 +454,7 @@ describe("tokens project --experimental-sqlite", () => {
 
   it("tracks unknown sessions count correctly", async () => {
     // proj_present has session_fork_parser with no messages
-    const result = await $`bun src/bin/opencode-manager.ts tokens project --project proj_present --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts tokens project --project proj_present --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -463,7 +463,7 @@ describe("tokens project --experimental-sqlite", () => {
 
   it("computes tokens for project with single session", async () => {
     // proj_missing has 1 session: session_missing_proj_01 with tokens
-    const result = await $`bun src/bin/opencode-manager.ts tokens project --project proj_missing --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts tokens project --project proj_missing --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -474,7 +474,7 @@ describe("tokens project --experimental-sqlite", () => {
   });
 
   it("returns error for non-existent project", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts tokens project --project nonexistent_project --db ${FIXTURE_SQLITE_PATH} --format json`.nothrow().quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts tokens project --project nonexistent_project --db ${FIXTURE_SQLITE_PATH} --format json`.nothrow().quiet();
     const output = result.stderr.toString();
 
     const parsed = JSON.parse(output);
@@ -484,7 +484,7 @@ describe("tokens project --experimental-sqlite", () => {
   });
 
   it("works with ndjson format", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts tokens project --project proj_present --db ${FIXTURE_SQLITE_PATH} --format ndjson`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts tokens project --project proj_present --db ${FIXTURE_SQLITE_PATH} --format ndjson`.quiet();
     const output = result.stdout.toString().trim();
     const lines = output.split("\n");
 
@@ -496,7 +496,7 @@ describe("tokens project --experimental-sqlite", () => {
   });
 
   it("works with table format", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts tokens project --project proj_present --db ${FIXTURE_SQLITE_PATH} --format table`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts tokens project --project proj_present --db ${FIXTURE_SQLITE_PATH} --format table`.quiet();
     const output = result.stdout.toString();
 
     expect(output).toContain("Category");
@@ -505,7 +505,7 @@ describe("tokens project --experimental-sqlite", () => {
   });
 
   it("returns error for non-existent database file", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts tokens project --project proj_present --db /nonexistent/path/to/db.sqlite --format json`.nothrow().quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts tokens project --project proj_present --db /nonexistent/path/to/db.sqlite --format json`.nothrow().quiet();
 
     expect(result.exitCode).toBe(1);
     const output = result.stderr.toString();
@@ -519,7 +519,7 @@ describe("tokens project --experimental-sqlite", () => {
 
 describe("tokens global --experimental-sqlite", () => {
   it("outputs valid JSON with success envelope using --db flag", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts tokens global --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts tokens global --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -528,7 +528,7 @@ describe("tokens global --experimental-sqlite", () => {
   });
 
   it("includes aggregate token summary structure", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts tokens global --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts tokens global --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -540,7 +540,7 @@ describe("tokens global --experimental-sqlite", () => {
     // All sessions: session_add_tests (310) + session_parser_fix (745) + 
     // session_refactor_api (970) + session_missing_proj_01 (150) + session_fork_parser (0)
     // Total known = 310 + 745 + 970 + 150 = 2175
-    const result = await $`bun src/bin/opencode-manager.ts tokens global --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts tokens global --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -549,7 +549,7 @@ describe("tokens global --experimental-sqlite", () => {
 
   it("counts all unknown sessions globally", async () => {
     // session_fork_parser has no messages
-    const result = await $`bun src/bin/opencode-manager.ts tokens global --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts tokens global --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -557,7 +557,7 @@ describe("tokens global --experimental-sqlite", () => {
   });
 
   it("includes correct token breakdown values", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts tokens global --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts tokens global --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -576,7 +576,7 @@ describe("tokens global --experimental-sqlite", () => {
   });
 
   it("works with ndjson format", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts tokens global --db ${FIXTURE_SQLITE_PATH} --format ndjson`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts tokens global --db ${FIXTURE_SQLITE_PATH} --format ndjson`.quiet();
     const output = result.stdout.toString().trim();
     const lines = output.split("\n");
 
@@ -587,7 +587,7 @@ describe("tokens global --experimental-sqlite", () => {
   });
 
   it("works with table format", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts tokens global --db ${FIXTURE_SQLITE_PATH} --format table`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts tokens global --db ${FIXTURE_SQLITE_PATH} --format table`.quiet();
     const output = result.stdout.toString();
 
     expect(output).toContain("Category");
@@ -597,7 +597,7 @@ describe("tokens global --experimental-sqlite", () => {
   });
 
   it("returns error for non-existent database file", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts tokens global --db /nonexistent/path/to/db.sqlite --format json`.nothrow().quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts tokens global --db /nonexistent/path/to/db.sqlite --format json`.nothrow().quiet();
 
     expect(result.exitCode).toBe(1);
     const output = result.stderr.toString();

@@ -197,8 +197,8 @@ export function registerSessionsCommands(parent: Command): void {
     [
       "",
       "Examples:",
-      "  opencode-manager sessions list --experimental-sqlite",
-      "  opencode-manager sessions list --db ~/.local/share/opencode/opencode.db",
+      "  opencode-session-tui sessions list --experimental-sqlite",
+      "  opencode-session-tui sessions list --db ~/.local/share/opencode/opencode.db",
     ].join("\n")
   )
 }

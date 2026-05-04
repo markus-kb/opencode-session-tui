@@ -14,7 +14,7 @@ import { FIXTURE_STORE_ROOT, FIXTURE_SQLITE_PATH } from "../../helpers";
 
 describe("projects list --format json", () => {
   it("outputs valid JSON with success envelope", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts projects list --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects list --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -24,7 +24,7 @@ describe("projects list --format json", () => {
   });
 
   it("includes correct project count", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts projects list --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects list --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -32,7 +32,7 @@ describe("projects list --format json", () => {
   });
 
   it("includes project fields in JSON output", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts projects list --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects list --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -47,7 +47,7 @@ describe("projects list --format json", () => {
   });
 
   it("serializes Date fields as ISO strings", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts projects list --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects list --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -60,7 +60,7 @@ describe("projects list --format json", () => {
   });
 
   it("includes meta with limit info", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts projects list --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects list --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -69,7 +69,7 @@ describe("projects list --format json", () => {
   });
 
   it("respects --missing-only filter", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts projects list --root ${FIXTURE_STORE_ROOT} --format json --missing-only`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects list --root ${FIXTURE_STORE_ROOT} --format json --missing-only`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -79,7 +79,7 @@ describe("projects list --format json", () => {
   });
 
   it("respects --search filter", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts projects list --root ${FIXTURE_STORE_ROOT} --format json --search present`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects list --root ${FIXTURE_STORE_ROOT} --format json --search present`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -88,7 +88,7 @@ describe("projects list --format json", () => {
   });
 
   it("respects --limit option", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts projects list --root ${FIXTURE_STORE_ROOT} --format json --limit 1`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects list --root ${FIXTURE_STORE_ROOT} --format json --limit 1`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -98,7 +98,7 @@ describe("projects list --format json", () => {
 
 describe("projects list --format ndjson", () => {
   it("outputs valid NDJSON (one JSON object per line)", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts projects list --root ${FIXTURE_STORE_ROOT} --format ndjson`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects list --root ${FIXTURE_STORE_ROOT} --format ndjson`.quiet();
     const output = result.stdout.toString().trim();
     const lines = output.split("\n");
 
@@ -109,7 +109,7 @@ describe("projects list --format ndjson", () => {
   });
 
   it("includes correct project count (one per line)", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts projects list --root ${FIXTURE_STORE_ROOT} --format ndjson`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects list --root ${FIXTURE_STORE_ROOT} --format ndjson`.quiet();
     const output = result.stdout.toString().trim();
     const lines = output.split("\n");
 
@@ -117,7 +117,7 @@ describe("projects list --format ndjson", () => {
   });
 
   it("includes project fields in each NDJSON line", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts projects list --root ${FIXTURE_STORE_ROOT} --format ndjson`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects list --root ${FIXTURE_STORE_ROOT} --format ndjson`.quiet();
     const output = result.stdout.toString().trim();
     const lines = output.split("\n");
 
@@ -133,7 +133,7 @@ describe("projects list --format ndjson", () => {
   });
 
   it("serializes Date fields as ISO strings", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts projects list --root ${FIXTURE_STORE_ROOT} --format ndjson`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects list --root ${FIXTURE_STORE_ROOT} --format ndjson`.quiet();
     const output = result.stdout.toString().trim();
     const lines = output.split("\n");
 
@@ -147,7 +147,7 @@ describe("projects list --format ndjson", () => {
   });
 
   it("does not include envelope wrapper (raw records only)", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts projects list --root ${FIXTURE_STORE_ROOT} --format ndjson`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects list --root ${FIXTURE_STORE_ROOT} --format ndjson`.quiet();
     const output = result.stdout.toString().trim();
     const lines = output.split("\n");
 
@@ -159,7 +159,7 @@ describe("projects list --format ndjson", () => {
   });
 
   it("respects --missing-only filter", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts projects list --root ${FIXTURE_STORE_ROOT} --format ndjson --missing-only`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects list --root ${FIXTURE_STORE_ROOT} --format ndjson --missing-only`.quiet();
     const output = result.stdout.toString().trim();
     const lines = output.split("\n");
 
@@ -170,7 +170,7 @@ describe("projects list --format ndjson", () => {
   });
 
   it("respects --search filter", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts projects list --root ${FIXTURE_STORE_ROOT} --format ndjson --search present`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects list --root ${FIXTURE_STORE_ROOT} --format ndjson --search present`.quiet();
     const output = result.stdout.toString().trim();
     const lines = output.split("\n");
 
@@ -180,7 +180,7 @@ describe("projects list --format ndjson", () => {
   });
 
   it("respects --limit option", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts projects list --root ${FIXTURE_STORE_ROOT} --format ndjson --limit 1`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects list --root ${FIXTURE_STORE_ROOT} --format ndjson --limit 1`.quiet();
     const output = result.stdout.toString().trim();
     const lines = output.split("\n");
 
@@ -190,7 +190,7 @@ describe("projects list --format ndjson", () => {
 
 describe("projects list --format table", () => {
   it("outputs table with headers", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts projects list --root ${FIXTURE_STORE_ROOT} --format table`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects list --root ${FIXTURE_STORE_ROOT} --format table`.quiet();
     const output = result.stdout.toString();
 
     // Should have header row
@@ -202,7 +202,7 @@ describe("projects list --format table", () => {
   });
 
   it("outputs table with header underline", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts projects list --root ${FIXTURE_STORE_ROOT} --format table`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects list --root ${FIXTURE_STORE_ROOT} --format table`.quiet();
     const output = result.stdout.toString();
     const lines = output.split("\n");
 
@@ -212,7 +212,7 @@ describe("projects list --format table", () => {
   });
 
   it("includes project data rows", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts projects list --root ${FIXTURE_STORE_ROOT} --format table`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects list --root ${FIXTURE_STORE_ROOT} --format table`.quiet();
     const output = result.stdout.toString();
 
     // Should include project IDs
@@ -221,7 +221,7 @@ describe("projects list --format table", () => {
   });
 
   it("shows correct project count (header + underline + data rows)", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts projects list --root ${FIXTURE_STORE_ROOT} --format table`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects list --root ${FIXTURE_STORE_ROOT} --format table`.quiet();
     const output = result.stdout.toString().trim();
     const lines = output.split("\n");
 
@@ -230,7 +230,7 @@ describe("projects list --format table", () => {
   });
 
   it("formats state column with visual indicators", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts projects list --root ${FIXTURE_STORE_ROOT} --format table`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects list --root ${FIXTURE_STORE_ROOT} --format table`.quiet();
     const output = result.stdout.toString();
 
     // State indicators: checkmark for present, X for missing
@@ -238,7 +238,7 @@ describe("projects list --format table", () => {
   });
 
   it("respects --missing-only filter", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts projects list --root ${FIXTURE_STORE_ROOT} --format table --missing-only`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects list --root ${FIXTURE_STORE_ROOT} --format table --missing-only`.quiet();
     const output = result.stdout.toString();
 
     // Should only include missing project
@@ -247,7 +247,7 @@ describe("projects list --format table", () => {
   });
 
   it("respects --search filter", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts projects list --root ${FIXTURE_STORE_ROOT} --format table --search present`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects list --root ${FIXTURE_STORE_ROOT} --format table --search present`.quiet();
     const output = result.stdout.toString();
 
     // Should only include present project
@@ -256,7 +256,7 @@ describe("projects list --format table", () => {
   });
 
   it("respects --limit option", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts projects list --root ${FIXTURE_STORE_ROOT} --format table --limit 1`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects list --root ${FIXTURE_STORE_ROOT} --format table --limit 1`.quiet();
     const output = result.stdout.toString().trim();
     const lines = output.split("\n");
 
@@ -267,7 +267,7 @@ describe("projects list --format table", () => {
 
 describe("projects delete --dry-run", () => {
   it("outputs dry-run JSON format with paths to delete", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts projects delete --id proj_present --root ${FIXTURE_STORE_ROOT} --format json --dry-run`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects delete --id proj_present --root ${FIXTURE_STORE_ROOT} --format json --dry-run`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -284,7 +284,7 @@ describe("projects delete --dry-run", () => {
   });
 
   it("includes correct file path in dry-run output", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts projects delete --id proj_present --root ${FIXTURE_STORE_ROOT} --format json --dry-run`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects delete --id proj_present --root ${FIXTURE_STORE_ROOT} --format json --dry-run`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -292,7 +292,7 @@ describe("projects delete --dry-run", () => {
   });
 
   it("outputs dry-run table format with header", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts projects delete --id proj_present --root ${FIXTURE_STORE_ROOT} --format table --dry-run`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects delete --id proj_present --root ${FIXTURE_STORE_ROOT} --format table --dry-run`.quiet();
     const output = result.stdout.toString();
 
     expect(output).toContain("[DRY RUN]");
@@ -302,17 +302,17 @@ describe("projects delete --dry-run", () => {
 
   it("does not actually delete the file", async () => {
     // Run dry-run delete
-    await $`bun src/bin/opencode-manager.ts projects delete --id proj_present --root ${FIXTURE_STORE_ROOT} --format json --dry-run`.quiet();
+    await $`bun src/bin/opencode-session-tui.ts projects delete --id proj_present --root ${FIXTURE_STORE_ROOT} --format json --dry-run`.quiet();
 
     // Verify file still exists by running projects list
-    const listResult = await $`bun src/bin/opencode-manager.ts projects list --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const listResult = await $`bun src/bin/opencode-session-tui.ts projects list --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const parsed = JSON.parse(listResult.stdout.toString());
     const projectIds = parsed.data.map((p: { projectId: string }) => p.projectId);
     expect(projectIds).toContain("proj_present");
   });
 
   it("supports prefix matching in dry-run mode", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts projects delete --id proj_pres --root ${FIXTURE_STORE_ROOT} --format json --dry-run`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects delete --id proj_pres --root ${FIXTURE_STORE_ROOT} --format json --dry-run`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -320,7 +320,7 @@ describe("projects delete --dry-run", () => {
   });
 
   it("returns exit code 3 for non-existent project", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts projects delete --id nonexistent_project --root ${FIXTURE_STORE_ROOT} --format json --dry-run`.quiet().nothrow();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects delete --id nonexistent_project --root ${FIXTURE_STORE_ROOT} --format json --dry-run`.quiet().nothrow();
     
     expect(result.exitCode).toBe(3);
   });
@@ -348,7 +348,7 @@ describe("projects delete --backup-dir", () => {
   });
 
   it("creates backup before deleting project", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts projects delete --id proj_present --root ${tempRoot} --format json --yes --backup-dir ${tempBackupDir}`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects delete --id proj_present --root ${tempRoot} --format json --yes --backup-dir ${tempBackupDir}`.quiet();
     
     expect(result.exitCode).toBe(0);
 
@@ -359,7 +359,7 @@ describe("projects delete --backup-dir", () => {
   });
 
   it("backup contains the project file", async () => {
-    await $`bun src/bin/opencode-manager.ts projects delete --id proj_present --root ${tempRoot} --format json --yes --backup-dir ${tempBackupDir}`.quiet();
+    await $`bun src/bin/opencode-session-tui.ts projects delete --id proj_present --root ${tempRoot} --format json --yes --backup-dir ${tempBackupDir}`.quiet();
 
     // Find the backup subdirectory
     const backupContents = await fs.readdir(tempBackupDir);
@@ -378,7 +378,7 @@ describe("projects delete --backup-dir", () => {
     const existsBefore = await fs.access(originalFile).then(() => true).catch(() => false);
     expect(existsBefore).toBe(true);
 
-    await $`bun src/bin/opencode-manager.ts projects delete --id proj_present --root ${tempRoot} --format json --yes --backup-dir ${tempBackupDir}`.quiet();
+    await $`bun src/bin/opencode-session-tui.ts projects delete --id proj_present --root ${tempRoot} --format json --yes --backup-dir ${tempBackupDir}`.quiet();
 
     // Verify file is deleted after backup
     const existsAfter = await fs.access(originalFile).then(() => true).catch(() => false);
@@ -386,7 +386,7 @@ describe("projects delete --backup-dir", () => {
   });
 
   it("outputs success message with project ID", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts projects delete --id proj_present --root ${tempRoot} --format json --yes --quiet --backup-dir ${tempBackupDir}`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects delete --id proj_present --root ${tempRoot} --format json --yes --quiet --backup-dir ${tempBackupDir}`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -395,7 +395,7 @@ describe("projects delete --backup-dir", () => {
   });
 
   it("backup preserves directory structure relative to root", async () => {
-    await $`bun src/bin/opencode-manager.ts projects delete --id proj_present --root ${tempRoot} --format json --yes --backup-dir ${tempBackupDir}`.quiet();
+    await $`bun src/bin/opencode-session-tui.ts projects delete --id proj_present --root ${tempRoot} --format json --yes --backup-dir ${tempBackupDir}`.quiet();
 
     // Find the backup subdirectory
     const backupContents = await fs.readdir(tempBackupDir);
@@ -410,7 +410,7 @@ describe("projects delete --backup-dir", () => {
   });
 
   it("returns exit code 2 when --yes is not provided", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts projects delete --id proj_present --root ${tempRoot} --format json --backup-dir ${tempBackupDir}`.quiet().nothrow();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects delete --id proj_present --root ${tempRoot} --format json --backup-dir ${tempBackupDir}`.quiet().nothrow();
     
     expect(result.exitCode).toBe(2);
   });
@@ -418,13 +418,13 @@ describe("projects delete --backup-dir", () => {
 
 describe("projects delete requires --yes", () => {
   it("returns exit code 2 when --yes is missing", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts projects delete --id proj_present --root ${FIXTURE_STORE_ROOT} --format json`.quiet().nothrow();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects delete --id proj_present --root ${FIXTURE_STORE_ROOT} --format json`.quiet().nothrow();
     
     expect(result.exitCode).toBe(2);
   });
 
   it("error message mentions --yes flag", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts projects delete --id proj_present --root ${FIXTURE_STORE_ROOT} --format json`.quiet().nothrow();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects delete --id proj_present --root ${FIXTURE_STORE_ROOT} --format json`.quiet().nothrow();
     // Error output goes to stderr
     const output = result.stderr.toString();
 
@@ -434,7 +434,7 @@ describe("projects delete requires --yes", () => {
   });
 
   it("suggests using --dry-run in error message", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts projects delete --id proj_present --root ${FIXTURE_STORE_ROOT} --format json`.quiet().nothrow();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects delete --id proj_present --root ${FIXTURE_STORE_ROOT} --format json`.quiet().nothrow();
     // Error output goes to stderr
     const output = result.stderr.toString();
 
@@ -456,7 +456,7 @@ describe("projects delete requires --yes", () => {
 describe("projects list - JSONL backend regression (default)", () => {
   it("uses JSONL backend by default (no SQLite flags)", async () => {
     // Run without any --experimental-sqlite or --db flags
-    const result = await $`bun src/bin/opencode-manager.ts projects list --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects list --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -472,7 +472,7 @@ describe("projects list - JSONL backend regression (default)", () => {
   });
 
   it("returns correct project data from JSONL files", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts projects list --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects list --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -484,7 +484,7 @@ describe("projects list - JSONL backend regression (default)", () => {
   });
 
   it("JSONL backend produces correct state detection", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts projects list --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects list --root ${FIXTURE_STORE_ROOT} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -497,7 +497,7 @@ describe("projects list - JSONL backend regression (default)", () => {
   });
 
   it("filters work correctly with JSONL backend (--missing-only)", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts projects list --root ${FIXTURE_STORE_ROOT} --format json --missing-only`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects list --root ${FIXTURE_STORE_ROOT} --format json --missing-only`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -506,7 +506,7 @@ describe("projects list - JSONL backend regression (default)", () => {
   });
 
   it("search works correctly with JSONL backend (--search)", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts projects list --root ${FIXTURE_STORE_ROOT} --format json --search present`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects list --root ${FIXTURE_STORE_ROOT} --format json --search present`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -525,7 +525,7 @@ describe("projects list - JSONL backend regression (default)", () => {
  */
 describe("projects list --experimental-sqlite", () => {
   it("loads projects from SQLite database with --db flag", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts projects list --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects list --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -535,7 +535,7 @@ describe("projects list --experimental-sqlite", () => {
   });
 
   it("returns correct project IDs from SQLite database", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts projects list --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects list --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -546,7 +546,7 @@ describe("projects list --experimental-sqlite", () => {
   });
 
   it("produces correct state detection from SQLite data", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts projects list --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects list --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -559,7 +559,7 @@ describe("projects list --experimental-sqlite", () => {
   });
 
   it("uses SQLite virtual filePath format (sqlite:project:{id})", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts projects list --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects list --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -571,7 +571,7 @@ describe("projects list --experimental-sqlite", () => {
   });
 
   it("includes all expected project fields", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts projects list --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects list --db ${FIXTURE_SQLITE_PATH} --format json`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -586,7 +586,7 @@ describe("projects list --experimental-sqlite", () => {
   });
 
   it("respects --missing-only filter with SQLite backend", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts projects list --db ${FIXTURE_SQLITE_PATH} --format json --missing-only`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects list --db ${FIXTURE_SQLITE_PATH} --format json --missing-only`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -596,7 +596,7 @@ describe("projects list --experimental-sqlite", () => {
   });
 
   it("respects --search filter with SQLite backend", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts projects list --db ${FIXTURE_SQLITE_PATH} --format json --search present`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects list --db ${FIXTURE_SQLITE_PATH} --format json --search present`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -605,7 +605,7 @@ describe("projects list --experimental-sqlite", () => {
   });
 
   it("respects --limit option with SQLite backend", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts projects list --db ${FIXTURE_SQLITE_PATH} --format json --limit 1`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects list --db ${FIXTURE_SQLITE_PATH} --format json --limit 1`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -613,7 +613,7 @@ describe("projects list --experimental-sqlite", () => {
   });
 
   it("works with table format output", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts projects list --db ${FIXTURE_SQLITE_PATH} --format table`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects list --db ${FIXTURE_SQLITE_PATH} --format table`.quiet();
     const output = result.stdout.toString();
 
     // Should have header row with expected columns
@@ -629,7 +629,7 @@ describe("projects list --experimental-sqlite", () => {
   });
 
   it("works with ndjson format output", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts projects list --db ${FIXTURE_SQLITE_PATH} --format ndjson`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects list --db ${FIXTURE_SQLITE_PATH} --format ndjson`.quiet();
     const output = result.stdout.toString().trim();
     const lines = output.split("\n");
 
@@ -645,7 +645,7 @@ describe("projects list --experimental-sqlite", () => {
   });
 
   it("returns error for non-existent database file", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts projects list --db /nonexistent/path/db.sqlite --format json`.quiet().nothrow();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects list --db /nonexistent/path/db.sqlite --format json`.quiet().nothrow();
 
     // Should fail with non-zero exit code
     expect(result.exitCode).not.toBe(0);
@@ -670,7 +670,7 @@ describe("projects list --experimental-sqlite", () => {
     db.run("INSERT INTO project (id, data) VALUES (?, ?)", ["proj_bad", "{not-json"]);
     db.close();
 
-    const result = await $`bun src/bin/opencode-manager.ts projects list --db ${tempDbPath} --format json`.quiet().nothrow();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects list --db ${tempDbPath} --format json`.quiet().nothrow();
     expect(result.exitCode).toBe(0);
 
     const parsed = JSON.parse(result.stdout.toString());
@@ -693,7 +693,7 @@ describe("projects list --experimental-sqlite", () => {
     db.run("INSERT INTO project (id, data) VALUES (?, ?)", ["proj_bad", "{not-json"]);
     db.close();
 
-    const result = await $`bun src/bin/opencode-manager.ts projects list --db ${tempDbPath} --format json --sqlite-strict`.quiet().nothrow();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects list --db ${tempDbPath} --format json --sqlite-strict`.quiet().nothrow();
     expect(result.exitCode).not.toBe(0);
 
     const combined = result.stdout.toString() + result.stderr.toString();
@@ -712,7 +712,7 @@ describe("projects list --experimental-sqlite", () => {
     db.run("CREATE TABLE session (id TEXT PRIMARY KEY, data TEXT NOT NULL)");
     db.close();
 
-    const result = await $`bun src/bin/opencode-manager.ts projects list --db ${tempDbPath} --format json --sqlite-strict`.quiet().nothrow();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects list --db ${tempDbPath} --format json --sqlite-strict`.quiet().nothrow();
     expect(result.exitCode).not.toBe(0);
 
     const combined = result.stdout.toString() + result.stderr.toString();
@@ -760,13 +760,13 @@ describe("projects delete --experimental-sqlite", () => {
 
   it("deletes project from SQLite database with --db flag and --yes", async () => {
     // Verify project exists before deletion
-    const listBefore = await $`bun src/bin/opencode-manager.ts projects list --db ${tempDbPath} --format json`.quiet();
+    const listBefore = await $`bun src/bin/opencode-session-tui.ts projects list --db ${tempDbPath} --format json`.quiet();
     const parsedBefore = JSON.parse(listBefore.stdout.toString());
     const projectsBefore = parsedBefore.data.map((p: { projectId: string }) => p.projectId);
     expect(projectsBefore).toContain("proj_missing");
 
     // Delete the project
-    const result = await $`bun src/bin/opencode-manager.ts projects delete --id proj_missing --db ${tempDbPath} --format json --yes`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects delete --id proj_missing --db ${tempDbPath} --format json --yes`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -776,7 +776,7 @@ describe("projects delete --experimental-sqlite", () => {
     expect(parsed.data.deleted).toBeArray();
 
     // Verify project is gone after deletion
-    const listAfter = await $`bun src/bin/opencode-manager.ts projects list --db ${tempDbPath} --format json`.quiet();
+    const listAfter = await $`bun src/bin/opencode-session-tui.ts projects list --db ${tempDbPath} --format json`.quiet();
     const parsedAfter = JSON.parse(listAfter.stdout.toString());
     const projectsAfter = parsedAfter.data.map((p: { projectId: string }) => p.projectId);
     expect(projectsAfter).not.toContain("proj_missing");
@@ -786,7 +786,7 @@ describe("projects delete --experimental-sqlite", () => {
 
   it("supports project ID prefix matching with SQLite", async () => {
     // Delete using prefix "proj_miss"
-    const result = await $`bun src/bin/opencode-manager.ts projects delete --id proj_miss --db ${tempDbPath} --format json --yes`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects delete --id proj_miss --db ${tempDbPath} --format json --yes`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -795,14 +795,14 @@ describe("projects delete --experimental-sqlite", () => {
     expect(parsed.data).toHaveProperty("projectId", "proj_missing");
 
     // Verify project is deleted
-    const listAfter = await $`bun src/bin/opencode-manager.ts projects list --db ${tempDbPath} --format json`.quiet();
+    const listAfter = await $`bun src/bin/opencode-session-tui.ts projects list --db ${tempDbPath} --format json`.quiet();
     const parsedAfter = JSON.parse(listAfter.stdout.toString());
     const projectsAfter = parsedAfter.data.map((p: { projectId: string }) => p.projectId);
     expect(projectsAfter).not.toContain("proj_missing");
   });
 
   it("outputs dry-run result with SQLite backend", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts projects delete --id proj_missing --db ${tempDbPath} --format json --dry-run`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects delete --id proj_missing --db ${tempDbPath} --format json --dry-run`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -816,26 +816,26 @@ describe("projects delete --experimental-sqlite", () => {
     expect(parsed.data.paths[0]).toContain("sqlite:project:proj_missing");
 
     // Verify project is NOT deleted (dry run)
-    const listAfter = await $`bun src/bin/opencode-manager.ts projects list --db ${tempDbPath} --format json`.quiet();
+    const listAfter = await $`bun src/bin/opencode-session-tui.ts projects list --db ${tempDbPath} --format json`.quiet();
     const parsedAfter = JSON.parse(listAfter.stdout.toString());
     const projectsAfter = parsedAfter.data.map((p: { projectId: string }) => p.projectId);
     expect(projectsAfter).toContain("proj_missing");
   });
 
   it("requires --yes flag for destructive operation (SQLite)", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts projects delete --id proj_missing --db ${tempDbPath} --format json`.quiet().nothrow();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects delete --id proj_missing --db ${tempDbPath} --format json`.quiet().nothrow();
 
     expect(result.exitCode).toBe(2);
 
     // Project should still exist
-    const listAfter = await $`bun src/bin/opencode-manager.ts projects list --db ${tempDbPath} --format json`.quiet();
+    const listAfter = await $`bun src/bin/opencode-session-tui.ts projects list --db ${tempDbPath} --format json`.quiet();
     const parsedAfter = JSON.parse(listAfter.stdout.toString());
     const projectsAfter = parsedAfter.data.map((p: { projectId: string }) => p.projectId);
     expect(projectsAfter).toContain("proj_missing");
   });
 
   it("returns error for non-existent project ID with SQLite", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts projects delete --id nonexistent_project --db ${tempDbPath} --format json --yes`.quiet().nothrow();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects delete --id nonexistent_project --db ${tempDbPath} --format json --yes`.quiet().nothrow();
 
     expect(result.exitCode).toBe(3);
 
@@ -854,7 +854,7 @@ describe("projects delete --experimental-sqlite", () => {
   });
 
   it("returns error for non-existent database file", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts projects delete --id proj_missing --db /nonexistent/path/db.sqlite --format json --yes`.quiet().nothrow();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects delete --id proj_missing --db /nonexistent/path/db.sqlite --format json --yes`.quiet().nothrow();
 
     expect(result.exitCode).not.toBe(0);
 
@@ -870,7 +870,7 @@ describe("projects delete --experimental-sqlite", () => {
     locker.run("BEGIN IMMEDIATE");
 
     try {
-      const result = await $`bun src/bin/opencode-manager.ts projects delete --id proj_missing --db ${tempDbPath} --format json --yes`.quiet().nothrow();
+      const result = await $`bun src/bin/opencode-session-tui.ts projects delete --id proj_missing --db ${tempDbPath} --format json --yes`.quiet().nothrow();
 
       expect(result.exitCode).not.toBe(0);
       const combined = result.stdout.toString() + result.stderr.toString();
@@ -883,7 +883,7 @@ describe("projects delete --experimental-sqlite", () => {
   });
 
   it("works with table format output (SQLite)", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts projects delete --id proj_missing --db ${tempDbPath} --format table --yes`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects delete --id proj_missing --db ${tempDbPath} --format table --yes`.quiet();
     const output = result.stdout.toString();
 
     // Table format should show success message
@@ -892,7 +892,7 @@ describe("projects delete --experimental-sqlite", () => {
   });
 
   it("works with ndjson format output (SQLite)", async () => {
-    const result = await $`bun src/bin/opencode-manager.ts projects delete --id proj_missing --db ${tempDbPath} --format ndjson --yes`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects delete --id proj_missing --db ${tempDbPath} --format ndjson --yes`.quiet();
     const output = result.stdout.toString().trim();
 
     // NDJSON format wraps output in success envelope for consistency
@@ -904,7 +904,7 @@ describe("projects delete --experimental-sqlite", () => {
 
   it("deletes project and all related sessions/messages/parts atomically", async () => {
     // Get initial counts by checking sessions
-    const sessionsBefore = await $`bun src/bin/opencode-manager.ts sessions list --db ${tempDbPath} --format json`.quiet();
+    const sessionsBefore = await $`bun src/bin/opencode-session-tui.ts sessions list --db ${tempDbPath} --format json`.quiet();
     const parsedSessionsBefore = JSON.parse(sessionsBefore.stdout.toString());
     // proj_present has 3 sessions: session_parser_fix, session_add_tests, session_refactor_api
     const sessionsInProject = parsedSessionsBefore.data.filter(
@@ -913,16 +913,16 @@ describe("projects delete --experimental-sqlite", () => {
     expect(sessionsInProject.length).toBeGreaterThan(0);
 
     // Delete the project
-    await $`bun src/bin/opencode-manager.ts projects delete --id proj_present --db ${tempDbPath} --format json --yes`.quiet();
+    await $`bun src/bin/opencode-session-tui.ts projects delete --id proj_present --db ${tempDbPath} --format json --yes`.quiet();
 
     // Verify project is gone
-    const listAfter = await $`bun src/bin/opencode-manager.ts projects list --db ${tempDbPath} --format json`.quiet();
+    const listAfter = await $`bun src/bin/opencode-session-tui.ts projects list --db ${tempDbPath} --format json`.quiet();
     const parsedAfter = JSON.parse(listAfter.stdout.toString());
     const projectsAfter = parsedAfter.data.map((p: { projectId: string }) => p.projectId);
     expect(projectsAfter).not.toContain("proj_present");
 
     // Verify sessions belonging to the project are also gone
-    const sessionsAfter = await $`bun src/bin/opencode-manager.ts sessions list --db ${tempDbPath} --format json`.quiet();
+    const sessionsAfter = await $`bun src/bin/opencode-session-tui.ts sessions list --db ${tempDbPath} --format json`.quiet();
     const parsedSessionsAfter = JSON.parse(sessionsAfter.stdout.toString());
     const sessionsInProjectAfter = parsedSessionsAfter.data.filter(
       (s: { projectId: string }) => s.projectId === "proj_present"
@@ -933,7 +933,7 @@ describe("projects delete --experimental-sqlite", () => {
   it("ignores --backup-dir flag with SQLite backend (virtual paths cannot be backed up)", async () => {
     // backup-dir is only meaningful for JSONL file backend
     // SQLite backend should ignore it and proceed with deletion
-    const result = await $`bun src/bin/opencode-manager.ts projects delete --id proj_missing --db ${tempDbPath} --format json --yes --backup-dir ${tempDbDir}`.quiet();
+    const result = await $`bun src/bin/opencode-session-tui.ts projects delete --id proj_missing --db ${tempDbPath} --format json --yes --backup-dir ${tempDbDir}`.quiet();
     const output = result.stdout.toString();
 
     const parsed = JSON.parse(output);
@@ -941,7 +941,7 @@ describe("projects delete --experimental-sqlite", () => {
     expect(parsed.data).toHaveProperty("projectId", "proj_missing");
 
     // Project should be deleted
-    const listAfter = await $`bun src/bin/opencode-manager.ts projects list --db ${tempDbPath} --format json`.quiet();
+    const listAfter = await $`bun src/bin/opencode-session-tui.ts projects list --db ${tempDbPath} --format json`.quiet();
     const parsedAfter = JSON.parse(listAfter.stdout.toString());
     const projectsAfter = parsedAfter.data.map((p: { projectId: string }) => p.projectId);
     expect(projectsAfter).not.toContain("proj_missing");
