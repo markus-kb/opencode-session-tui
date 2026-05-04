@@ -1,0 +1,8 @@
+{
+  "id": "proj_present",
+  "worktree": "tests/fixtures/worktrees/my-present-project",
+  "vcs": "git",
+  "time": {
+    "created": 1704067200000
+  }
+}

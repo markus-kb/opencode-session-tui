@@ -1,0 +1,8 @@
+{
+  "id": "proj_missing",
+  "worktree": "tests/fixtures/worktrees/nonexistent-project",
+  "vcs": "git",
+  "time": {
+    "created": 1704153600000
+  }
+}
