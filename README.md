@@ -4,6 +4,8 @@ Terminal UI for inspecting, filtering, and pruning OpenCode metadata stored on d
 
 ## Install
 
+### Global install
+
 Install this fork globally from the git repository to get the `opencode-session-tui` command on your PATH:
 
 ```bash
@@ -17,24 +19,29 @@ opencode-session-tui --help
 opencode-session-tui --root ~/.local/share/opencode
 ```
 
-If you only want to try it locally from the source checkout, use `bunx` or `bun run` instead of a global install:
+### Local development (first-time setup)
+
+Clone the repo, install dependencies, then launch:
+
+```bash
+git clone https://github.com/markus-kb/opencode-session-tui.git
+cd opencode-session-tui
+bun install
+bun run start
+```
+
+> `bun install` is required on every new machine before running any `bun run` script.
+
+On Windows you can also double-click `launch-oc-session-tui.bat` from the repository root instead of using `bun run start`.
+
+If you only want to try it without a global install, use `bunx` or `bun run` from the checkout:
 
 ```bash
 bunx opencode-session-tui --help
 bun run manager -- --help
 ```
 
-### Windows-friendly local launch
-
-For local development on Windows, use the package scripts instead of calling source files directly:
-
-```bash
-bun run start
-```
-
-You can also double-click `launch-oc-session-tui.bat` from this repository root to launch the app in a Windows terminal.
-
-Additional options:
+Additional launch options:
 
 ```bash
 bun run start -- --db "C:\\Users\\<you>\\.local\\share\\opencode\\opencode.db"
@@ -131,14 +138,6 @@ Current Phase 10 status:
 - Comprehensive CLI/data/TUI seam coverage.
 - SQLite fixtures under `tests/fixtures/`.
 - Full-suite and typecheck expected green on every change.
-
-## Installation
-```bash
-# Clone the repo and install deps
-git clone https://github.com/markus-kb/opencode-session-tui.git
-cd opencode-session-tui
-bun install
-```
 
 ## Credits
 Original project by [shuv1337](https://github.com/shuv1337) — [shuv1337/oc-manager](https://github.com/shuv1337/oc-manager).
